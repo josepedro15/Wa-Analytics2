@@ -67,11 +67,23 @@ const Benefits = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {benefits.map((benefit, index) => (
-            <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
-              <benefit.icon className="h-10 w-10 text-primary mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-3">
+            <Card 
+              key={index} 
+              className={`p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative ${
+                index < 3 ? 'border-primary/20 bg-primary/5' : ''
+              }`}
+            >
+              {index < 3 && (
+                <div className="absolute -top-2 -right-2 bg-primary text-white px-2 py-1 rounded-full text-xs font-medium">
+                  {index === 0 ? 'Mais Popular' : index === 1 ? 'Essencial' : 'Recomendado'}
+                </div>
+              )}
+              <div className="group-hover:scale-110 transition-transform duration-300 mb-4">
+                <benefit.icon className={`h-10 w-10 ${index < 3 ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
                 {benefit.title}
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">

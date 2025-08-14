@@ -11,7 +11,9 @@ import {
   MapPin, 
   Clock,
   Send,
-  CheckCircle
+  CheckCircle,
+  Shield,
+  Star
 } from "lucide-react";
 
 const ContactForm = () => {
@@ -69,69 +71,54 @@ const ContactForm = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Contact Form */}
           <Card className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Nome completo *</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="mt-2"
-                    placeholder="Seu nome"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">E-mail *</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="mt-2"
-                    placeholder="seu@email.com"
-                  />
-                </div>
+            {/* Trust Indicators */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4 w-4 text-blue-600" />
+                <span className="font-semibold text-blue-800">100% Seguro</span>
               </div>
+              <p className="text-sm text-blue-700">
+                Seus dados são protegidos e nunca serão compartilhados
+              </p>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="company">Empresa</Label>
-                  <Input
-                    id="company"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    className="mt-2"
-                    placeholder="Nome da empresa"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">WhatsApp</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="mt-2"
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Nome completo *</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="mt-2"
+                  placeholder="Seu nome"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="email">E-mail *</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="mt-2"
+                  placeholder="seu@email.com"
+                />
               </div>
 
               <div>
-                <Label htmlFor="message">Mensagem</Label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
+                <Label htmlFor="company">Empresa</Label>
+                <Input
+                  id="company"
+                  name="company"
+                  value={formData.company}
                   onChange={handleChange}
-                  className="mt-2 min-h-[120px]"
-                  placeholder="Conte-nos sobre seu negócio e como podemos ajudar..."
+                  className="mt-2"
+                  placeholder="Nome da empresa"
                 />
               </div>
 
@@ -146,7 +133,7 @@ const ContactForm = () => {
                 ) : (
                   <>
                     <Send className="h-4 w-4 mr-2" />
-                    Enviar mensagem
+                    Falar com Especialista
                   </>
                 )}
               </Button>
@@ -216,6 +203,31 @@ const ContactForm = () => {
                 Comprometemo-nos a responder todas as mensagens em até 24 horas, 
                 incluindo finais de semana e feriados.
               </p>
+            </Card>
+
+            {/* Testimonial */}
+            <Card className="p-6 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold">M</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    "Implementamos o WhatsApp Analytics e em 30 dias nossa conversão aumentou 45%. 
+                    A equipe é incrível e o suporte é excepcional!"
+                  </p>
+                  <p className="text-xs font-semibold text-foreground">
+                    Maria Silva, CEO - Fashion Store
+                  </p>
+                </div>
+              </div>
             </Card>
           </div>
         </div>

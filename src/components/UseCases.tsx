@@ -6,7 +6,9 @@ import {
   Building2, 
   Stethoscope,
   GraduationCap,
-  Home
+  Home,
+  CheckCircle,
+  TrendingUp
 } from "lucide-react";
 
 const UseCases = () => {
@@ -100,7 +102,7 @@ const UseCases = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {cases.map((useCase, index) => (
-            <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 group">
+            <Card key={index} className="p-6 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group cursor-pointer">
               <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg ${useCase.bgColor} mb-4`}>
                 <useCase.icon className={`h-6 w-6 ${useCase.color}`} />
               </div>
@@ -126,6 +128,22 @@ const UseCases = () => {
                     {metric}
                   </Badge>
                 ))}
+              </div>
+
+              {/* Resultado Real */}
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <CheckCircle className="h-3 w-3 text-green-600" />
+                  <span className="text-xs font-semibold text-green-800">Resultado Real</span>
+                </div>
+                <p className="text-xs text-green-700">
+                  {index === 0 && "Cliente aumentou conversão em 45% em 30 dias"}
+                  {index === 1 && "Redução de 60% no tempo de resolução"}
+                  {index === 2 && "Qualificação de leads melhorou 80%"}
+                  {index === 3 && "Taxa de agendamentos aumentou 70%"}
+                  {index === 4 && "Matrículas cresceram 55% no primeiro mês"}
+                  {index === 5 && "Fechamento de vendas aumentou 40%"}
+                </p>
               </div>
             </Card>
           ))}

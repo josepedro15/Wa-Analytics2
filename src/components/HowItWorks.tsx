@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Download, BarChart3, Settings, Zap } from "lucide-react";
+import { ArrowRight, Download, BarChart3, Settings, Zap, CheckCircle, TrendingUp } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
@@ -76,6 +76,47 @@ const HowItWorks = () => {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Results Section */}
+        <div className="mt-16 bg-gradient-to-r from-primary/5 to-accent/10 rounded-2xl p-8">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-foreground mb-4">
+              Resultados Reais dos Nossos Clientes
+            </h3>
+            <p className="text-muted-foreground">
+              Veja como empresas como a sua estão transformando atendimentos em vendas
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg p-6 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <span className="text-2xl font-bold text-green-600">+45%</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Aumento na conversão</p>
+              <p className="text-xs text-muted-foreground mt-1">E-commerce de roupas</p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-6 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+                <span className="text-2xl font-bold text-blue-600">-60%</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Redução no tempo de resposta</p>
+              <p className="text-xs text-muted-foreground mt-1">Clínica médica</p>
+            </div>
+            
+            <div className="bg-white rounded-lg p-6 text-center shadow-sm">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Zap className="h-5 w-5 text-orange-600" />
+                <span className="text-2xl font-bold text-orange-600">+80%</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Mais leads qualificados</p>
+              <p className="text-xs text-muted-foreground mt-1">Imobiliária</p>
+            </div>
           </div>
         </div>
 
