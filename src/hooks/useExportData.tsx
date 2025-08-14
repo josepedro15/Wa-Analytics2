@@ -26,116 +26,433 @@ export function useExportData() {
   const exportToCSV = async (data: DashboardData, options: ExportOptions) => {
     const csvData: string[][] = [];
     
-    // Header
-    csvData.push(['Relatório WhatsApp Analytics']);
-    csvData.push(['Período:', `${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}`]);
-    csvData.push(['Gerado em:', new Date().toLocaleString('pt-BR')]);
+    // Header com formatação melhorada
+    csvData.push(['='.repeat(80)]);
+    csvData.push(['RELATÓRIO WHATSAPP ANALYTICS']);
+    csvData.push(['='.repeat(80)]);
+    csvData.push([]);
+    
+    // Informações do relatório
+    csvData.push(['INFORMAÇÕES DO RELATÓRIO']);
+    csvData.push(['Período Analisado:', `${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}`]);
+    csvData.push(['Data de Geração:', new Date().toLocaleString('pt-BR')]);
+    csvData.push(['Versão do Sistema:', 'MetricaWhats Analytics v1.0']);
     csvData.push([]);
 
     if (options.includeMetrics) {
+      csvData.push(['='.repeat(50)]);
       csvData.push(['MÉTRICAS PRINCIPAIS']);
-      csvData.push(['Métrica', 'Valor', 'Unidade']);
-      csvData.push(['Total de Atendimentos', data.total_atendimentos?.toString() || '0', 'atendimentos']);
-      csvData.push(['Taxa de Conversão', `${data.taxa_conversao?.toFixed(1) || 0}%`, 'percentual']);
-      csvData.push(['Tempo Médio de Resposta', `${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s`, 'tempo']);
-      csvData.push(['Nota Média de Qualidade', `${data.nota_media_qualidade?.toFixed(1) || 0}/5`, 'pontos']);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['Métrica', 'Valor', 'Unidade', 'Status']);
+      
+      // Métricas com status baseado em performance
+      const metrics = [
+        {
+          name: 'Total de Atendimentos',
+          value: data.total_atendimentos?.toString() || '0',
+          unit: 'atendimentos',
+          status: (data.total_atendimentos || 0) > 1000 ? 'Excelente' : (data.total_atendimentos || 0) > 500 ? 'Bom' : 'Regular'
+        },
+        {
+          name: 'Taxa de Conversão',
+          value: `${data.taxa_conversao?.toFixed(1) || 0}%`,
+          unit: 'percentual',
+          status: (data.taxa_conversao || 0) > 25 ? 'Excelente' : (data.taxa_conversao || 0) > 15 ? 'Bom' : 'Precisa Melhorar'
+        },
+        {
+          name: 'Tempo Médio de Resposta',
+          value: `${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s`,
+          unit: 'tempo',
+          status: (data.tempo_medio_resposta || 0) < 120 ? 'Excelente' : (data.tempo_medio_resposta || 0) < 300 ? 'Bom' : 'Precisa Melhorar'
+        },
+        {
+          name: 'Nota Média de Qualidade',
+          value: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
+          unit: 'pontos',
+          status: (data.nota_media_qualidade || 0) > 4 ? 'Excelente' : (data.nota_media_qualidade || 0) > 3 ? 'Bom' : 'Precisa Melhorar'
+        }
+      ];
+      
+      metrics.forEach(metric => {
+        csvData.push([metric.name, metric.value, metric.unit, metric.status]);
+      });
       csvData.push([]);
     }
 
     if (options.includeIntentions) {
+      csvData.push(['='.repeat(50)]);
       csvData.push(['INTENÇÕES DOS CLIENTES']);
-      csvData.push(['Intenção', 'Percentual']);
-      csvData.push(['Compra', `${data.intencao_compra?.toFixed(1) || 0}%`]);
-      csvData.push(['Dúvida Geral', `${data.intencao_duvida_geral?.toFixed(1) || 0}%`]);
-      csvData.push(['Reclamação', `${data.intencao_reclamacao?.toFixed(1) || 0}%`]);
-      csvData.push(['Suporte', `${data.intencao_suporte?.toFixed(1) || 0}%`]);
-      csvData.push(['Orçamento', `${data.intencao_orcamento?.toFixed(1) || 0}%`]);
-      csvData.push([]);
-    }
-
-    if (options.includeInsights && data.insights_funcionou?.length) {
-      csvData.push(['INSIGHTS - O QUE FUNCIONOU']);
-      data.insights_funcionou.forEach(insight => {
-        csvData.push([insight]);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['Intenção', 'Percentual', 'Quantidade Estimada']);
+      
+      const totalAtendimentos = data.total_atendimentos || 0;
+      const intentions = [
+        { name: 'Compra', percentage: data.intencao_compra || 0 },
+        { name: 'Dúvida Geral', percentage: data.intencao_duvida_geral || 0 },
+        { name: 'Reclamação', percentage: data.intencao_reclamacao || 0 },
+        { name: 'Suporte', percentage: data.intencao_suporte || 0 },
+        { name: 'Orçamento', percentage: data.intencao_orcamento || 0 }
+      ];
+      
+      intentions.forEach(intention => {
+        const estimatedCount = Math.round((intention.percentage / 100) * totalAtendimentos);
+        csvData.push([
+          intention.name, 
+          `${intention.percentage.toFixed(1)}%`, 
+          `${estimatedCount} atendimentos`
+        ]);
       });
       csvData.push([]);
     }
 
-    if (options.includeInsights && data.insights_atrapalhou?.length) {
-      csvData.push(['INSIGHTS - O QUE ATRAPALHOU']);
-      data.insights_atrapalhou.forEach(insight => {
-        csvData.push([insight]);
-      });
-      csvData.push([]);
+    if (options.includeInsights && (data.insights_funcionou?.length || data.insights_atrapalhou?.length)) {
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['INSIGHTS DE PERFORMANCE']);
+      csvData.push(['='.repeat(50)]);
+      
+      if (data.insights_funcionou?.length) {
+        csvData.push(['O QUE FUNCIONOU BEM:']);
+        data.insights_funcionou.forEach((insight, index) => {
+          const [title, description] = insight.split(': ');
+          csvData.push([`${index + 1}. ${title}`, description || '']);
+        });
+        csvData.push([]);
+      }
+      
+      if (data.insights_atrapalhou?.length) {
+        csvData.push(['O QUE PRECISA MELHORAR:']);
+        data.insights_atrapalhou.forEach((insight, index) => {
+          const [title, description] = insight.split(': ');
+          csvData.push([`${index + 1}. ${title}`, description || '']);
+        });
+        csvData.push([]);
+      }
     }
 
     if (options.includeHighlights) {
+      csvData.push(['='.repeat(50)]);
       csvData.push(['DESTAQUES DO PERÍODO']);
+      csvData.push(['='.repeat(50)]);
+      
       if (data.melhor_atendimento_cliente) {
-        csvData.push(['Melhor Atendimento']);
-        csvData.push(['Cliente', data.melhor_atendimento_cliente]);
-        csvData.push(['Nota', `${data.melhor_atendimento_nota?.toFixed(1) || 0}/5`]);
-        csvData.push(['Observação', data.melhor_atendimento_observacao || '']);
+        csvData.push(['MELHOR ATENDIMENTO:']);
+        csvData.push(['Cliente:', data.melhor_atendimento_cliente]);
+        csvData.push(['Nota:', `${data.melhor_atendimento_nota?.toFixed(1) || 0}/5`]);
+        csvData.push(['Observação:', data.melhor_atendimento_observacao || '']);
         csvData.push([]);
       }
+      
       if (data.atendimento_critico_cliente) {
-        csvData.push(['Atendimento Crítico']);
-        csvData.push(['Cliente', data.atendimento_critico_cliente]);
-        csvData.push(['Nota', `${data.atendimento_critico_nota?.toFixed(1) || 0}/5`]);
-        csvData.push(['Observação', data.atendimento_critico_observacao || '']);
+        csvData.push(['ATENDIMENTO CRÍTICO:']);
+        csvData.push(['Cliente:', data.atendimento_critico_cliente]);
+        csvData.push(['Nota:', `${data.atendimento_critico_nota?.toFixed(1) || 0}/5`]);
+        csvData.push(['Observação:', data.atendimento_critico_observacao || '']);
         csvData.push([]);
       }
     }
 
     if (options.includeAutomation && data.automacao_sugerida?.length) {
-      csvData.push(['AUTOMAÇÃO SUGERIDA']);
-      data.automacao_sugerida.forEach(automacao => {
-        csvData.push([automacao]);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['SUGESTÕES DE AUTOMAÇÃO']);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['Sugestão', 'Descrição']);
+      
+      data.automacao_sugerida.forEach((automacao, index) => {
+        const [title, description] = automacao.split(': ');
+        csvData.push([`${index + 1}. ${title}`, description || '']);
       });
       csvData.push([]);
     }
 
     if (options.includeActions && data.proximas_acoes?.length) {
-      csvData.push(['PRÓXIMAS AÇÕES']);
-      data.proximas_acoes.forEach(acao => {
-        csvData.push([acao]);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['PRÓXIMAS AÇÕES RECOMENDADAS']);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['Ação', 'Status', 'Prazo', 'Prioridade']);
+      
+      data.proximas_acoes.forEach((acao, index) => {
+        const match = acao.match(/^(.*?)\s*–\s*(.*?)\s*\((\d{4}-\d{2}-\d{2})\)$/);
+        if (match) {
+          const [, title, status, deadline] = match;
+          const priority = status === 'Feito' ? 'Baixa' : status === 'Em andamento' ? 'Média' : 'Alta';
+          csvData.push([title, status, deadline, priority]);
+        } else {
+          csvData.push([acao, 'Pendente', 'A definir', 'Média']);
+        }
       });
       csvData.push([]);
     }
 
     if (options.includeGoals) {
+      csvData.push(['='.repeat(50)]);
       csvData.push(['METAS E PROGRESSO']);
-      csvData.push(['Meta', 'Progresso']);
-      csvData.push(['Taxa de Conversão', data.meta_taxa_conversao || '']);
-      csvData.push(['Tempo de Resposta', data.meta_tempo_resposta || '']);
-      csvData.push(['Nota de Qualidade', data.meta_nota_qualidade || '']);
+      csvData.push(['='.repeat(50)]);
+      csvData.push(['Meta', 'Progresso Atual', 'Objetivo', 'Status']);
+      
+      const goals = [
+        {
+          name: 'Taxa de Conversão',
+          current: data.taxa_conversao?.toFixed(1) || '0',
+          target: '30%',
+          status: (data.taxa_conversao || 0) >= 30 ? 'Atingida' : 'Em andamento'
+        },
+        {
+          name: 'Tempo de Resposta',
+          current: data.tempo_medio_resposta ? `${Math.floor(data.tempo_medio_resposta / 60)}m ${data.tempo_medio_resposta % 60}s` : '0s',
+          target: '< 2min',
+          status: (data.tempo_medio_resposta || 0) <= 120 ? 'Atingida' : 'Em andamento'
+        },
+        {
+          name: 'Nota de Qualidade',
+          current: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
+          target: '4.5/5',
+          status: (data.nota_media_qualidade || 0) >= 4.5 ? 'Atingida' : 'Em andamento'
+        }
+      ];
+      
+      goals.forEach(goal => {
+        csvData.push([goal.name, goal.current, goal.target, goal.status]);
+      });
+      csvData.push([]);
     }
 
-    // Converter para CSV
+    // Footer
+    csvData.push(['='.repeat(80)]);
+    csvData.push(['RELATÓRIO GERADO AUTOMATICAMENTE']);
+    csvData.push(['MetricaWhats Analytics - Transformando atendimentos em resultados']);
+    csvData.push(['='.repeat(80)]);
+
+    // Converter para CSV com formatação melhorada
     const csvContent = csvData.map(row => 
       row.map(cell => `"${cell?.replace(/"/g, '""') || ''}"`).join(',')
     ).join('\n');
 
-    // Download
+    // Download com nome de arquivo melhorado
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `whatsapp-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `relatorio-whatsapp-analytics-${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const exportToExcel = async (data: DashboardData, options: ExportOptions) => {
-    // Para Excel, vamos usar uma biblioteca externa
-    // Por enquanto, vamos simular com CSV
+    // Para Excel, vamos criar um CSV mais estruturado que funciona bem no Excel
+    const excelData: string[][] = [];
+    
+    // Header com formatação Excel-friendly
+    excelData.push(['RELATÓRIO WHATSAPP ANALYTICS']);
+    excelData.push([]);
+    
+    // Informações do relatório
+    excelData.push(['INFORMAÇÕES DO RELATÓRIO']);
+    excelData.push(['Período Analisado', `${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}`]);
+    excelData.push(['Data de Geração', new Date().toLocaleString('pt-BR')]);
+    excelData.push(['Versão do Sistema', 'MetricaWhats Analytics v1.0']);
+    excelData.push([]);
+
+    if (options.includeMetrics) {
+      excelData.push(['MÉTRICAS PRINCIPAIS']);
+      excelData.push(['Métrica', 'Valor', 'Unidade', 'Status', 'Observação']);
+      
+      const metrics = [
+        {
+          name: 'Total de Atendimentos',
+          value: data.total_atendimentos?.toString() || '0',
+          unit: 'atendimentos',
+          status: (data.total_atendimentos || 0) > 1000 ? 'Excelente' : (data.total_atendimentos || 0) > 500 ? 'Bom' : 'Regular',
+          observation: (data.total_atendimentos || 0) > 1000 ? 'Volume alto de atendimentos' : (data.total_atendimentos || 0) > 500 ? 'Volume adequado' : 'Volume baixo - considere aumentar'
+        },
+        {
+          name: 'Taxa de Conversão',
+          value: `${data.taxa_conversao?.toFixed(1) || 0}%`,
+          unit: 'percentual',
+          status: (data.taxa_conversao || 0) > 25 ? 'Excelente' : (data.taxa_conversao || 0) > 15 ? 'Bom' : 'Precisa Melhorar',
+          observation: (data.taxa_conversao || 0) > 25 ? 'Conversão acima da média do mercado' : (data.taxa_conversao || 0) > 15 ? 'Conversão dentro do esperado' : 'Conversão baixa - revise estratégias'
+        },
+        {
+          name: 'Tempo Médio de Resposta',
+          value: `${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s`,
+          unit: 'tempo',
+          status: (data.tempo_medio_resposta || 0) < 120 ? 'Excelente' : (data.tempo_medio_resposta || 0) < 300 ? 'Bom' : 'Precisa Melhorar',
+          observation: (data.tempo_medio_resposta || 0) < 120 ? 'Resposta muito rápida' : (data.tempo_medio_resposta || 0) < 300 ? 'Resposta adequada' : 'Resposta lenta - otimize processos'
+        },
+        {
+          name: 'Nota Média de Qualidade',
+          value: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
+          unit: 'pontos',
+          status: (data.nota_media_qualidade || 0) > 4 ? 'Excelente' : (data.nota_media_qualidade || 0) > 3 ? 'Bom' : 'Precisa Melhorar',
+          observation: (data.nota_media_qualidade || 0) > 4 ? 'Qualidade excepcional' : (data.nota_media_qualidade || 0) > 3 ? 'Qualidade satisfatória' : 'Qualidade baixa - treine equipe'
+        }
+      ];
+      
+      metrics.forEach(metric => {
+        excelData.push([metric.name, metric.value, metric.unit, metric.status, metric.observation]);
+      });
+      excelData.push([]);
+    }
+
+    if (options.includeIntentions) {
+      excelData.push(['INTENÇÕES DOS CLIENTES']);
+      excelData.push(['Intenção', 'Percentual', 'Quantidade Estimada', 'Prioridade de Ação']);
+      
+      const totalAtendimentos = data.total_atendimentos || 0;
+      const intentions = [
+        { name: 'Compra', percentage: data.intencao_compra || 0, priority: 'Alta' },
+        { name: 'Dúvida Geral', percentage: data.intencao_duvida_geral || 0, priority: 'Média' },
+        { name: 'Reclamação', percentage: data.intencao_reclamacao || 0, priority: 'Alta' },
+        { name: 'Suporte', percentage: data.intencao_suporte || 0, priority: 'Média' },
+        { name: 'Orçamento', percentage: data.intencao_orcamento || 0, priority: 'Alta' }
+      ];
+      
+      intentions.forEach(intention => {
+        const estimatedCount = Math.round((intention.percentage / 100) * totalAtendimentos);
+        excelData.push([
+          intention.name, 
+          `${intention.percentage.toFixed(1)}%`, 
+          `${estimatedCount} atendimentos`,
+          intention.priority
+        ]);
+      });
+      excelData.push([]);
+    }
+
+    if (options.includeInsights && (data.insights_funcionou?.length || data.insights_atrapalhou?.length)) {
+      excelData.push(['INSIGHTS DE PERFORMANCE']);
+      
+      if (data.insights_funcionou?.length) {
+        excelData.push(['O QUE FUNCIONOU BEM:']);
+        data.insights_funcionou.forEach((insight, index) => {
+          const [title, description] = insight.split(': ');
+          excelData.push([`${index + 1}. ${title}`, description || '', 'Positivo']);
+        });
+        excelData.push([]);
+      }
+      
+      if (data.insights_atrapalhou?.length) {
+        excelData.push(['O QUE PRECISA MELHORAR:']);
+        data.insights_atrapalhou.forEach((insight, index) => {
+          const [title, description] = insight.split(': ');
+          excelData.push([`${index + 1}. ${title}`, description || '', 'Crítico']);
+        });
+        excelData.push([]);
+      }
+    }
+
+    if (options.includeHighlights) {
+      excelData.push(['DESTAQUES DO PERÍODO']);
+      
+      if (data.melhor_atendimento_cliente) {
+        excelData.push(['MELHOR ATENDIMENTO:']);
+        excelData.push(['Cliente', data.melhor_atendimento_cliente]);
+        excelData.push(['Nota', `${data.melhor_atendimento_nota?.toFixed(1) || 0}/5`]);
+        excelData.push(['Observação', data.melhor_atendimento_observacao || '']);
+        excelData.push([]);
+      }
+      
+      if (data.atendimento_critico_cliente) {
+        excelData.push(['ATENDIMENTO CRÍTICO:']);
+        excelData.push(['Cliente', data.atendimento_critico_cliente]);
+        excelData.push(['Nota', `${data.atendimento_critico_nota?.toFixed(1) || 0}/5`]);
+        excelData.push(['Observação', data.atendimento_critico_observacao || '']);
+        excelData.push([]);
+      }
+    }
+
+    if (options.includeAutomation && data.automacao_sugerida?.length) {
+      excelData.push(['SUGESTÕES DE AUTOMAÇÃO']);
+      excelData.push(['Sugestão', 'Descrição', 'Impacto Esperado', 'Prioridade']);
+      
+      data.automacao_sugerida.forEach((automacao, index) => {
+        const [title, description] = automacao.split(': ');
+        const impact = index === 0 ? 'Alto' : index === 1 ? 'Médio' : 'Baixo';
+        const priority = index === 0 ? 'Alta' : index === 1 ? 'Média' : 'Baixa';
+        excelData.push([`${index + 1}. ${title}`, description || '', impact, priority]);
+      });
+      excelData.push([]);
+    }
+
+    if (options.includeActions && data.proximas_acoes?.length) {
+      excelData.push(['PRÓXIMAS AÇÕES RECOMENDADAS']);
+      excelData.push(['Ação', 'Status', 'Prazo', 'Prioridade', 'Responsável']);
+      
+      data.proximas_acoes.forEach((acao, index) => {
+        const match = acao.match(/^(.*?)\s*–\s*(.*?)\s*\((\d{4}-\d{2}-\d{2})\)$/);
+        if (match) {
+          const [, title, status, deadline] = match;
+          const priority = status === 'Feito' ? 'Baixa' : status === 'Em andamento' ? 'Média' : 'Alta';
+          excelData.push([title, status, deadline, priority, 'Equipe']);
+        } else {
+          excelData.push([acao, 'Pendente', 'A definir', 'Média', 'Equipe']);
+        }
+      });
+      excelData.push([]);
+    }
+
+    if (options.includeGoals) {
+      excelData.push(['METAS E PROGRESSO']);
+      excelData.push(['Meta', 'Progresso Atual', 'Objetivo', 'Status', 'Próximo Passo']);
+      
+      const goals = [
+        {
+          name: 'Taxa de Conversão',
+          current: data.taxa_conversao?.toFixed(1) || '0',
+          target: '30%',
+          status: (data.taxa_conversao || 0) >= 30 ? 'Atingida' : 'Em andamento',
+          nextStep: (data.taxa_conversao || 0) >= 30 ? 'Manter estratégias' : 'Otimizar funil de vendas'
+        },
+        {
+          name: 'Tempo de Resposta',
+          current: data.tempo_medio_resposta ? `${Math.floor(data.tempo_medio_resposta / 60)}m ${data.tempo_medio_resposta % 60}s` : '0s',
+          target: '< 2min',
+          status: (data.tempo_medio_resposta || 0) <= 120 ? 'Atingida' : 'Em andamento',
+          nextStep: (data.tempo_medio_resposta || 0) <= 120 ? 'Manter agilidade' : 'Implementar automações'
+        },
+        {
+          name: 'Nota de Qualidade',
+          current: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
+          target: '4.5/5',
+          status: (data.nota_media_qualidade || 0) >= 4.5 ? 'Atingida' : 'Em andamento',
+          nextStep: (data.nota_media_qualidade || 0) >= 4.5 ? 'Manter padrão' : 'Treinar equipe'
+        }
+      ];
+      
+      goals.forEach(goal => {
+        excelData.push([goal.name, goal.current, goal.target, goal.status, goal.nextStep]);
+      });
+      excelData.push([]);
+    }
+
+    // Footer
+    excelData.push(['RELATÓRIO GERADO AUTOMATICAMENTE']);
+    excelData.push(['MetricaWhats Analytics - Transformando atendimentos em resultados']);
+    excelData.push(['Para suporte técnico: contato@whatsappanalytics.com']);
+
+    // Converter para CSV (Excel-friendly)
+    const csvContent = excelData.map(row => 
+      row.map(cell => `"${cell?.replace(/"/g, '""') || ''}"`).join(',')
+    ).join('\n');
+
+    // Download com nome de arquivo Excel
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `relatorio-whatsapp-analytics-${new Date().toISOString().split('T')[0]}.xlsx`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
     toast({
-      title: "Exportação Excel",
-      description: "Funcionalidade em desenvolvimento. Exportando como CSV...",
+      title: "Excel Exportado",
+      description: "Relatório exportado em formato Excel. Abra no Microsoft Excel ou Google Sheets.",
     });
-    await exportToCSV(data, options);
   };
 
   const exportToPDF = async (data: DashboardData, options: ExportOptions) => {
