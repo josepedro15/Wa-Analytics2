@@ -139,9 +139,8 @@ export function useExportData() {
   };
 
   const exportToPDF = async (data: DashboardData, options: ExportOptions) => {
-    // Para PDF, vamos usar uma abordagem mais simples
     try {
-      // Criar conteúdo HTML para PDF
+      // Criar conteúdo HTML para PDF com design moderno
       let htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -149,126 +148,701 @@ export function useExportData() {
           <meta charset="utf-8">
           <title>Relatório WhatsApp Analytics</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 40px; }
-            h1 { color: #25D366; text-align: center; }
-            h2 { color: #333; border-bottom: 2px solid #25D366; padding-bottom: 5px; }
-            .metric { margin: 10px 0; }
-            .metric strong { color: #25D366; }
-            .insight { background: #f5f5f5; padding: 10px; margin: 5px 0; border-left: 4px solid #25D366; }
-            .highlight { background: #e8f5e8; padding: 15px; margin: 10px 0; border-radius: 5px; }
-            .critical { background: #ffe8e8; padding: 15px; margin: 10px 0; border-radius: 5px; }
-            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #25D366; color: white; }
-            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body { 
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+              line-height: 1.6;
+              color: #1f2937;
+              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+              min-height: 100vh;
+            }
+            
+            .container {
+              max-width: 1200px;
+              margin: 0 auto;
+              padding: 40px 20px;
+              background: white;
+              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+              border-radius: 16px;
+              margin-top: 20px;
+              margin-bottom: 20px;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 40px;
+              padding-bottom: 30px;
+              border-bottom: 3px solid #25D366;
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white;
+              padding: 30px;
+              border-radius: 12px;
+              margin: -40px -20px 40px -20px;
+            }
+            
+            .header h1 {
+              font-size: 2.5rem;
+              font-weight: 700;
+              margin-bottom: 10px;
+              text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            .header .subtitle {
+              font-size: 1.1rem;
+              opacity: 0.9;
+              font-weight: 400;
+            }
+            
+            .info-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 40px;
+              background: #f8fafc;
+              padding: 20px;
+              border-radius: 12px;
+              border: 1px solid #e2e8f0;
+            }
+            
+            .info-item {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+            
+            .info-item strong {
+              color: #25D366;
+              font-weight: 600;
+            }
+            
+            .section {
+              margin-bottom: 40px;
+              page-break-inside: avoid;
+            }
+            
+            .section-title {
+              font-size: 1.5rem;
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 20px;
+              padding-bottom: 10px;
+              border-bottom: 2px solid #25D366;
+              display: flex;
+              align-items: center;
+              gap: 10px;
+            }
+            
+            .metrics-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 20px;
+              margin-bottom: 30px;
+            }
+            
+            .metric-card {
+              background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+              border: 1px solid #e2e8f0;
+              border-radius: 12px;
+              padding: 20px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+              transition: transform 0.2s ease;
+            }
+            
+            .metric-card:hover {
+              transform: translateY(-2px);
+            }
+            
+            .metric-title {
+              font-size: 0.875rem;
+              font-weight: 500;
+              color: #6b7280;
+              margin-bottom: 8px;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+            
+            .metric-value {
+              font-size: 2rem;
+              font-weight: 700;
+              color: #25D366;
+              margin-bottom: 5px;
+            }
+            
+            .metric-description {
+              font-size: 0.875rem;
+              color: #9ca3af;
+            }
+            
+            .table-container {
+              background: white;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+              border: 1px solid #e2e8f0;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 0.875rem;
+            }
+            
+            th {
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white;
+              font-weight: 600;
+              padding: 15px 20px;
+              text-align: left;
+              font-size: 0.875rem;
+            }
+            
+            td {
+              padding: 15px 20px;
+              border-bottom: 1px solid #e2e8f0;
+              font-weight: 500;
+            }
+            
+            tr:nth-child(even) {
+              background: #f8fafc;
+            }
+            
+            tr:hover {
+              background: #f1f5f9;
+            }
+            
+            .insights-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              gap: 20px;
+            }
+            
+            .insight-card {
+              background: white;
+              border-radius: 12px;
+              padding: 20px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+              border: 1px solid #e2e8f0;
+              border-left: 4px solid #25D366;
+            }
+            
+            .insight-card.positive {
+              border-left-color: #10b981;
+              background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            }
+            
+            .insight-card.negative {
+              border-left-color: #ef4444;
+              background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+            }
+            
+            .insight-title {
+              font-weight: 600;
+              color: #1f2937;
+              margin-bottom: 10px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+            
+            .insight-content {
+              color: #6b7280;
+              font-size: 0.875rem;
+              line-height: 1.5;
+            }
+            
+            .highlights-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+              gap: 20px;
+            }
+            
+            .highlight-card {
+              background: white;
+              border-radius: 12px;
+              padding: 20px;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+              border: 1px solid #e2e8f0;
+            }
+            
+            .highlight-card.best {
+              border-left: 4px solid #10b981;
+              background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            }
+            
+            .highlight-card.critical {
+              border-left: 4px solid #ef4444;
+              background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+            }
+            
+            .highlight-header {
+              display: flex;
+              justify-content: between;
+              align-items: center;
+              margin-bottom: 15px;
+            }
+            
+            .highlight-title {
+              font-weight: 600;
+              color: #1f2937;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            }
+            
+            .highlight-badge {
+              background: #25D366;
+              color: white;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 0.75rem;
+              font-weight: 600;
+            }
+            
+            .highlight-badge.critical {
+              background: #ef4444;
+            }
+            
+            .highlight-info {
+              margin-bottom: 10px;
+            }
+            
+            .highlight-info strong {
+              color: #25D366;
+              font-weight: 600;
+            }
+            
+            .highlight-description {
+              color: #6b7280;
+              font-size: 0.875rem;
+              line-height: 1.5;
+            }
+            
+            .progress-bar {
+              width: 100%;
+              height: 8px;
+              background: #e2e8f0;
+              border-radius: 4px;
+              overflow: hidden;
+              margin: 10px 0;
+            }
+            
+            .progress-fill {
+              height: 100%;
+              background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
+              border-radius: 4px;
+              transition: width 0.3s ease;
+            }
+            
+            .footer {
+              margin-top: 60px;
+              padding-top: 30px;
+              border-top: 2px solid #e2e8f0;
+              text-align: center;
+              color: #6b7280;
+              font-size: 0.875rem;
+            }
+            
+            .footer-content {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              flex-wrap: wrap;
+              gap: 20px;
+            }
+            
+                         .footer-logo {
+               font-weight: 600;
+               color: #25D366;
+             }
+             
+             .status-badge {
+               padding: 4px 12px;
+               border-radius: 20px;
+               font-size: 0.75rem;
+               font-weight: 600;
+               text-transform: uppercase;
+               letter-spacing: 0.05em;
+             }
+             
+             .status-badge.positive {
+               background: #10b981;
+               color: white;
+             }
+             
+             .status-badge.negative {
+               background: #ef4444;
+               color: white;
+             }
+             
+             .status-badge.neutral {
+               background: #6b7280;
+               color: white;
+             }
+            
+            @media print {
+              body {
+                background: white;
+              }
+              .container {
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+              }
+              .header {
+                margin: 0 0 30px 0;
+                border-radius: 8px;
+              }
+            }
           </style>
         </head>
         <body>
-          <h1>📊 Relatório WhatsApp Analytics</h1>
-          <p><strong>Período:</strong> ${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}</p>
-          <p><strong>Gerado em:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+          <div class="container">
+            <div class="header">
+              <h1>📊 Relatório WhatsApp Analytics</h1>
+              <div class="subtitle">Análise completa dos atendimentos e performance</div>
+            </div>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <strong>📅 Período:</strong> ${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}
+              </div>
+              <div class="info-item">
+                <strong>🕒 Gerado em:</strong> ${new Date().toLocaleString('pt-BR')}
+              </div>
+            </div>
       `;
 
       if (options.includeMetrics) {
         htmlContent += `
-          <h2>📈 Métricas Principais</h2>
-          <div class="metric"><strong>Total de Atendimentos:</strong> ${data.total_atendimentos?.toLocaleString() || 0}</div>
-          <div class="metric"><strong>Taxa de Conversão:</strong> ${data.taxa_conversao?.toFixed(1) || 0}%</div>
-          <div class="metric"><strong>Tempo Médio de Resposta:</strong> ${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s</div>
-          <div class="metric"><strong>Nota Média de Qualidade:</strong> ${data.nota_media_qualidade?.toFixed(1) || 0}/5</div>
+          <div class="section">
+            <h2 class="section-title">📈 Métricas Principais</h2>
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-title">Total de Atendimentos</div>
+                <div class="metric-value">${data.total_atendimentos?.toLocaleString() || 0}</div>
+                <div class="metric-description">Conversas realizadas no período</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">Taxa de Conversão</div>
+                <div class="metric-value">${data.taxa_conversao?.toFixed(1) || 0}%</div>
+                <div class="metric-description">Percentual de vendas realizadas</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">Tempo Médio de Resposta</div>
+                <div class="metric-value">${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s</div>
+                <div class="metric-description">Velocidade média de resposta</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-title">Nota Média de Qualidade</div>
+                <div class="metric-value">${data.nota_media_qualidade?.toFixed(1) || 0}/5</div>
+                <div class="metric-description">Satisfação média dos clientes</div>
+              </div>
+            </div>
+          </div>
         `;
       }
 
       if (options.includeIntentions) {
         htmlContent += `
-          <h2>🎯 Intenções dos Clientes</h2>
-          <table>
-            <tr><th>Intenção</th><th>Percentual</th></tr>
-            <tr><td>Compra</td><td>${data.intencao_compra?.toFixed(1) || 0}%</td></tr>
-            <tr><td>Dúvida Geral</td><td>${data.intencao_duvida_geral?.toFixed(1) || 0}%</td></tr>
-            <tr><td>Reclamação</td><td>${data.intencao_reclamacao?.toFixed(1) || 0}%</td></tr>
-            <tr><td>Suporte</td><td>${data.intencao_suporte?.toFixed(1) || 0}%</td></tr>
-            <tr><td>Orçamento</td><td>${data.intencao_orcamento?.toFixed(1) || 0}%</td></tr>
-          </table>
+          <div class="section">
+            <h2 class="section-title">🎯 Intenções dos Clientes</h2>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Intenção</th>
+                    <th>Percentual</th>
+                    <th>Progresso</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>🛒 Compra</td>
+                    <td>${data.intencao_compra?.toFixed(1) || 0}%</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${data.intencao_compra || 0}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>❓ Dúvida Geral</td>
+                    <td>${data.intencao_duvida_geral?.toFixed(1) || 0}%</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${data.intencao_duvida_geral || 0}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>⚠️ Reclamação</td>
+                    <td>${data.intencao_reclamacao?.toFixed(1) || 0}%</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${data.intencao_reclamacao || 0}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>🛠️ Suporte</td>
+                    <td>${data.intencao_suporte?.toFixed(1) || 0}%</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${data.intencao_suporte || 0}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>💰 Orçamento</td>
+                    <td>${data.intencao_orcamento?.toFixed(1) || 0}%</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${data.intencao_orcamento || 0}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         `;
       }
 
-      if (options.includeInsights && data.insights_funcionou?.length) {
+      if (options.includeInsights && (data.insights_funcionou?.length || data.insights_atrapalhou?.length)) {
         htmlContent += `
-          <h2>✅ O que Funcionou</h2>
+          <div class="section">
+            <h2 class="section-title">💡 Insights de Performance</h2>
+            <div class="insights-grid">
         `;
-        data.insights_funcionou.forEach(insight => {
-          htmlContent += `<div class="insight">${insight}</div>`;
-        });
-      }
-
-      if (options.includeInsights && data.insights_atrapalhou?.length) {
+        
+        if (data.insights_funcionou?.length) {
+          htmlContent += `
+            <div class="insight-card positive">
+              <div class="insight-title">✅ O que Funcionou</div>
+          `;
+          data.insights_funcionou.forEach(insight => {
+            const [title, description] = insight.split(': ');
+            htmlContent += `
+              <div class="insight-content">
+                <strong>${title}:</strong> ${description}
+              </div>
+            `;
+          });
+          htmlContent += `</div>`;
+        }
+        
+        if (data.insights_atrapalhou?.length) {
+          htmlContent += `
+            <div class="insight-card negative">
+              <div class="insight-title">❌ O que Atrapalhou</div>
+          `;
+          data.insights_atrapalhou.forEach(insight => {
+            const [title, description] = insight.split(': ');
+            htmlContent += `
+              <div class="insight-content">
+                <strong>${title}:</strong> ${description}
+              </div>
+            `;
+          });
+          htmlContent += `</div>`;
+        }
+        
         htmlContent += `
-          <h2>❌ O que Atrapalhou</h2>
+            </div>
+          </div>
         `;
-        data.insights_atrapalhou.forEach(insight => {
-          htmlContent += `<div class="insight">${insight}</div>`;
-        });
       }
 
       if (options.includeHighlights) {
-        htmlContent += `<h2>🏆 Destaques do Período</h2>`;
+        htmlContent += `
+          <div class="section">
+            <h2 class="section-title">🏆 Destaques do Período</h2>
+            <div class="highlights-grid">
+        `;
+        
         if (data.melhor_atendimento_cliente) {
           htmlContent += `
-            <div class="highlight">
-              <h3>Melhor Atendimento</h3>
-              <p><strong>Cliente:</strong> ${data.melhor_atendimento_cliente}</p>
-              <p><strong>Nota:</strong> ${data.melhor_atendimento_nota?.toFixed(1) || 0}/5</p>
-              <p><strong>Observação:</strong> ${data.melhor_atendimento_observacao || ''}</p>
+            <div class="highlight-card best">
+              <div class="highlight-header">
+                <div class="highlight-title">⭐ Melhor Atendimento</div>
+                <div class="highlight-badge">${data.melhor_atendimento_nota?.toFixed(1) || 0}/5</div>
+              </div>
+              <div class="highlight-info">
+                <strong>Cliente:</strong> ${data.melhor_atendimento_cliente}
+              </div>
+              <div class="highlight-description">
+                ${data.melhor_atendimento_observacao || ''}
+              </div>
             </div>
           `;
         }
+        
         if (data.atendimento_critico_cliente) {
           htmlContent += `
-            <div class="critical">
-              <h3>Atendimento Crítico</h3>
-              <p><strong>Cliente:</strong> ${data.atendimento_critico_cliente}</p>
-              <p><strong>Nota:</strong> ${data.atendimento_critico_nota?.toFixed(1) || 0}/5</p>
-              <p><strong>Observação:</strong> ${data.atendimento_critico_observacao || ''}</p>
+            <div class="highlight-card critical">
+              <div class="highlight-header">
+                <div class="highlight-title">⚠️ Atendimento Crítico</div>
+                <div class="highlight-badge critical">${data.atendimento_critico_nota?.toFixed(1) || 0}/5</div>
+              </div>
+              <div class="highlight-info">
+                <strong>Cliente:</strong> ${data.atendimento_critico_cliente}
+              </div>
+              <div class="highlight-description">
+                ${data.atendimento_critico_observacao || ''}
+              </div>
             </div>
           `;
         }
+        
+        if (!data.melhor_atendimento_cliente && !data.atendimento_critico_cliente) {
+          htmlContent += `
+            <div class="highlight-card">
+              <div class="highlight-title">📊 Nenhum destaque registrado</div>
+              <div class="highlight-description">
+                Os destaques aparecerão conforme os dados forem analisados e registrados.
+              </div>
+            </div>
+          `;
+        }
+        
+        htmlContent += `
+            </div>
+          </div>
+        `;
       }
 
       if (options.includeAutomation && data.automacao_sugerida?.length) {
         htmlContent += `
-          <h2>🤖 Automação Sugerida</h2>
+          <div class="section">
+            <h2 class="section-title">🤖 Automação Sugerida</h2>
+            <div class="insights-grid">
         `;
         data.automacao_sugerida.forEach(automacao => {
-          htmlContent += `<div class="insight">${automacao}</div>`;
+          const [title, description] = automacao.split(': ');
+          htmlContent += `
+            <div class="insight-card">
+              <div class="insight-title">⚡ ${title}</div>
+              <div class="insight-content">${description}</div>
+            </div>
+          `;
         });
+        htmlContent += `
+            </div>
+          </div>
+        `;
       }
 
       if (options.includeActions && data.proximas_acoes?.length) {
         htmlContent += `
-          <h2>📋 Próximas Ações</h2>
+          <div class="section">
+            <h2 class="section-title">📋 Próximas Ações</h2>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ação</th>
+                    <th>Status</th>
+                    <th>Prazo</th>
+                  </tr>
+                </thead>
+                <tbody>
         `;
         data.proximas_acoes.forEach(acao => {
-          htmlContent += `<div class="insight">${acao}</div>`;
+          const match = acao.match(/^(.*?)\s*–\s*(.*?)\s*\((\d{4}-\d{2}-\d{2})\)$/);
+          if (match) {
+            const [, title, status, deadline] = match;
+            const statusClass = status === 'Feito' ? 'positive' : status === 'Em andamento' ? 'neutral' : 'negative';
+            htmlContent += `
+              <tr>
+                <td>${title}</td>
+                <td><span class="status-badge ${statusClass}">${status}</span></td>
+                <td>${deadline}</td>
+              </tr>
+            `;
+          } else {
+            htmlContent += `
+              <tr>
+                <td>${acao}</td>
+                <td><span class="status-badge neutral">Pendente</span></td>
+                <td>-</td>
+              </tr>
+            `;
+          }
         });
+        htmlContent += `
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
       }
 
       if (options.includeGoals) {
         htmlContent += `
-          <h2>🎯 Metas e Progresso</h2>
-          <table>
-            <tr><th>Meta</th><th>Progresso</th></tr>
-            <tr><td>Taxa de Conversão</td><td>${data.meta_taxa_conversao || ''}</td></tr>
-            <tr><td>Tempo de Resposta</td><td>${data.meta_tempo_resposta || ''}</td></tr>
-            <tr><td>Nota de Qualidade</td><td>${data.meta_nota_qualidade || ''}</td></tr>
-          </table>
+          <div class="section">
+            <h2 class="section-title">🎯 Metas e Progresso</h2>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Meta</th>
+                    <th>Progresso Atual</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>📈 Taxa de Conversão</td>
+                    <td>${data.meta_taxa_conversao || 'Não definida'}</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${((data.taxa_conversao || 0) / 30) * 100}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>⏱️ Tempo de Resposta</td>
+                    <td>${data.meta_tempo_resposta || 'Não definida'}</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.max(0, 100 - ((data.tempo_medio_resposta || 0) / 120) * 100)}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>⭐ Nota de Qualidade</td>
+                    <td>${data.meta_nota_qualidade || 'Não definida'}</td>
+                    <td>
+                      <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${((data.nota_media_qualidade || 0) / 4.5) * 100}%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         `;
       }
 
       htmlContent += `
+          </div>
+          
           <div class="footer">
-            <p>Relatório gerado automaticamente pelo WhatsApp Analytics</p>
-            <p>© 2024 MetricaWhats - Todos os direitos reservados</p>
+            <div class="footer-content">
+              <div class="footer-logo">MetricaWhats Analytics</div>
+              <div>
+                <p>Relatório gerado automaticamente</p>
+                <p>© 2024 MetricaWhats - Todos os direitos reservados</p>
+              </div>
+            </div>
           </div>
         </body>
         </html>
