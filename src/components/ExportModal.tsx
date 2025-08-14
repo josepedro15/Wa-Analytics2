@@ -4,11 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Download, FileText, FileSpreadsheet, File } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Download, FileText, FileSpreadsheet, File } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExportData, ExportFormat } from '@/hooks/useExportData';
 import { DashboardData } from '@/hooks/useDashboardData';
@@ -25,8 +21,8 @@ export function ExportModal({ data, trigger }: ExportModalProps) {
     from: Date | undefined;
     to: Date | undefined;
   }>({
-    from: data ? new Date(data.periodo_inicio) : undefined,
-    to: data ? new Date(data.periodo_fim) : undefined,
+    from: data?.periodo_inicio ? new Date(data.periodo_inicio) : undefined,
+    to: data?.periodo_fim ? new Date(data.periodo_fim) : undefined,
   });
   
   const [options, setOptions] = useState({
@@ -47,8 +43,8 @@ export function ExportModal({ data, trigger }: ExportModalProps) {
     await exportData(data, {
       format,
       dateRange: {
-        start: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : data.periodo_inicio,
-        end: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : data.periodo_fim,
+        start: data.periodo_inicio,
+        end: data.periodo_fim,
       },
       ...options,
     });
@@ -109,54 +105,11 @@ export function ExportModal({ data, trigger }: ExportModalProps) {
           {/* Período */}
           <div className="space-y-2">
             <Label>Período do Relatório</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !dateRange.from && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.from ? format(dateRange.from, "dd/MM/yyyy", { locale: ptBR }) : "Data inicial"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.from}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "justify-start text-left font-normal",
-                      !dateRange.to && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.to ? format(dateRange.to, "dd/MM/yyyy", { locale: ptBR }) : "Data final"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateRange.to}
-                    onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="text-sm text-muted-foreground">
+              {data?.periodo_inicio && data?.periodo_fim 
+                ? `${data.periodo_inicio} a ${data.periodo_fim}`
+                : 'Período atual'
+              }
             </div>
           </div>
 
