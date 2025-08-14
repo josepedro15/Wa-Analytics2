@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Download, FileText, FileSpreadsheet, FilePdf } from 'lucide-react';
+import { CalendarIcon, Download, FileText, FileSpreadsheet, File } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -59,7 +59,7 @@ export function ExportModal({ data, trigger }: ExportModalProps) {
   const formatOptions = [
     { value: 'csv', label: 'CSV', icon: FileText },
     { value: 'excel', label: 'Excel', icon: FileSpreadsheet },
-    { value: 'pdf', label: 'PDF', icon: FilePdf },
+    { value: 'pdf', label: 'PDF', icon: File },
   ];
 
   const getFormatIcon = (formatValue: ExportFormat) => {
