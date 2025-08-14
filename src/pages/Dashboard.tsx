@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { ExportModal } from '@/components/ExportModal';
+import { FilterModal } from '@/components/FilterModal';
 import { 
   MessageSquare, 
   TrendingUp, 
@@ -251,14 +253,27 @@ export default function Dashboard() {
               <p className="text-muted-foreground">Análise completa dos atendimentos do WhatsApp</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filtrar
-              </Button>
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-              </Button>
+              <FilterModal 
+                onFilterChange={(dateRange) => {
+                  // TODO: Implementar filtro de dados por período
+                  console.log('Filtrar por período:', dateRange);
+                }}
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filtrar
+                  </Button>
+                }
+              />
+              <ExportModal 
+                data={dashboardData} 
+                trigger={
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar
+                  </Button>
+                }
+              />
             </div>
           </div>
 
