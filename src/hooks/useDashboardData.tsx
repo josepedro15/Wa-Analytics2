@@ -49,11 +49,11 @@ export interface DashboardData {
   updated_at: string;
 }
 
-export function useDashboardData(dateFilter?: { from: Date; to: Date }) {
+export function useDashboardData(selectedDate?: Date) {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['dashboard-data', user?.id, dateFilter?.from, dateFilter?.to],
+    queryKey: ['dashboard-data', user?.id, selectedDate?.toISOString().split('T')[0]],
     queryFn: async (): Promise<DashboardData | null> => {
       if (!user) {
         throw new Error('Usuário não autenticado');
@@ -65,14 +65,15 @@ export function useDashboardData(dateFilter?: { from: Date; to: Date }) {
         .eq('user_id', user.id);
 
       // Aplicar filtro de data se fornecido
-      if (dateFilter?.from) {
-        query = query.gte('created_at', dateFilter.from.toISOString());
-      }
-      if (dateFilter?.to) {
-        // Adicionar 23:59:59 ao final do dia para incluir todo o dia
-        const endOfDay = new Date(dateFilter.to);
+      if (selectedDate) {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(selectedDate);
         endOfDay.setHours(23, 59, 59, 999);
-        query = query.lte('created_at', endOfDay.toISOString());
+        
+        query = query.gte('created_at', startOfDay.toISOString())
+                    .lte('created_at', endOfDay.toISOString());
       }
 
       const { data: userData, error: userError } = await query

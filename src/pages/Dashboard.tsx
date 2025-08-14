@@ -46,7 +46,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [dateFilter, setDateFilter] = useState<{ from: Date; to: Date } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
   // Buscar dados do dashboard
   const { 
@@ -54,7 +54,7 @@ export default function Dashboard() {
     isLoading: isLoadingData, 
     error: dataError,
     refetch 
-  } = useDashboardData(dateFilter || undefined);
+  } = useDashboardData(selectedDate || undefined);
 
   useEffect(() => {
     if (!user) {
@@ -252,35 +252,35 @@ export default function Dashboard() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Dashboard Analítico</h1>
               <p className="text-muted-foreground">Análise completa dos atendimentos do WhatsApp</p>
-              {dateFilter && (
+              {selectedDate && (
                 <div className="mt-2 flex items-center gap-2">
                   <div className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-md border border-primary/20">
-                    Filtro: {dateFilter.from.toLocaleDateString('pt-BR')} a {dateFilter.to.toLocaleDateString('pt-BR')}
+                    Relatório de: {selectedDate.toLocaleDateString('pt-BR')}
                   </div>
                 </div>
               )}
             </div>
             <div className="flex gap-2">
               <FilterModal 
-                onFilterChange={(dateRange) => {
-                  setDateFilter(dateRange);
-                  if (dateRange) {
+                onFilterChange={(date) => {
+                  setSelectedDate(date);
+                  if (date) {
                     toast({
-                      title: "Filtro aplicado",
-                      description: `Dados filtrados de ${dateRange.from.toLocaleDateString('pt-BR')} a ${dateRange.to.toLocaleDateString('pt-BR')}`,
+                      title: "Data selecionada",
+                      description: `Exibindo relatório de ${date.toLocaleDateString('pt-BR')}`,
                     });
                   } else {
                     toast({
                       title: "Filtro removido",
-                      description: "Exibindo todos os dados disponíveis",
+                      description: "Exibindo relatório mais recente",
                     });
                   }
                 }}
-                currentFilter={dateFilter}
+                currentDate={selectedDate}
                 trigger={
                   <Button variant="outline" size="sm">
                     <Filter className="h-4 w-4 mr-2" />
-                    {dateFilter ? 'Filtrado' : 'Filtrar'}
+                    {selectedDate ? 'Filtrado' : 'Filtrar'}
                   </Button>
                 }
               />

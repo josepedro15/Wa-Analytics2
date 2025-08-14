@@ -7,36 +7,26 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface FilterModalProps {
-  onFilterChange?: (dateRange: { from: Date; to: Date } | null) => void;
+  onFilterChange?: (selectedDate: Date | null) => void;
   trigger?: React.ReactNode;
-  currentFilter?: { from: Date; to: Date } | null;
+  currentDate?: Date | null;
 }
 
-export function FilterModal({ onFilterChange, trigger, currentFilter }: FilterModalProps) {
+export function FilterModal({ onFilterChange, trigger, currentDate }: FilterModalProps) {
   const [open, setOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: currentFilter?.from || new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    to: currentFilter?.to || new Date(),
-  });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    currentDate || new Date()
+  );
 
   const handleApplyFilter = () => {
-    if (dateRange.from && dateRange.to && onFilterChange) {
-      onFilterChange({
-        from: dateRange.from,
-        to: dateRange.to,
-      });
+    if (selectedDate && onFilterChange) {
+      onFilterChange(selectedDate);
     }
     setOpen(false);
   };
 
   const handleReset = () => {
-    setDateRange({
-      from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-      to: new Date(),
-    });
+    setSelectedDate(new Date());
     if (onFilterChange) {
       onFilterChange(null); // Remove o filtro
     }
@@ -68,20 +58,16 @@ export function FilterModal({ onFilterChange, trigger, currentFilter }: FilterMo
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Período */}
+          {/* Seleção de Data */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Filtrar por Data de Criação</label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-muted-foreground">Data Inicial</label>
-                <div className="mt-1 p-2 border rounded-md bg-muted/50">
-                  {dateRange.from ? format(dateRange.from, "dd/MM/yyyy", { locale: ptBR }) : "Selecione"}
+            <label className="text-sm font-medium">Selecionar Data do Relatório</label>
+            <div className="p-3 border rounded-md bg-muted/50">
+              <div className="text-center">
+                <div className="text-lg font-semibold">
+                  {selectedDate ? format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : "Selecione uma data"}
                 </div>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Data Final</label>
-                <div className="mt-1 p-2 border rounded-md bg-muted/50">
-                  {dateRange.to ? format(dateRange.to, "dd/MM/yyyy", { locale: ptBR }) : "Selecione"}
+                <div className="text-sm text-muted-foreground mt-1">
+                  {selectedDate ? format(selectedDate, "EEEE", { locale: ptBR }) : ""}
                 </div>
               </div>
             </div>
@@ -89,57 +75,57 @@ export function FilterModal({ onFilterChange, trigger, currentFilter }: FilterMo
 
           {/* Presets rápidos */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Períodos Rápidos</label>
+            <label className="text-sm font-medium">Datas Rápidas</label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setDateRange({
-                  from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-                  to: new Date(),
-                })}
+                onClick={() => setSelectedDate(new Date())}
               >
-                Este Mês
+                Hoje
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setDateRange({
-                  from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
-                  to: new Date(new Date().getFullYear(), new Date().getMonth(), 0),
-                })}
+                onClick={() => {
+                  const yesterday = new Date();
+                  yesterday.setDate(yesterday.getDate() - 1);
+                  setSelectedDate(yesterday);
+                }}
               >
-                Mês Passado
+                Ontem
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setDateRange({
-                  from: new Date(new Date().getFullYear(), 0, 1),
-                  to: new Date(),
-                })}
+                onClick={() => {
+                  const lastWeek = new Date();
+                  lastWeek.setDate(lastWeek.getDate() - 7);
+                  setSelectedDate(lastWeek);
+                }}
               >
-                Este Ano
+                Há 7 dias
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setDateRange({
-                  from: new Date(new Date().setDate(new Date().getDate() - 7)),
-                  to: new Date(),
-                })}
+                onClick={() => {
+                  const lastMonth = new Date();
+                  lastMonth.setDate(lastMonth.getDate() - 30);
+                  setSelectedDate(lastMonth);
+                }}
               >
-                Últimos 7 dias
+                Há 30 dias
               </Button>
             </div>
           </div>
 
           {/* Status do filtro atual */}
-          {currentFilter && (
+          {currentDate && (
             <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-sm font-medium text-primary">Filtro Ativo</p>
+              <p className="text-sm font-medium text-primary">Data Selecionada</p>
               <p className="text-xs text-muted-foreground">
-                {format(currentFilter.from, "dd/MM/yyyy", { locale: ptBR })} a {format(currentFilter.to, "dd/MM/yyyy", { locale: ptBR })}
+                {format(currentDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             </div>
           )}
@@ -153,7 +139,7 @@ export function FilterModal({ onFilterChange, trigger, currentFilter }: FilterMo
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleApplyFilter} disabled={!dateRange.from || !dateRange.to}>
+              <Button onClick={handleApplyFilter} disabled={!selectedDate}>
                 Aplicar Filtro
               </Button>
             </div>
