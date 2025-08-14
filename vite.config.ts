@@ -21,13 +21,23 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: 'dist',
+    sourcemap: mode === 'development',
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-dropdown-menu'],
+          charts: ['recharts'],
+          utils: ['date-fns', 'zod', 'clsx'],
+          icons: ['lucide-react'],
         },
       },
     },
+    chunkSizeWarningLimit: 1000,
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
   },
 }));
+
