@@ -16,12 +16,9 @@ const Hero = () => {
             Analise conversas, identifique oportunidades e otimize suas vendas com 
             inteligência artificial. Aumente sua conversão em até 40%.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button asChild size="lg" className="text-lg px-8 py-6">
-              <a href="/auth">Começar Análise Grátis</a>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              Ver Demo ao Vivo
+              <a href="#contact">Fale Conosco</a>
             </Button>
           </div>
         </div>

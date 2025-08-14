@@ -84,7 +84,7 @@ const HowItWorks = () => {
             Pronto para transformar seus atendimentos em resultados?
           </p>
           <button className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-            Começar Agora - É Grátis
+            Fale Conosco
           </button>
         </div>
       </div>

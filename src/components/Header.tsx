@@ -34,7 +34,7 @@ const Header = () => {
             <a href="/auth">Entrar</a>
           </Button>
           <Button asChild>
-            <a href="/auth">Começar Grátis</a>
+            <a href="#contact">Falar com um Especialista</a>
           </Button>
         </div>
 
@@ -68,7 +68,7 @@ const Header = () => {
                 <a href="/auth">Entrar</a>
               </Button>
               <Button asChild className="w-full">
-                <a href="/auth">Começar Grátis</a>
+                <a href="#contact">Falar com um Especialista</a>
               </Button>
             </div>
           </nav>
