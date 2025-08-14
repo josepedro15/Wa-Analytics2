@@ -49,22 +49,31 @@ export interface DashboardData {
   updated_at: string;
 }
 
+export interface DashboardDataWithComparison extends DashboardData {
+  comparison?: {
+    total_atendimentos_change: number;
+    taxa_conversao_change: number;
+    tempo_medio_resposta_change: number;
+    nota_media_qualidade_change: number;
+  };
+}
+
 export function useDashboardData(selectedDate?: Date) {
   const { user } = useAuth();
   
   return useQuery({
     queryKey: ['dashboard-data', user?.id, selectedDate?.toISOString().split('T')[0]],
-    queryFn: async (): Promise<DashboardData | null> => {
+    queryFn: async (): Promise<DashboardDataWithComparison | null> => {
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
-      let query = supabase
+      // Buscar dados do dia selecionado
+      let currentDayQuery = supabase
         .from('dashboard_data')
         .select('*')
         .eq('user_id', user.id);
 
-      // Aplicar filtro de data se fornecido
       if (selectedDate) {
         const startOfDay = new Date(selectedDate);
         startOfDay.setHours(0, 0, 0, 0);
@@ -72,47 +81,134 @@ export function useDashboardData(selectedDate?: Date) {
         const endOfDay = new Date(selectedDate);
         endOfDay.setHours(23, 59, 59, 999);
         
-        query = query.gte('created_at', startOfDay.toISOString())
-                    .lte('created_at', endOfDay.toISOString());
+        currentDayQuery = currentDayQuery.gte('created_at', startOfDay.toISOString())
+                                        .lte('created_at', endOfDay.toISOString());
       }
 
-      const { data: userData, error: userError } = await query
+      const { data: currentData, error: currentError } = await currentDayQuery
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (userData) {
-        return userData;
-      }
-
-      if (userError && userError.code !== 'PGRST116') {
-        throw userError;
+      if (currentError && currentError.code !== 'PGRST116') {
+        throw currentError;
       }
 
       // Se não há dados do usuário, busca dados de exemplo
-      const { data: sampleData, error: sampleError } = await supabase
+      if (!currentData) {
+        const { data: sampleData, error: sampleError } = await supabase
+          .from('dashboard_data')
+          .select('*')
+          .eq('user_id', '00000000-0000-0000-0000-000000000000')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (sampleError) {
+          if (sampleError.code === 'PGRST116') {
+            return null;
+          }
+          throw sampleError;
+        }
+
+        if (sampleData) {
+          const sampleWithComparison = { ...sampleData, user_id: user.id };
+          return await addComparisonData(sampleWithComparison, user.id, selectedDate);
+        }
+        return null;
+      }
+
+      // Buscar dados do dia anterior para comparação
+      const previousDate = selectedDate ? new Date(selectedDate) : new Date();
+      previousDate.setDate(previousDate.getDate() - 1);
+      
+      const startOfPreviousDay = new Date(previousDate);
+      startOfPreviousDay.setHours(0, 0, 0, 0);
+      
+      const endOfPreviousDay = new Date(previousDate);
+      endOfPreviousDay.setHours(23, 59, 59, 999);
+
+      const { data: previousData } = await supabase
         .from('dashboard_data')
         .select('*')
-        .eq('user_id', '00000000-0000-0000-0000-000000000000')
+        .eq('user_id', user.id)
+        .gte('created_at', startOfPreviousDay.toISOString())
+        .lte('created_at', endOfPreviousDay.toISOString())
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (sampleError) {
-        if (sampleError.code === 'PGRST116') {
-          // No sample data found - return null
-          return null;
-        }
-        throw sampleError;
-      }
-
-      // Retorna os dados de exemplo, mas com o user_id do usuário atual
-      return sampleData ? { ...sampleData, user_id: user.id } : null;
+      // Adicionar dados de comparação
+      const dataWithComparison = await addComparisonData(currentData, user.id, selectedDate, previousData);
+      return dataWithComparison;
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });
+}
+
+// Função auxiliar para calcular comparações
+async function addComparisonData(
+  currentData: DashboardData, 
+  userId: string, 
+  selectedDate?: Date, 
+  previousData?: DashboardData | null
+): Promise<DashboardDataWithComparison> {
+  
+  // Se não há dados anteriores, usar dados de exemplo ou zeros
+  if (!previousData) {
+    const { data: samplePreviousData } = await supabase
+      .from('dashboard_data')
+      .select('*')
+      .eq('user_id', '00000000-0000-0000-0000-000000000000')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    previousData = samplePreviousData || {
+      total_atendimentos: 0,
+      taxa_conversao: 0,
+      tempo_medio_resposta: 0,
+      nota_media_qualidade: 0,
+    } as DashboardData;
+  }
+
+  // Calcular mudanças percentuais
+  const calculateChange = (current: number | null, previous: number | null): number => {
+    if (!current || !previous) return 0;
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  const calculateTimeChange = (current: number | null, previous: number | null): number => {
+    if (!current || !previous) return 0;
+    return current - previous; // Diferença em segundos
+  };
+
+  const comparison = {
+    total_atendimentos_change: calculateChange(
+      currentData.total_atendimentos, 
+      previousData.total_atendimentos
+    ),
+    taxa_conversao_change: calculateChange(
+      currentData.taxa_conversao, 
+      previousData.taxa_conversao
+    ),
+    tempo_medio_resposta_change: calculateTimeChange(
+      currentData.tempo_medio_resposta, 
+      previousData.tempo_medio_resposta
+    ),
+    nota_media_qualidade_change: calculateChange(
+      currentData.nota_media_qualidade, 
+      previousData.nota_media_qualidade
+    ),
+  };
+
+  return {
+    ...currentData,
+    comparison,
+  };
 }
 
 // Função para criar dados iniciais do dashboard para um usuário

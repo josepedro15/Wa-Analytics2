@@ -86,13 +86,40 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  // Dados reais do dashboard com melhor estrutura
+  // Função para formatar mudança de tempo
+  const formatTimeChange = (seconds: number): string => {
+    const absSeconds = Math.abs(seconds);
+    const minutes = Math.floor(absSeconds / 60);
+    const remainingSeconds = absSeconds % 60;
+    
+    if (minutes > 0) {
+      return `${seconds > 0 ? '+' : '-'}${minutes}m ${remainingSeconds}s`;
+    }
+    return `${seconds > 0 ? '+' : '-'}${remainingSeconds}s`;
+  };
+
+  // Função para determinar tendência baseada na mudança
+  const getTrend = (change: number, metric: string): 'up' | 'down' | 'neutral' => {
+    if (change === 0) return 'neutral';
+    
+    // Para tempo de resposta, menor é melhor
+    if (metric === 'tempo') {
+      return change < 0 ? 'up' : 'down';
+    }
+    
+    // Para outros, maior é melhor
+    return change > 0 ? 'up' : 'down';
+  };
+
+  // Dados reais do dashboard com comparação do dia anterior
   const metricsData: MetricCard[] = [
     {
       title: "Total de Atendimentos",
       value: dashboardData?.total_atendimentos?.toLocaleString() || "0",
-      change: "+12%",
-      trend: "up",
+      change: dashboardData?.comparison 
+        ? `${dashboardData.comparison.total_atendimentos_change > 0 ? '+' : ''}${dashboardData.comparison.total_atendimentos_change.toFixed(1)}%`
+        : "0%",
+      trend: getTrend(dashboardData?.comparison?.total_atendimentos_change || 0, 'atendimentos'),
       icon: <MessageSquare className="h-5 w-5" />,
       color: "from-blue-500 to-blue-600",
       description: "Conversas realizadas no período"
@@ -100,8 +127,10 @@ export default function Dashboard() {
     {
       title: "Taxa de Conversão",
       value: `${dashboardData?.taxa_conversao?.toFixed(1) || 0}%`,
-      change: "+3.2%",
-      trend: "up",
+      change: dashboardData?.comparison 
+        ? `${dashboardData.comparison.taxa_conversao_change > 0 ? '+' : ''}${dashboardData.comparison.taxa_conversao_change.toFixed(1)}%`
+        : "0%",
+      trend: getTrend(dashboardData?.comparison?.taxa_conversao_change || 0, 'taxa'),
       icon: <TrendingUp className="h-5 w-5" />,
       color: "from-green-500 to-green-600",
       description: "Percentual de vendas realizadas"
@@ -111,8 +140,10 @@ export default function Dashboard() {
       value: dashboardData?.tempo_medio_resposta 
         ? `${Math.floor(dashboardData.tempo_medio_resposta / 60)}m ${dashboardData.tempo_medio_resposta % 60}s`
         : "0s",
-      change: "-15s",
-      trend: "up",
+      change: dashboardData?.comparison 
+        ? formatTimeChange(dashboardData.comparison.tempo_medio_resposta_change)
+        : "0s",
+      trend: getTrend(dashboardData?.comparison?.tempo_medio_resposta_change || 0, 'tempo'),
       icon: <Clock className="h-5 w-5" />,
       color: "from-purple-500 to-purple-600",
       description: "Velocidade média de resposta"
@@ -120,8 +151,10 @@ export default function Dashboard() {
     {
       title: "Nota Média de Qualidade",
       value: `${dashboardData?.nota_media_qualidade?.toFixed(1) || 0}/5`,
-      change: "+0.3",
-      trend: "up",
+      change: dashboardData?.comparison 
+        ? `${dashboardData.comparison.nota_media_qualidade_change > 0 ? '+' : ''}${dashboardData.comparison.nota_media_qualidade_change.toFixed(1)}`
+        : "0",
+      trend: getTrend(dashboardData?.comparison?.nota_media_qualidade_change || 0, 'nota'),
       icon: <Star className="h-5 w-5" />,
       color: "from-yellow-500 to-yellow-600",
       description: "Satisfação média dos clientes"
@@ -385,7 +418,7 @@ export default function Dashboard() {
                     {metric.trend === 'up' && <TrendingUp className="h-3 w-3" />}
                     {metric.trend === 'down' && <TrendingDown className="h-3 w-3" />}
                     <span className="font-medium">{metric.change}</span>
-                    <span className="text-muted-foreground">vs mês anterior</span>
+                    <span className="text-muted-foreground">vs dia anterior</span>
                   </div>
                 </CardContent>
               </Card>
