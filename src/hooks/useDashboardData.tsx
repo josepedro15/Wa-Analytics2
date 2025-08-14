@@ -49,21 +49,33 @@ export interface DashboardData {
   updated_at: string;
 }
 
-export function useDashboardData() {
+export function useDashboardData(dateFilter?: { from: Date; to: Date }) {
   const { user } = useAuth();
   
   return useQuery({
-    queryKey: ['dashboard-data', user?.id],
+    queryKey: ['dashboard-data', user?.id, dateFilter?.from, dateFilter?.to],
     queryFn: async (): Promise<DashboardData | null> => {
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
 
-      // Primeiro, tenta buscar dados do usuário
-      const { data: userData, error: userError } = await supabase
+      let query = supabase
         .from('dashboard_data')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id);
+
+      // Aplicar filtro de data se fornecido
+      if (dateFilter?.from) {
+        query = query.gte('created_at', dateFilter.from.toISOString());
+      }
+      if (dateFilter?.to) {
+        // Adicionar 23:59:59 ao final do dia para incluir todo o dia
+        const endOfDay = new Date(dateFilter.to);
+        endOfDay.setHours(23, 59, 59, 999);
+        query = query.lte('created_at', endOfDay.toISOString());
+      }
+
+      const { data: userData, error: userError } = await query
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
