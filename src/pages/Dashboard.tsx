@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { 
   MessageSquare, 
   TrendingUp, 
@@ -43,12 +44,22 @@ export default function Dashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  
+  // Buscar dados do dashboard
+  const { 
+    data: dashboardData, 
+    isLoading: isLoadingData, 
+    error: dataError,
+    refetch 
+  } = useDashboardData();
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -66,54 +77,139 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  // Mock data - será substituído por dados reais
+  // Dados reais do dashboard
   const metricsData: MetricCard[] = [
     {
       title: "Total de Atendimentos",
-      value: "1,234",
-      change: "+12%",
+      value: dashboardData?.total_atendimentos?.toLocaleString() || "0",
+      change: "+12%", // TODO: Calcular mudança real
       trend: "up",
       icon: <MessageSquare className="h-4 w-4" />
     },
     {
       title: "Taxa de Conversão",
-      value: "24.5%",
-      change: "+3.2%",
+      value: `${dashboardData?.taxa_conversao?.toFixed(1) || 0}%`,
+      change: "+3.2%", // TODO: Calcular mudança real
       trend: "up",
       icon: <TrendingUp className="h-4 w-4" />
     },
     {
       title: "Tempo Médio de Resposta",
-      value: "2m 34s",
-      change: "-15s",
+      value: dashboardData?.tempo_medio_resposta 
+        ? `${Math.floor(dashboardData.tempo_medio_resposta / 60)}m ${dashboardData.tempo_medio_resposta % 60}s`
+        : "0s",
+      change: "-15s", // TODO: Calcular mudança real
       trend: "up",
       icon: <Clock className="h-4 w-4" />
     },
     {
       title: "Nota Média de Qualidade",
-      value: "4.2/5",
-      change: "+0.3",
+      value: `${dashboardData?.nota_media_qualidade?.toFixed(1) || 0}/5`,
+      change: "+0.3", // TODO: Calcular mudança real
       trend: "up",
       icon: <Star className="h-4 w-4" />
     }
   ];
 
   const intentionsData = [
-    { name: "Compra", percentage: 45, color: "bg-primary" },
-    { name: "Dúvida Geral", percentage: 25, color: "bg-secondary" },
-    { name: "Reclamação", percentage: 15, color: "bg-destructive" },
-    { name: "Suporte", percentage: 10, color: "bg-accent" },
-    { name: "Orçamento", percentage: 5, color: "bg-muted" }
+    { name: "Compra", percentage: dashboardData?.intencao_compra || 0, color: "bg-primary" },
+    { name: "Dúvida Geral", percentage: dashboardData?.intencao_duvida_geral || 0, color: "bg-secondary" },
+    { name: "Reclamação", percentage: dashboardData?.intencao_reclamacao || 0, color: "bg-destructive" },
+    { name: "Suporte", percentage: dashboardData?.intencao_suporte || 0, color: "bg-accent" },
+    { name: "Orçamento", percentage: dashboardData?.intencao_orcamento || 0, color: "bg-muted" }
   ];
 
-  const tasksData = [
-    { id: 1, title: "Revisar script de boas-vindas", status: "pendente", priority: "alta", deadline: "2024-01-20" },
-    { id: 2, title: "Implementar FAQ automatizado", status: "em_andamento", priority: "media", deadline: "2024-01-25" },
-    { id: 3, title: "Treinamento equipe - objeções", status: "concluida", priority: "alta", deadline: "2024-01-15" }
-  ];
+  // Processar próximas ações do dashboard
+  const tasksData = dashboardData?.proximas_acoes?.map((acao, index) => {
+    const match = acao.match(/^(.*?)\s*–\s*(.*?)\s*\((\d{4}-\d{2}-\d{2})\)$/);
+    if (match) {
+      const [, title, status, deadline] = match;
+      return {
+        id: index + 1,
+        title,
+        status: status === 'Feito' ? 'concluida' : status === 'Em andamento' ? 'em_andamento' : 'pendente',
+        priority: 'media',
+        deadline
+      };
+    }
+    return {
+      id: index + 1,
+      title: acao,
+      status: 'pendente' as const,
+      priority: 'media' as const,
+      deadline: new Date().toISOString().split('T')[0]
+    };
+  }) || [];
 
   if (!user) {
     return <div>Carregando...</div>;
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header skeleton */}
+        <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-6 w-6 bg-muted rounded animate-pulse"></div>
+                <div className="h-6 w-32 bg-muted rounded animate-pulse"></div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-4 w-24 bg-muted rounded animate-pulse"></div>
+                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-8 space-y-8">
+          {/* Title skeleton */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="h-8 w-64 bg-muted rounded animate-pulse mb-2"></div>
+              <div className="h-4 w-96 bg-muted rounded animate-pulse"></div>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-8 w-16 bg-muted rounded animate-pulse"></div>
+              <div className="h-8 w-20 bg-muted rounded animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Metrics skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="p-6 border rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse"></div>
+                  <div className="h-4 w-4 bg-muted rounded animate-pulse"></div>
+                </div>
+                <div className="h-8 w-16 bg-muted rounded animate-pulse mb-2"></div>
+                <div className="h-3 w-20 bg-muted rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando dados do dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (dataError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Erro ao carregar dados do dashboard</p>
+          <Button onClick={() => refetch()}>Tentar novamente</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -238,24 +334,34 @@ export default function Dashboard() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="funcionou" className="space-y-3 mt-4">
-                  <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <div className="font-medium text-green-800 dark:text-green-200">Resposta rápida (&lt; 1min)</div>
-                    <div className="text-sm text-green-600 dark:text-green-300">87% dos clientes responderam positivamente</div>
-                  </div>
-                  <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <div className="font-medium text-green-800 dark:text-green-200">Ofertas personalizadas</div>
-                    <div className="text-sm text-green-600 dark:text-green-300">Aumentaram conversão em 34%</div>
-                  </div>
+                  {dashboardData?.insights_funcionou?.map((insight, index) => {
+                    const [title, description] = insight.split(': ');
+                    return (
+                      <div key={index} className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="font-medium text-green-800 dark:text-green-200">{title}</div>
+                        <div className="text-sm text-green-600 dark:text-green-300">{description}</div>
+                      </div>
+                    );
+                  }) || (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="text-sm text-muted-foreground">Nenhum insight positivo registrado ainda.</div>
+                    </div>
+                  )}
                 </TabsContent>
                 <TabsContent value="atrapalhou" className="space-y-3 mt-4">
-                  <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                    <div className="font-medium text-red-800 dark:text-red-200">Falta de clareza no pagamento</div>
-                    <div className="text-sm text-red-600 dark:text-red-300">23% abandonaram nesta etapa</div>
-                  </div>
-                  <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                    <div className="font-medium text-red-800 dark:text-red-200">Respostas genéricas</div>
-                    <div className="text-sm text-red-600 dark:text-red-300">Baixa satisfação (2.1/5)</div>
-                  </div>
+                  {dashboardData?.insights_atrapalhou?.map((insight, index) => {
+                    const [title, description] = insight.split(': ');
+                    return (
+                      <div key={index} className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                        <div className="font-medium text-red-800 dark:text-red-200">{title}</div>
+                        <div className="text-sm text-red-600 dark:text-red-300">{description}</div>
+                      </div>
+                    );
+                  }) || (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="text-sm text-muted-foreground">Nenhum problema identificado ainda.</div>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -272,31 +378,41 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-green-800 dark:text-green-200">Melhor Atendimento</span>
-                  <Badge variant="default">5.0★</Badge>
+              {dashboardData?.melhor_atendimento_cliente && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-green-800 dark:text-green-200">Melhor Atendimento</span>
+                    <Badge variant="default">{dashboardData.melhor_atendimento_nota?.toFixed(1) || '5.0'}★</Badge>
+                  </div>
+                  <div className="text-sm text-green-600 dark:text-green-300 mb-2">
+                    Cliente: {dashboardData.melhor_atendimento_cliente}
+                  </div>
+                  <div className="text-xs text-green-600 dark:text-green-300">
+                    {dashboardData.melhor_atendimento_observacao}
+                  </div>
                 </div>
-                <div className="text-sm text-green-600 dark:text-green-300 mb-2">
-                  Cliente: +55 11 9xxxx-8765
-                </div>
-                <div className="text-xs text-green-600 dark:text-green-300">
-                  Resposta em 30s, proposta personalizada, fechamento em 3 mensagens
-                </div>
-              </div>
+              )}
 
-              <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-red-800 dark:text-red-200">Atendimento Crítico</span>
-                  <Badge variant="destructive">1.5★</Badge>
+              {dashboardData?.atendimento_critico_cliente && (
+                <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-red-800 dark:text-red-200">Atendimento Crítico</span>
+                    <Badge variant="destructive">{dashboardData.atendimento_critico_nota?.toFixed(1) || '1.5'}★</Badge>
+                  </div>
+                  <div className="text-sm text-red-600 dark:text-red-300 mb-2">
+                    Cliente: {dashboardData.atendimento_critico_cliente}
+                  </div>
+                  <div className="text-xs text-red-600 dark:text-red-300">
+                    {dashboardData.atendimento_critico_observacao}
+                  </div>
                 </div>
-                <div className="text-sm text-red-600 dark:text-red-300 mb-2">
-                  Cliente: +55 11 9xxxx-1234
+              )}
+
+              {!dashboardData?.melhor_atendimento_cliente && !dashboardData?.atendimento_critico_cliente && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <div className="text-sm text-muted-foreground">Nenhum destaque registrado ainda.</div>
                 </div>
-                <div className="text-xs text-red-600 dark:text-red-300">
-                  Demora de 12min, informações confusas, cliente abandonou
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -309,18 +425,20 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="p-3 border rounded-lg">
-                <div className="font-medium text-sm">FAQ Automatizado</div>
-                <div className="text-xs text-muted-foreground">67% das dúvidas são sobre horário de funcionamento</div>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <div className="font-medium text-sm">Reengajamento</div>
-                <div className="text-xs text-muted-foreground">Clientes que enviam apenas "Oi" e param</div>
-              </div>
-              <div className="p-3 border rounded-lg">
-                <div className="font-medium text-sm">Follow-up</div>
-                <div className="text-xs text-muted-foreground">Lembrete para leads inativos há 3+ dias</div>
-              </div>
+              {dashboardData?.automacao_sugerida?.map((automacao, index) => {
+                const [title, description] = automacao.split(': ');
+                return (
+                  <div key={index} className="p-3 border rounded-lg">
+                    <div className="font-medium text-sm">{title}</div>
+                    <div className="text-xs text-muted-foreground">{description}</div>
+                  </div>
+                );
+              }) || (
+                <div className="p-3 border rounded-lg">
+                  <div className="font-medium text-sm">Nenhuma automação sugerida</div>
+                  <div className="text-xs text-muted-foreground">As sugestões aparecerão conforme os dados forem analisados</div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -376,25 +494,33 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Taxa de Conversão</span>
-                  <span className="text-sm text-muted-foreground">24.5% / 30%</span>
+                  <span className="text-sm text-muted-foreground">
+                    {dashboardData?.taxa_conversao?.toFixed(1) || 0}% / 30%
+                  </span>
                 </div>
-                <Progress value={81.6} className="h-2" />
+                <Progress value={((dashboardData?.taxa_conversao || 0) / 30) * 100} className="h-2" />
                 <div className="text-xs text-muted-foreground">Meta: 30% até março</div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Tempo de Resposta</span>
-                  <span className="text-sm text-muted-foreground">2m 34s / 2m</span>
+                  <span className="text-sm text-muted-foreground">
+                    {dashboardData?.tempo_medio_resposta 
+                      ? `${Math.floor(dashboardData.tempo_medio_resposta / 60)}m ${dashboardData.tempo_medio_resposta % 60}s`
+                      : '0s'} / 2m
+                  </span>
                 </div>
-                <Progress value={78} className="h-2" />
+                <Progress value={Math.max(0, 100 - ((dashboardData?.tempo_medio_resposta || 0) / 120) * 100)} className="h-2" />
                 <div className="text-xs text-muted-foreground">Meta: &lt; 2min até fevereiro</div>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Nota de Qualidade</span>
-                  <span className="text-sm text-muted-foreground">4.2 / 4.5</span>
+                  <span className="text-sm text-muted-foreground">
+                    {dashboardData?.nota_media_qualidade?.toFixed(1) || 0} / 4.5
+                  </span>
                 </div>
-                <Progress value={93.3} className="h-2" />
+                <Progress value={((dashboardData?.nota_media_qualidade || 0) / 4.5) * 100} className="h-2" />
                 <div className="text-xs text-muted-foreground">Meta: 4.5/5 até abril</div>
               </div>
             </div>
@@ -404,7 +530,9 @@ export default function Dashboard() {
         {/* Footer com informações da análise */}
         <div className="text-center text-sm text-muted-foreground border-t pt-6">
           <div className="flex items-center justify-center gap-4">
-            <span>Última análise: {new Date().toLocaleDateString('pt-BR')}</span>
+            <span>Última análise: {dashboardData?.updated_at ? new Date(dashboardData.updated_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}</span>
+            <span>•</span>
+            <span>Período: {dashboardData?.periodo_inicio ? new Date(dashboardData.periodo_inicio).toLocaleDateString('pt-BR') : '-'} a {dashboardData?.periodo_fim ? new Date(dashboardData.periodo_fim).toLocaleDateString('pt-BR') : '-'}</span>
             <span>•</span>
             <span>Assinatura: MetricaWhats Analytics Engine v1.0</span>
           </div>
