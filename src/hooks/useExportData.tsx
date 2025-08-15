@@ -23,75 +23,140 @@ export function useExportData() {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
+  // Função auxiliar para criar separadores visuais
+  const createSeparator = (char: string, length: number) => char.repeat(length);
+  
+  // Função auxiliar para formatar data
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  // Função auxiliar para formatar tempo
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  // Função auxiliar para determinar status com cores
+  const getStatusWithColor = (value: number, thresholds: { excellent: number; good: number }, isLowerBetter = false) => {
+    if (isLowerBetter) {
+      if (value <= thresholds.excellent) return '🟢 Excelente';
+      if (value <= thresholds.good) return '🟡 Bom';
+      return '🔴 Precisa Melhorar';
+    } else {
+      if (value >= thresholds.excellent) return '🟢 Excelente';
+      if (value >= thresholds.good) return '🟡 Bom';
+      return '🔴 Precisa Melhorar';
+    }
+  };
+
   const exportToCSV = async (data: DashboardData, options: ExportOptions) => {
     const csvData: string[][] = [];
     
-    // Header com formatação melhorada
-    csvData.push(['='.repeat(80)]);
-    csvData.push(['RELATÓRIO WHATSAPP ANALYTICS']);
-    csvData.push(['='.repeat(80)]);
+    // ===== CABEÇALHO PROFISSIONAL =====
+    csvData.push([createSeparator('=', 100)]);
+    csvData.push(['📊 RELATÓRIO WHATSAPP ANALYTICS - METRICAWHATS']);
+    csvData.push([createSeparator('=', 100)]);
     csvData.push([]);
     
-    // Informações do relatório
-    csvData.push(['INFORMAÇÕES DO RELATÓRIO']);
+    // ===== INFORMAÇÕES DO RELATÓRIO =====
+    csvData.push(['📋 INFORMAÇÕES DO RELATÓRIO']);
+    csvData.push([createSeparator('-', 50)]);
     csvData.push(['Período Analisado:', `${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}`]);
-    csvData.push(['Data de Geração:', new Date().toLocaleString('pt-BR')]);
+    csvData.push(['Data de Geração:', formatDate(new Date())]);
     csvData.push(['Versão do Sistema:', 'MetricaWhats Analytics v1.0']);
+    csvData.push(['Gerado por:', 'Sistema Automático']);
     csvData.push([]);
 
+    // ===== MÉTRICAS PRINCIPAIS =====
     if (options.includeMetrics) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['MÉTRICAS PRINCIPAIS']);
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['Métrica', 'Valor', 'Unidade', 'Status']);
+      csvData.push(['📈 MÉTRICAS PRINCIPAIS']);
+      csvData.push([createSeparator('-', 50)]);
+      csvData.push(['Métrica', 'Valor', 'Unidade', 'Status', 'Tendência']);
       
-      // Métricas com status baseado em performance
       const metrics = [
         {
           name: 'Total de Atendimentos',
-          value: data.total_atendimentos?.toString() || '0',
+          value: data.total_atendimentos?.toLocaleString('pt-BR') || '0',
           unit: 'atendimentos',
-          status: (data.total_atendimentos || 0) > 1000 ? 'Excelente' : (data.total_atendimentos || 0) > 500 ? 'Bom' : 'Regular'
+          status: getStatusWithColor(data.total_atendimentos || 0, { excellent: 1000, good: 500 }),
+          trend: (data.total_atendimentos || 0) > 1000 ? '↗️ Crescente' : (data.total_atendimentos || 0) > 500 ? '→ Estável' : '↘️ Decrescente'
         },
         {
           name: 'Taxa de Conversão',
           value: `${data.taxa_conversao?.toFixed(1) || 0}%`,
           unit: 'percentual',
-          status: (data.taxa_conversao || 0) > 25 ? 'Excelente' : (data.taxa_conversao || 0) > 15 ? 'Bom' : 'Precisa Melhorar'
+          status: getStatusWithColor(data.taxa_conversao || 0, { excellent: 25, good: 15 }),
+          trend: (data.taxa_conversao || 0) > 25 ? '↗️ Excelente' : (data.taxa_conversao || 0) > 15 ? '→ Boa' : '↘️ Baixa'
         },
         {
           name: 'Tempo Médio de Resposta',
-          value: `${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s`,
+          value: formatTime(data.tempo_medio_resposta || 0),
           unit: 'tempo',
-          status: (data.tempo_medio_resposta || 0) < 120 ? 'Excelente' : (data.tempo_medio_resposta || 0) < 300 ? 'Bom' : 'Precisa Melhorar'
+          status: getStatusWithColor(data.tempo_medio_resposta || 0, { excellent: 120, good: 300 }, true),
+          trend: (data.tempo_medio_resposta || 0) < 120 ? '↗️ Muito Rápido' : (data.tempo_medio_resposta || 0) < 300 ? '→ Adequado' : '↘️ Lento'
         },
         {
           name: 'Nota Média de Qualidade',
           value: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
           unit: 'pontos',
-          status: (data.nota_media_qualidade || 0) > 4 ? 'Excelente' : (data.nota_media_qualidade || 0) > 3 ? 'Bom' : 'Precisa Melhorar'
+          status: getStatusWithColor(data.nota_media_qualidade || 0, { excellent: 4, good: 3 }),
+          trend: (data.nota_media_qualidade || 0) > 4 ? '↗️ Excepcional' : (data.nota_media_qualidade || 0) > 3 ? '→ Satisfatória' : '↘️ Insatisfatória'
         }
       ];
       
       metrics.forEach(metric => {
-        csvData.push([metric.name, metric.value, metric.unit, metric.status]);
+        csvData.push([metric.name, metric.value, metric.unit, metric.status, metric.trend]);
       });
       csvData.push([]);
     }
 
+    // ===== INTENÇÕES DOS CLIENTES =====
     if (options.includeIntentions) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['INTENÇÕES DOS CLIENTES']);
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['Intenção', 'Percentual', 'Quantidade Estimada']);
+      csvData.push(['🎯 INTENÇÕES DOS CLIENTES']);
+      csvData.push([createSeparator('-', 50)]);
+      csvData.push(['Intenção', 'Percentual', 'Quantidade Estimada', 'Prioridade', 'Ação Recomendada']);
       
       const totalAtendimentos = data.total_atendimentos || 0;
       const intentions = [
-        { name: 'Compra', percentage: data.intencao_compra || 0 },
-        { name: 'Dúvida Geral', percentage: data.intencao_duvida_geral || 0 },
-        { name: 'Reclamação', percentage: data.intencao_reclamacao || 0 },
-        { name: 'Suporte', percentage: data.intencao_suporte || 0 },
-        { name: 'Orçamento', percentage: data.intencao_orcamento || 0 }
+        { 
+          name: '🛒 Compra', 
+          percentage: data.intencao_compra || 0, 
+          priority: 'Alta',
+          action: 'Otimizar funil de vendas'
+        },
+        { 
+          name: '❓ Dúvida Geral', 
+          percentage: data.intencao_duvida_geral || 0, 
+          priority: 'Média',
+          action: 'Melhorar FAQ e documentação'
+        },
+        { 
+          name: '⚠️ Reclamação', 
+          percentage: data.intencao_reclamacao || 0, 
+          priority: 'Alta',
+          action: 'Investigar e resolver problemas'
+        },
+        { 
+          name: '🛠️ Suporte', 
+          percentage: data.intencao_suporte || 0, 
+          priority: 'Média',
+          action: 'Capacitar equipe de suporte'
+        },
+        { 
+          name: '💰 Orçamento', 
+          percentage: data.intencao_orcamento || 0, 
+          priority: 'Alta',
+          action: 'Acelerar processo de orçamento'
+        }
       ];
       
       intentions.forEach(intention => {
@@ -99,43 +164,45 @@ export function useExportData() {
         csvData.push([
           intention.name, 
           `${intention.percentage.toFixed(1)}%`, 
-          `${estimatedCount} atendimentos`
+          `${estimatedCount.toLocaleString('pt-BR')} atendimentos`,
+          intention.priority,
+          intention.action
         ]);
       });
       csvData.push([]);
     }
 
+    // ===== INSIGHTS DE PERFORMANCE =====
     if (options.includeInsights && (data.insights_funcionou?.length || data.insights_atrapalhou?.length)) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['INSIGHTS DE PERFORMANCE']);
-      csvData.push(['='.repeat(50)]);
+      csvData.push(['💡 INSIGHTS DE PERFORMANCE']);
+      csvData.push([createSeparator('-', 50)]);
       
       if (data.insights_funcionou?.length) {
-        csvData.push(['O QUE FUNCIONOU BEM:']);
+        csvData.push(['✅ O QUE FUNCIONOU BEM:']);
         data.insights_funcionou.forEach((insight, index) => {
           const [title, description] = insight.split(': ');
-          csvData.push([`${index + 1}. ${title}`, description || '']);
+          csvData.push([`${index + 1}. ${title}`, description || '', 'Positivo', 'Manter']);
         });
         csvData.push([]);
       }
       
       if (data.insights_atrapalhou?.length) {
-        csvData.push(['O QUE PRECISA MELHORAR:']);
+        csvData.push(['❌ O QUE PRECISA MELHORAR:']);
         data.insights_atrapalhou.forEach((insight, index) => {
           const [title, description] = insight.split(': ');
-          csvData.push([`${index + 1}. ${title}`, description || '']);
+          csvData.push([`${index + 1}. ${title}`, description || '', 'Crítico', 'Corrigir']);
         });
         csvData.push([]);
       }
     }
 
+    // ===== DESTAQUES DO PERÍODO =====
     if (options.includeHighlights) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['DESTAQUES DO PERÍODO']);
-      csvData.push(['='.repeat(50)]);
+      csvData.push(['🏆 DESTAQUES DO PERÍODO']);
+      csvData.push([createSeparator('-', 50)]);
       
       if (data.melhor_atendimento_cliente) {
-        csvData.push(['MELHOR ATENDIMENTO:']);
+        csvData.push(['🥇 MELHOR ATENDIMENTO:']);
         csvData.push(['Cliente:', data.melhor_atendimento_cliente]);
         csvData.push(['Nota:', `${data.melhor_atendimento_nota?.toFixed(1) || 0}/5`]);
         csvData.push(['Observação:', data.melhor_atendimento_observacao || '']);
@@ -143,7 +210,7 @@ export function useExportData() {
       }
       
       if (data.atendimento_critico_cliente) {
-        csvData.push(['ATENDIMENTO CRÍTICO:']);
+        csvData.push(['⚠️ ATENDIMENTO CRÍTICO:']);
         csvData.push(['Cliente:', data.atendimento_critico_cliente]);
         csvData.push(['Nota:', `${data.atendimento_critico_nota?.toFixed(1) || 0}/5`]);
         csvData.push(['Observação:', data.atendimento_critico_observacao || '']);
@@ -151,162 +218,202 @@ export function useExportData() {
       }
     }
 
+    // ===== SUGESTÕES DE AUTOMAÇÃO =====
     if (options.includeAutomation && data.automacao_sugerida?.length) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['SUGESTÕES DE AUTOMAÇÃO']);
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['Sugestão', 'Descrição']);
+      csvData.push(['🤖 SUGESTÕES DE AUTOMAÇÃO']);
+      csvData.push([createSeparator('-', 50)]);
+      csvData.push(['Sugestão', 'Descrição', 'Impacto Esperado', 'Prioridade', 'Tempo Estimado']);
       
       data.automacao_sugerida.forEach((automacao, index) => {
         const [title, description] = automacao.split(': ');
-        csvData.push([`${index + 1}. ${title}`, description || '']);
+        const impact = index === 0 ? 'Alto' : index === 1 ? 'Médio' : 'Baixo';
+        const priority = index === 0 ? 'Alta' : index === 1 ? 'Média' : 'Baixa';
+        const time = index === 0 ? '1-2 semanas' : index === 1 ? '2-4 semanas' : '4-8 semanas';
+        csvData.push([`${index + 1}. ${title}`, description || '', impact, priority, time]);
       });
       csvData.push([]);
     }
 
+    // ===== PRÓXIMAS AÇÕES =====
     if (options.includeActions && data.proximas_acoes?.length) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['PRÓXIMAS AÇÕES RECOMENDADAS']);
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['Ação', 'Status', 'Prazo', 'Prioridade']);
+      csvData.push(['📋 PRÓXIMAS AÇÕES RECOMENDADAS']);
+      csvData.push([createSeparator('-', 50)]);
+      csvData.push(['Ação', 'Status', 'Prazo', 'Prioridade', 'Responsável', 'Progresso']);
       
       data.proximas_acoes.forEach((acao, index) => {
         const match = acao.match(/^(.*?)\s*–\s*(.*?)\s*\((\d{4}-\d{2}-\d{2})\)$/);
         if (match) {
           const [, title, status, deadline] = match;
           const priority = status === 'Feito' ? 'Baixa' : status === 'Em andamento' ? 'Média' : 'Alta';
-          csvData.push([title, status, deadline, priority]);
+          const progress = status === 'Feito' ? '100%' : status === 'Em andamento' ? '50%' : '0%';
+          csvData.push([title, status, deadline, priority, 'Equipe', progress]);
         } else {
-          csvData.push([acao, 'Pendente', 'A definir', 'Média']);
+          csvData.push([acao, 'Pendente', 'A definir', 'Média', 'Equipe', '0%']);
         }
       });
       csvData.push([]);
     }
 
+    // ===== METAS E PROGRESSO =====
     if (options.includeGoals) {
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['METAS E PROGRESSO']);
-      csvData.push(['='.repeat(50)]);
-      csvData.push(['Meta', 'Progresso Atual', 'Objetivo', 'Status']);
+      csvData.push(['🎯 METAS E PROGRESSO']);
+      csvData.push([createSeparator('-', 50)]);
+      csvData.push(['Meta', 'Progresso Atual', 'Objetivo', 'Status', 'Próximo Passo', 'Prazo']);
       
       const goals = [
         {
           name: 'Taxa de Conversão',
           current: data.taxa_conversao?.toFixed(1) || '0',
           target: '30%',
-          status: (data.taxa_conversao || 0) >= 30 ? 'Atingida' : 'Em andamento'
+          status: (data.taxa_conversao || 0) >= 30 ? 'Atingida' : 'Em andamento',
+          nextStep: (data.taxa_conversao || 0) >= 30 ? 'Manter estratégias' : 'Otimizar funil de vendas',
+          deadline: 'Próximo mês'
         },
         {
           name: 'Tempo de Resposta',
-          current: data.tempo_medio_resposta ? `${Math.floor(data.tempo_medio_resposta / 60)}m ${data.tempo_medio_resposta % 60}s` : '0s',
+          current: formatTime(data.tempo_medio_resposta || 0),
           target: '< 2min',
-          status: (data.tempo_medio_resposta || 0) <= 120 ? 'Atingida' : 'Em andamento'
+          status: (data.tempo_medio_resposta || 0) <= 120 ? 'Atingida' : 'Em andamento',
+          nextStep: (data.tempo_medio_resposta || 0) <= 120 ? 'Manter agilidade' : 'Implementar automações',
+          deadline: '2 semanas'
         },
         {
           name: 'Nota de Qualidade',
           current: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
           target: '4.5/5',
-          status: (data.nota_media_qualidade || 0) >= 4.5 ? 'Atingida' : 'Em andamento'
+          status: (data.nota_media_qualidade || 0) >= 4.5 ? 'Atingida' : 'Em andamento',
+          nextStep: (data.nota_media_qualidade || 0) >= 4.5 ? 'Manter padrão' : 'Treinar equipe',
+          deadline: '1 mês'
         }
       ];
       
       goals.forEach(goal => {
-        csvData.push([goal.name, goal.current, goal.target, goal.status]);
+        csvData.push([goal.name, goal.current, goal.target, goal.status, goal.nextStep, goal.deadline]);
       });
       csvData.push([]);
     }
 
-    // Footer
-    csvData.push(['='.repeat(80)]);
-    csvData.push(['RELATÓRIO GERADO AUTOMATICAMENTE']);
-    csvData.push(['MetricaWhats Analytics - Transformando atendimentos em resultados']);
-    csvData.push(['='.repeat(80)]);
+    // ===== RESUMO EXECUTIVO =====
+    csvData.push(['📊 RESUMO EXECUTIVO']);
+    csvData.push([createSeparator('-', 50)]);
+    csvData.push(['Indicador', 'Valor', 'Status Geral']);
+    
+    const overallStatus = (data.taxa_conversao || 0) > 20 && (data.nota_media_qualidade || 0) > 4 ? '🟢 Excelente' :
+                         (data.taxa_conversao || 0) > 15 && (data.nota_media_qualidade || 0) > 3 ? '🟡 Bom' : '🔴 Precisa Melhorar';
+    
+    const overallTrend = (data.taxa_conversao || 0) > 20 ? 'Crescente' : (data.taxa_conversao || 0) > 15 ? 'Estável' : 'Decrescente';
+    const recommendation = (data.taxa_conversao || 0) > 20 ? 'Manter estratégias atuais' : (data.taxa_conversao || 0) > 15 ? 'Otimizar processos' : 'Revisar estratégias';
+    
+    csvData.push(['Performance Geral', `${((data.taxa_conversao || 0) + (data.nota_media_qualidade || 0) * 20) / 2}%`, overallStatus]);
+    csvData.push(['Volume de Atendimentos', `${data.total_atendimentos?.toLocaleString('pt-BR') || 0}`, (data.total_atendimentos || 0) > 500 ? '🟢 Alto' : '🟡 Médio']);
+    csvData.push(['Eficiência Operacional', `${((data.tempo_medio_resposta || 0) < 300 ? 100 : 50)}%`, (data.tempo_medio_resposta || 0) < 300 ? '🟢 Eficiente' : '🟡 Melhorável']);
+    csvData.push([]);
+
+    // ===== FOOTER PROFISSIONAL =====
+    csvData.push([createSeparator('=', 100)]);
+    csvData.push(['📄 RELATÓRIO GERADO AUTOMATICAMENTE PELO SISTEMA METRICAWHATS']);
+    csvData.push(['🚀 Transformando atendimentos do WhatsApp em resultados mensuráveis']);
+    csvData.push(['📧 Suporte: contato@metricawhats.com | 📱 WhatsApp: (11) 99999-9999']);
+    csvData.push([createSeparator('=', 100)]);
 
     // Converter para CSV com formatação melhorada
     const csvContent = csvData.map(row => 
       row.map(cell => `"${cell?.replace(/"/g, '""') || ''}"`).join(',')
     ).join('\n');
 
-    // Download com nome de arquivo melhorado
+    // Download com nome de arquivo profissional
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio-whatsapp-analytics-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `MetricaWhats_Relatorio_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    toast({
+      title: "CSV Exportado",
+      description: "Relatório CSV gerado com formatação profissional.",
+    });
   };
 
   const exportToExcel = async (data: DashboardData, options: ExportOptions) => {
-    // Para Excel, vamos criar um CSV mais estruturado que funciona bem no Excel
+    // Para Excel, vamos criar um CSV mais estruturado que funciona perfeitamente no Excel
     const excelData: string[][] = [];
     
-    // Header com formatação Excel-friendly
-    excelData.push(['RELATÓRIO WHATSAPP ANALYTICS']);
+    // ===== CABEÇALHO EXCEL-FRIENDLY =====
+    excelData.push(['RELATÓRIO WHATSAPP ANALYTICS - METRICAWHATS']);
     excelData.push([]);
     
-    // Informações do relatório
+    // ===== INFORMAÇÕES DO RELATÓRIO =====
     excelData.push(['INFORMAÇÕES DO RELATÓRIO']);
+    excelData.push(['Campo', 'Valor']);
     excelData.push(['Período Analisado', `${options.dateRange?.start || data.periodo_inicio} a ${options.dateRange?.end || data.periodo_fim}`]);
-    excelData.push(['Data de Geração', new Date().toLocaleString('pt-BR')]);
+    excelData.push(['Data de Geração', formatDate(new Date())]);
     excelData.push(['Versão do Sistema', 'MetricaWhats Analytics v1.0']);
+    excelData.push(['Gerado por', 'Sistema Automático']);
     excelData.push([]);
 
+    // ===== MÉTRICAS PRINCIPAIS =====
     if (options.includeMetrics) {
       excelData.push(['MÉTRICAS PRINCIPAIS']);
-      excelData.push(['Métrica', 'Valor', 'Unidade', 'Status', 'Observação']);
+      excelData.push(['Métrica', 'Valor', 'Unidade', 'Status', 'Observação', 'Tendência']);
       
       const metrics = [
         {
           name: 'Total de Atendimentos',
-          value: data.total_atendimentos?.toString() || '0',
+          value: data.total_atendimentos?.toLocaleString('pt-BR') || '0',
           unit: 'atendimentos',
-          status: (data.total_atendimentos || 0) > 1000 ? 'Excelente' : (data.total_atendimentos || 0) > 500 ? 'Bom' : 'Regular',
-          observation: (data.total_atendimentos || 0) > 1000 ? 'Volume alto de atendimentos' : (data.total_atendimentos || 0) > 500 ? 'Volume adequado' : 'Volume baixo - considere aumentar'
+          status: getStatusWithColor(data.total_atendimentos || 0, { excellent: 1000, good: 500 }),
+          observation: (data.total_atendimentos || 0) > 1000 ? 'Volume alto de atendimentos' : (data.total_atendimentos || 0) > 500 ? 'Volume adequado' : 'Volume baixo - considere aumentar',
+          trend: (data.total_atendimentos || 0) > 1000 ? 'Crescente' : (data.total_atendimentos || 0) > 500 ? 'Estável' : 'Decrescente'
         },
         {
           name: 'Taxa de Conversão',
           value: `${data.taxa_conversao?.toFixed(1) || 0}%`,
           unit: 'percentual',
-          status: (data.taxa_conversao || 0) > 25 ? 'Excelente' : (data.taxa_conversao || 0) > 15 ? 'Bom' : 'Precisa Melhorar',
-          observation: (data.taxa_conversao || 0) > 25 ? 'Conversão acima da média do mercado' : (data.taxa_conversao || 0) > 15 ? 'Conversão dentro do esperado' : 'Conversão baixa - revise estratégias'
+          status: getStatusWithColor(data.taxa_conversao || 0, { excellent: 25, good: 15 }),
+          observation: (data.taxa_conversao || 0) > 25 ? 'Conversão acima da média do mercado' : (data.taxa_conversao || 0) > 15 ? 'Conversão dentro do esperado' : 'Conversão baixa - revise estratégias',
+          trend: (data.taxa_conversao || 0) > 25 ? 'Excelente' : (data.taxa_conversao || 0) > 15 ? 'Boa' : 'Baixa'
         },
         {
           name: 'Tempo Médio de Resposta',
-          value: `${Math.floor((data.tempo_medio_resposta || 0) / 60)}m ${(data.tempo_medio_resposta || 0) % 60}s`,
+          value: formatTime(data.tempo_medio_resposta || 0),
           unit: 'tempo',
-          status: (data.tempo_medio_resposta || 0) < 120 ? 'Excelente' : (data.tempo_medio_resposta || 0) < 300 ? 'Bom' : 'Precisa Melhorar',
-          observation: (data.tempo_medio_resposta || 0) < 120 ? 'Resposta muito rápida' : (data.tempo_medio_resposta || 0) < 300 ? 'Resposta adequada' : 'Resposta lenta - otimize processos'
+          status: getStatusWithColor(data.tempo_medio_resposta || 0, { excellent: 120, good: 300 }, true),
+          observation: (data.tempo_medio_resposta || 0) < 120 ? 'Resposta muito rápida' : (data.tempo_medio_resposta || 0) < 300 ? 'Resposta adequada' : 'Resposta lenta - otimize processos',
+          trend: (data.tempo_medio_resposta || 0) < 120 ? 'Muito Rápido' : (data.tempo_medio_resposta || 0) < 300 ? 'Adequado' : 'Lento'
         },
         {
           name: 'Nota Média de Qualidade',
           value: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
           unit: 'pontos',
-          status: (data.nota_media_qualidade || 0) > 4 ? 'Excelente' : (data.nota_media_qualidade || 0) > 3 ? 'Bom' : 'Precisa Melhorar',
-          observation: (data.nota_media_qualidade || 0) > 4 ? 'Qualidade excepcional' : (data.nota_media_qualidade || 0) > 3 ? 'Qualidade satisfatória' : 'Qualidade baixa - treine equipe'
+          status: getStatusWithColor(data.nota_media_qualidade || 0, { excellent: 4, good: 3 }),
+          observation: (data.nota_media_qualidade || 0) > 4 ? 'Qualidade excepcional' : (data.nota_media_qualidade || 0) > 3 ? 'Qualidade satisfatória' : 'Qualidade baixa - treine equipe',
+          trend: (data.nota_media_qualidade || 0) > 4 ? 'Excepcional' : (data.nota_media_qualidade || 0) > 3 ? 'Satisfatória' : 'Insatisfatória'
         }
       ];
       
       metrics.forEach(metric => {
-        excelData.push([metric.name, metric.value, metric.unit, metric.status, metric.observation]);
+        excelData.push([metric.name, metric.value, metric.unit, metric.status, metric.observation, metric.trend]);
       });
       excelData.push([]);
     }
 
+    // ===== INTENÇÕES DOS CLIENTES =====
     if (options.includeIntentions) {
       excelData.push(['INTENÇÕES DOS CLIENTES']);
-      excelData.push(['Intenção', 'Percentual', 'Quantidade Estimada', 'Prioridade de Ação']);
+      excelData.push(['Intenção', 'Percentual', 'Quantidade Estimada', 'Prioridade de Ação', 'Estratégia Recomendada']);
       
       const totalAtendimentos = data.total_atendimentos || 0;
       const intentions = [
-        { name: 'Compra', percentage: data.intencao_compra || 0, priority: 'Alta' },
-        { name: 'Dúvida Geral', percentage: data.intencao_duvida_geral || 0, priority: 'Média' },
-        { name: 'Reclamação', percentage: data.intencao_reclamacao || 0, priority: 'Alta' },
-        { name: 'Suporte', percentage: data.intencao_suporte || 0, priority: 'Média' },
-        { name: 'Orçamento', percentage: data.intencao_orcamento || 0, priority: 'Alta' }
+        { name: 'Compra', percentage: data.intencao_compra || 0, priority: 'Alta', strategy: 'Otimizar funil de vendas e follow-up' },
+        { name: 'Dúvida Geral', percentage: data.intencao_duvida_geral || 0, priority: 'Média', strategy: 'Melhorar FAQ e documentação' },
+        { name: 'Reclamação', percentage: data.intencao_reclamacao || 0, priority: 'Alta', strategy: 'Investigar e resolver problemas rapidamente' },
+        { name: 'Suporte', percentage: data.intencao_suporte || 0, priority: 'Média', strategy: 'Capacitar equipe de suporte' },
+        { name: 'Orçamento', percentage: data.intencao_orcamento || 0, priority: 'Alta', strategy: 'Acelerar processo de orçamento' }
       ];
       
       intentions.forEach(intention => {
@@ -314,40 +421,46 @@ export function useExportData() {
         excelData.push([
           intention.name, 
           `${intention.percentage.toFixed(1)}%`, 
-          `${estimatedCount} atendimentos`,
-          intention.priority
+          `${estimatedCount.toLocaleString('pt-BR')} atendimentos`,
+          intention.priority,
+          intention.strategy
         ]);
       });
       excelData.push([]);
     }
 
+    // ===== INSIGHTS DE PERFORMANCE =====
     if (options.includeInsights && (data.insights_funcionou?.length || data.insights_atrapalhou?.length)) {
       excelData.push(['INSIGHTS DE PERFORMANCE']);
       
       if (data.insights_funcionou?.length) {
         excelData.push(['O QUE FUNCIONOU BEM:']);
+        excelData.push(['Item', 'Descrição', 'Impacto', 'Ação']);
         data.insights_funcionou.forEach((insight, index) => {
           const [title, description] = insight.split(': ');
-          excelData.push([`${index + 1}. ${title}`, description || '', 'Positivo']);
+          excelData.push([`${index + 1}. ${title}`, description || '', 'Positivo', 'Manter e replicar']);
         });
         excelData.push([]);
       }
       
       if (data.insights_atrapalhou?.length) {
         excelData.push(['O QUE PRECISA MELHORAR:']);
+        excelData.push(['Item', 'Descrição', 'Impacto', 'Ação']);
         data.insights_atrapalhou.forEach((insight, index) => {
           const [title, description] = insight.split(': ');
-          excelData.push([`${index + 1}. ${title}`, description || '', 'Crítico']);
+          excelData.push([`${index + 1}. ${title}`, description || '', 'Crítico', 'Corrigir imediatamente']);
         });
         excelData.push([]);
       }
     }
 
+    // ===== DESTAQUES DO PERÍODO =====
     if (options.includeHighlights) {
       excelData.push(['DESTAQUES DO PERÍODO']);
       
       if (data.melhor_atendimento_cliente) {
         excelData.push(['MELHOR ATENDIMENTO:']);
+        excelData.push(['Campo', 'Valor']);
         excelData.push(['Cliente', data.melhor_atendimento_cliente]);
         excelData.push(['Nota', `${data.melhor_atendimento_nota?.toFixed(1) || 0}/5`]);
         excelData.push(['Observação', data.melhor_atendimento_observacao || '']);
@@ -356,6 +469,7 @@ export function useExportData() {
       
       if (data.atendimento_critico_cliente) {
         excelData.push(['ATENDIMENTO CRÍTICO:']);
+        excelData.push(['Campo', 'Valor']);
         excelData.push(['Cliente', data.atendimento_critico_cliente]);
         excelData.push(['Nota', `${data.atendimento_critico_nota?.toFixed(1) || 0}/5`]);
         excelData.push(['Observação', data.atendimento_critico_observacao || '']);
@@ -363,39 +477,46 @@ export function useExportData() {
       }
     }
 
+    // ===== SUGESTÕES DE AUTOMAÇÃO =====
     if (options.includeAutomation && data.automacao_sugerida?.length) {
       excelData.push(['SUGESTÕES DE AUTOMAÇÃO']);
-      excelData.push(['Sugestão', 'Descrição', 'Impacto Esperado', 'Prioridade']);
+      excelData.push(['Sugestão', 'Descrição', 'Impacto Esperado', 'Prioridade', 'Tempo Estimado', 'ROI']);
       
       data.automacao_sugerida.forEach((automacao, index) => {
         const [title, description] = automacao.split(': ');
         const impact = index === 0 ? 'Alto' : index === 1 ? 'Médio' : 'Baixo';
         const priority = index === 0 ? 'Alta' : index === 1 ? 'Média' : 'Baixa';
-        excelData.push([`${index + 1}. ${title}`, description || '', impact, priority]);
+        const time = index === 0 ? '1-2 semanas' : index === 1 ? '2-4 semanas' : '4-8 semanas';
+        const roi = index === 0 ? 'Alto' : index === 1 ? 'Médio' : 'Baixo';
+        excelData.push([`${index + 1}. ${title}`, description || '', impact, priority, time, roi]);
       });
       excelData.push([]);
     }
 
+    // ===== PRÓXIMAS AÇÕES =====
     if (options.includeActions && data.proximas_acoes?.length) {
       excelData.push(['PRÓXIMAS AÇÕES RECOMENDADAS']);
-      excelData.push(['Ação', 'Status', 'Prazo', 'Prioridade', 'Responsável']);
+      excelData.push(['Ação', 'Status', 'Prazo', 'Prioridade', 'Responsável', 'Progresso', 'Próximo Passo']);
       
       data.proximas_acoes.forEach((acao, index) => {
         const match = acao.match(/^(.*?)\s*–\s*(.*?)\s*\((\d{4}-\d{2}-\d{2})\)$/);
         if (match) {
           const [, title, status, deadline] = match;
           const priority = status === 'Feito' ? 'Baixa' : status === 'Em andamento' ? 'Média' : 'Alta';
-          excelData.push([title, status, deadline, priority, 'Equipe']);
+          const progress = status === 'Feito' ? '100%' : status === 'Em andamento' ? '50%' : '0%';
+          const nextStep = status === 'Feito' ? 'Concluído' : status === 'Em andamento' ? 'Continuar execução' : 'Iniciar imediatamente';
+          excelData.push([title, status, deadline, priority, 'Equipe', progress, nextStep]);
         } else {
-          excelData.push([acao, 'Pendente', 'A definir', 'Média', 'Equipe']);
+          excelData.push([acao, 'Pendente', 'A definir', 'Média', 'Equipe', '0%', 'Definir prazo']);
         }
       });
       excelData.push([]);
     }
 
+    // ===== METAS E PROGRESSO =====
     if (options.includeGoals) {
       excelData.push(['METAS E PROGRESSO']);
-      excelData.push(['Meta', 'Progresso Atual', 'Objetivo', 'Status', 'Próximo Passo']);
+      excelData.push(['Meta', 'Progresso Atual', 'Objetivo', 'Status', 'Próximo Passo', 'Prazo', 'Responsável']);
       
       const goals = [
         {
@@ -403,34 +524,55 @@ export function useExportData() {
           current: data.taxa_conversao?.toFixed(1) || '0',
           target: '30%',
           status: (data.taxa_conversao || 0) >= 30 ? 'Atingida' : 'Em andamento',
-          nextStep: (data.taxa_conversao || 0) >= 30 ? 'Manter estratégias' : 'Otimizar funil de vendas'
+          nextStep: (data.taxa_conversao || 0) >= 30 ? 'Manter estratégias' : 'Otimizar funil de vendas',
+          deadline: 'Próximo mês',
+          responsible: 'Equipe de Vendas'
         },
         {
           name: 'Tempo de Resposta',
-          current: data.tempo_medio_resposta ? `${Math.floor(data.tempo_medio_resposta / 60)}m ${data.tempo_medio_resposta % 60}s` : '0s',
+          current: formatTime(data.tempo_medio_resposta || 0),
           target: '< 2min',
           status: (data.tempo_medio_resposta || 0) <= 120 ? 'Atingida' : 'Em andamento',
-          nextStep: (data.tempo_medio_resposta || 0) <= 120 ? 'Manter agilidade' : 'Implementar automações'
+          nextStep: (data.tempo_medio_resposta || 0) <= 120 ? 'Manter agilidade' : 'Implementar automações',
+          deadline: '2 semanas',
+          responsible: 'Equipe de Atendimento'
         },
         {
           name: 'Nota de Qualidade',
           current: `${data.nota_media_qualidade?.toFixed(1) || 0}/5`,
           target: '4.5/5',
           status: (data.nota_media_qualidade || 0) >= 4.5 ? 'Atingida' : 'Em andamento',
-          nextStep: (data.nota_media_qualidade || 0) >= 4.5 ? 'Manter padrão' : 'Treinar equipe'
+          nextStep: (data.nota_media_qualidade || 0) >= 4.5 ? 'Manter padrão' : 'Treinar equipe',
+          deadline: '1 mês',
+          responsible: 'Gestão de Qualidade'
         }
       ];
       
       goals.forEach(goal => {
-        excelData.push([goal.name, goal.current, goal.target, goal.status, goal.nextStep]);
+        excelData.push([goal.name, goal.current, goal.target, goal.status, goal.nextStep, goal.deadline, goal.responsible]);
       });
       excelData.push([]);
     }
 
-    // Footer
-    excelData.push(['RELATÓRIO GERADO AUTOMATICAMENTE']);
-    excelData.push(['MetricaWhats Analytics - Transformando atendimentos em resultados']);
-    excelData.push(['Para suporte técnico: contato@whatsappanalytics.com']);
+    // ===== RESUMO EXECUTIVO =====
+    excelData.push(['RESUMO EXECUTIVO']);
+    excelData.push(['Indicador', 'Valor', 'Status Geral', 'Tendência', 'Recomendação']);
+    
+    const overallStatus = (data.taxa_conversao || 0) > 20 && (data.nota_media_qualidade || 0) > 4 ? 'Excelente' :
+                         (data.taxa_conversao || 0) > 15 && (data.nota_media_qualidade || 0) > 3 ? 'Bom' : 'Precisa Melhorar';
+    
+    const overallTrend = (data.taxa_conversao || 0) > 20 ? 'Crescente' : (data.taxa_conversao || 0) > 15 ? 'Estável' : 'Decrescente';
+    const recommendation = (data.taxa_conversao || 0) > 20 ? 'Manter estratégias atuais' : (data.taxa_conversao || 0) > 15 ? 'Otimizar processos' : 'Revisar estratégias';
+    
+    excelData.push(['Performance Geral', `${((data.taxa_conversao || 0) + (data.nota_media_qualidade || 0) * 20) / 2}%`, overallStatus, overallTrend, recommendation]);
+    excelData.push(['Volume de Atendimentos', `${data.total_atendimentos?.toLocaleString('pt-BR') || 0}`, (data.total_atendimentos || 0) > 500 ? 'Alto' : 'Médio', (data.total_atendimentos || 0) > 500 ? 'Crescente' : 'Estável', (data.total_atendimentos || 0) > 500 ? 'Manter volume' : 'Aumentar volume']);
+    excelData.push(['Eficiência Operacional', `${((data.tempo_medio_resposta || 0) < 300 ? 100 : 50)}%`, (data.tempo_medio_resposta || 0) < 300 ? 'Eficiente' : 'Melhorável', (data.tempo_medio_resposta || 0) < 300 ? 'Estável' : 'Melhorando', (data.tempo_medio_resposta || 0) < 300 ? 'Manter agilidade' : 'Otimizar processos']);
+    excelData.push([]);
+
+    // ===== FOOTER PROFISSIONAL =====
+    excelData.push(['RELATÓRIO GERADO AUTOMATICAMENTE PELO SISTEMA METRICAWHATS']);
+    excelData.push(['Transformando atendimentos do WhatsApp em resultados mensuráveis']);
+    excelData.push(['Suporte: contato@metricawhats.com | WhatsApp: (11) 99999-9999']);
 
     // Converter para CSV (Excel-friendly)
     const csvContent = excelData.map(row => 
@@ -442,7 +584,7 @@ export function useExportData() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `relatorio-whatsapp-analytics-${new Date().toISOString().split('T')[0]}.xlsx`);
+    link.setAttribute('download', `MetricaWhats_Relatorio_${new Date().toISOString().split('T')[0]}.xlsx`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -451,7 +593,7 @@ export function useExportData() {
 
     toast({
       title: "Excel Exportado",
-      description: "Relatório exportado em formato Excel. Abra no Microsoft Excel ou Google Sheets.",
+      description: "Relatório Excel gerado com formatação profissional. Abra no Microsoft Excel ou Google Sheets.",
     });
   };
 
