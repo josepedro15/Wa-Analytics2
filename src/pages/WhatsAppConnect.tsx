@@ -102,12 +102,24 @@ export default function WhatsAppConnect() {
             updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
           }
         } else if (response.status === 404) {
-          // Instância não encontrada na API
-          console.log('📱 Instância não encontrada na API (404)');
-          setInstanceStatus('disconnected');
+          // 🚨 Instância não encontrada na API (404) - REMOVER DO BANCO!
+          console.log('🚨 Instância não encontrada na API (404) - REMOVENDO DO BANCO!');
           
-          // 🔄 SEMPRE atualizar banco com status real da API
-          updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
+          // 🗑️ EXCLUIR instância órfã do banco de dados
+          await deleteInstanceFromDatabase(formData.instanceName);
+          
+          // 🔄 Resetar estado local
+          setInstanceStatus('idle');
+          setInstanceCreated(false);
+          setQrCode('');
+          setInstanceId('');
+          
+          // 📱 Notificar usuário
+          toast({
+            title: "Instância Removida",
+            description: "A instância foi removida da API e excluída do banco.",
+            variant: "destructive"
+          });
         }
       } else {
         // Instância não existe no banco
@@ -752,6 +764,29 @@ export default function WhatsAppConnect() {
       }
     } catch (error) {
       console.error('❌ Erro ao atualizar status:', error);
+    }
+  };
+
+  // 🗑️ Função para EXCLUIR instância órfã do banco de dados
+  const deleteInstanceFromDatabase = async (instanceName: string) => {
+    if (!user?.id) return;
+
+    try {
+      console.log(`🗑️ Excluindo instância órfã do banco: ${instanceName}`);
+      
+      const { error } = await supabase
+        .from('whatsapp_instances')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('instance_name', instanceName);
+
+      if (error) {
+        console.error('❌ Erro ao excluir instância do banco:', error);
+      } else {
+        console.log(`✅ Instância excluída do banco: ${instanceName}`);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao excluir instância do banco:', error);
     }
   };
 
