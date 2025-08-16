@@ -99,6 +99,45 @@ export default function WhatsAppConnect() {
                 if (errorData.toLowerCase().includes('already in use') || 
                     errorData.toLowerCase().includes('already exists')) {
                   console.log('🎉 Instância já existe - pode estar conectada!');
+                  
+                  // Verificar se realmente está conectada fazendo uma chamada adicional
+                  try {
+                    const statusResponse = await fetch(endpoint, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'd3050208ba862ee87302278ac4370cb9'
+                      },
+                      body: JSON.stringify({
+                        instanceName: formData.instanceName,
+                        qrcode: true, // Tentar gerar QR code
+                        integration: "WHATSAPP-BAILEYS"
+                      })
+                    });
+                    
+                    if (statusResponse.ok) {
+                      const statusData = await statusResponse.json();
+                      console.log('🔍 Dados da verificação de status:', statusData);
+                      
+                      if (statusData.qrcode) {
+                        console.log('📱 Instância existe mas NÃO está conectada (tem QR code)');
+                        // Manter status atual
+                      } else if (statusData.instance && !statusData.qrcode) {
+                        console.log('🎉 WhatsApp CONECTADO! (tem instance mas não tem QR code)');
+                        if (instanceStatus !== 'connected') {
+                          setInstanceStatus('connected');
+                          setIsQrExpired(false);
+                          toast({
+                            title: "WhatsApp Conectado!",
+                            description: "Sua instância está ativa e pronta para receber dados.",
+                          });
+                        }
+                      }
+                    }
+                  } catch (statusError) {
+                    console.log('❌ Erro ao verificar status detalhado:', statusError);
+                  }
+                  
                   workingEndpoint = endpoint;
                   response = { ok: true, status: 200 } as Response; // Simular sucesso
                   break;
