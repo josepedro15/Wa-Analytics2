@@ -131,12 +131,31 @@ export default function WhatsAppConnect() {
       }
 
       const data = await response.json();
-      console.log('Resposta da API:', data);
+      console.log('🔍 Resposta completa da API:', JSON.stringify(data, null, 2));
+      console.log('🔍 Chaves disponíveis na resposta:', Object.keys(data));
+      console.log('🔍 Tipo de dados:', typeof data);
       
-      // Passo 2: Extrair dados da resposta
-      if (data.qrcode && data.instanceId) {
-        setQrCode(data.qrcode);
-        setInstanceId(data.instanceId);
+      // Passo 2: Extrair dados da resposta - tentar diferentes formatos
+      let qrCode = null;
+      let instanceId = null;
+      
+      // Tentar diferentes possibilidades de chaves
+      if (data.qrcode) qrCode = data.qrcode;
+      else if (data.qrCode) qrCode = data.qrCode;
+      else if (data.qr) qrCode = data.qr;
+      else if (data.qrcode_url) qrCode = data.qrcode_url;
+      
+      if (data.instanceId) instanceId = data.instanceId;
+      else if (data.instance_id) instanceId = data.instance_id;
+      else if (data.id) instanceId = data.id;
+      else if (data.instance) instanceId = data.instance;
+      
+      console.log('🔍 QR Code encontrado:', qrCode);
+      console.log('🔍 Instance ID encontrado:', instanceId);
+      
+      if (qrCode && instanceId) {
+        setQrCode(qrCode);
+        setInstanceId(instanceId);
         setInstanceCreated(true);
         setInstanceStatus('qr_ready');
         
@@ -145,7 +164,17 @@ export default function WhatsAppConnect() {
           description: `Instância criada via ${workingEndpoint}. Agora escaneie o QR Code!`,
         });
       } else {
-        throw new Error('QR Code ou ID da instância não recebidos da API');
+        // Mostrar erro mais detalhado
+        const errorMsg = `API respondeu com sucesso, mas não encontrou os dados necessários.
+        
+Resposta recebida: ${JSON.stringify(data, null, 2)}
+
+Chaves disponíveis: ${Object.keys(data).join(', ')}
+
+Esperado: qrcode (ou qrCode, qr, qrcode_url) e instanceId (ou instance_id, id, instance)`;
+        
+        console.error('❌ Erro detalhado:', errorMsg);
+        throw new Error(`API não retornou dados esperados. Verifique o console para detalhes.`);
       }
       
     } catch (error) {
