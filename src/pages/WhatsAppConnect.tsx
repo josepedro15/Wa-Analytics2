@@ -74,28 +74,50 @@ export default function WhatsAppConnect() {
   const checkInstanceStatus = async () => {
     if (!instanceId) return;
 
-    try {
-      const response = await fetch(`https://api.aiensed.com/instance/status/${instanceId}`, {
-        headers: {
-          'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        }
-      });
+    // Testar diferentes endpoints de status
+    const statusEndpoints = [
+      `https://api.aiensed.com/instance/status/${instanceId}`,
+      `https://api.aiensed.com/instance/${instanceId}/status`,
+      `https://api.aiensed.com/instance/connect/${instanceId}`,
+      `https://api.aiensed.com/instance/info/${instanceId}`
+    ];
 
-      if (response.ok) {
-        const statusData = await response.json();
-        console.log('🔍 Status da instância:', statusData);
+    for (const endpoint of statusEndpoints) {
+      try {
+        console.log(`🔍 Testando endpoint de status: ${endpoint}`);
+        
+        const response = await fetch(endpoint, {
+          headers: {
+            'apikey': 'd3050208ba862ee87302278ac4370cb9'
+          }
+        });
 
-        if (statusData.status === 'connected' || statusData.connected === true) {
-          setInstanceStatus('connected');
-          setIsQrExpired(false);
-          toast({
-            title: "WhatsApp Conectado!",
-            description: "Sua instância está ativa e pronta para receber dados.",
-          });
+        if (response.ok) {
+          const statusData = await response.json();
+          console.log('✅ Status da instância:', statusData);
+
+          // Verificar diferentes formatos de resposta
+          const isConnected = 
+            statusData.status === 'connected' || 
+            statusData.connected === true ||
+            statusData.state === 'connected' ||
+            statusData.connectionStatus === 'connected';
+
+          if (isConnected) {
+            setInstanceStatus('connected');
+            setIsQrExpired(false);
+            toast({
+              title: "WhatsApp Conectado!",
+              description: "Sua instância está ativa e pronta para receber dados.",
+            });
+            return; // Parar de testar outros endpoints
+          }
+        } else {
+          console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
         }
+      } catch (error) {
+        console.log(`❌ Erro no endpoint ${endpoint}:`, error);
       }
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
     }
   };
 
