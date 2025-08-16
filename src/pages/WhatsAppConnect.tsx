@@ -891,7 +891,42 @@ export default function WhatsAppConnect() {
             )}
           </div>
 
-          {/* Sidebar removida - mantendo apenas o conteúdo principal */}
+          {/* Sidebar com apenas o card de ajuda */}
+          <div className="space-y-6">
+            {/* Card de Ajuda */}
+            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-xl">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <CardTitle className="text-lg font-bold text-green-800">
+                    Como Funciona
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4 text-sm text-gray-600">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                    <p>Digite o nome da instância (apenas letras e números)</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <p>Clique em "Conectar WhatsApp" para gerar o QR Code</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                    <p>Escaneie o QR Code com seu WhatsApp Business</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2"></div>
+                    <p>A instância será criada e conectada automaticamente</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
