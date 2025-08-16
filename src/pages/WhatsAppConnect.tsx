@@ -365,13 +365,21 @@ export default function WhatsAppConnect() {
         if (!qrCode && data.qrcode_url) qrCode = data.qrcode_url;
         
         if (qrCode && instanceId) {
+          console.log('🎯 Dados válidos recebidos:', { qrCode: !!qrCode, instanceId, instanceName });
+          
           setQrCode(qrCode);
           setInstanceId(instanceId);
           setInstanceCreated(true);
           setInstanceStatus('qr_ready');
           
+          console.log('💾 Estado atualizado, salvando no banco...');
+          
           // Salvar instância no banco de dados
-          await saveInstanceToDatabase(formData.instanceName, instanceId, qrCode);
+          const savedInstance = await saveInstanceToDatabase(formData.instanceName, instanceId, qrCode);
+          
+          if (savedInstance) {
+            console.log('✅ Instância salva com sucesso no banco:', savedInstance);
+          }
           
           toast({
             title: "QR Code Gerado!",
@@ -424,6 +432,9 @@ export default function WhatsAppConnect() {
                 setInstanceId(instanceId);
                 setInstanceCreated(true);
                 setInstanceStatus('qr_ready');
+                
+                // Salvar instância no banco de dados (nome único)
+                await saveInstanceToDatabase(uniqueName, instanceId, qrCode);
                 
                 toast({
                   title: "QR Code Gerado!",
@@ -552,8 +563,8 @@ export default function WhatsAppConnect() {
     let existenceInterval: number;
     
     // Verificar se instância existe constantemente (a cada 3 segundos)
-    // MAS só quando não há instância criada ou quando está desconectada
-    if (formData.instanceName && (!instanceCreated || instanceStatus === 'disconnected')) {
+    // Sempre verificar quando há nome de instância
+    if (formData.instanceName) {
       existenceInterval = setInterval(checkInstanceExists, 3000);
     }
     
