@@ -865,7 +865,7 @@ export default function WhatsAppConnect() {
   }, [instanceStatus, instanceId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header com design moderno e elegante */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white shadow-2xl">
         {/* Background pattern simples */}
@@ -914,18 +914,18 @@ export default function WhatsAppConnect() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {/* Coluna Principal - Formulário */}
           <div className="xl:col-span-2 space-y-8">
-            {/* Card de Configuração com design premium */}
-            <Card className="shadow-2xl border-0 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30 backdrop-blur-sm rounded-3xl overflow-hidden border border-blue-100/50">
-              <CardHeader className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white p-10">
-                <div className="flex items-center gap-6">
-                  <div className="p-4 bg-white/20 rounded-3xl backdrop-blur-md border border-white/30">
-                    <Smartphone className="h-10 w-10 text-white" />
+            {/* Card de Configuração padronizado com Dashboard */}
+            <Card className="shadow-sm border border-border/50 bg-card/50 backdrop-blur-sm rounded-xl overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg">
+                    <Smartphone className="h-5 w-5 text-white m-auto mt-1.5" />
                   </div>
                   <div>
-                    <CardTitle className="text-4xl font-black text-white mb-3">
+                    <CardTitle className="text-lg font-semibold">
                       Configuração da Instância
                     </CardTitle>
-                    <CardDescription className="text-xl text-blue-100 leading-relaxed font-light">
+                    <CardDescription className="text-sm text-muted-foreground">
                       Crie uma nova instância do WhatsApp para análise de dados
                     </CardDescription>
                   </div>
@@ -1294,14 +1294,14 @@ export default function WhatsAppConnect() {
 
           {/* Sidebar com apenas o card de ajuda */}
           <div className="space-y-6">
-            {/* Card de Ajuda */}
-            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6">
+            {/* Card de Ajuda padronizado com Dashboard */}
+            <Card className="shadow-sm border border-border/50 bg-card/50 backdrop-blur-sm rounded-xl overflow-hidden">
+              <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-xl">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div className="h-8 w-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-white m-auto mt-1.5" />
                   </div>
-                  <CardTitle className="text-lg font-bold text-green-800">
+                  <CardTitle className="text-lg font-semibold">
                     Como Funciona
                   </CardTitle>
                 </div>
