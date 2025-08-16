@@ -593,14 +593,67 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                   {/* Status Conectado */}
                   {instanceStatus === 'connected' && (
                     <div className="text-center">
-                      <div className="text-green-600 text-lg font-medium mb-2">
-                        ✅ Instância Conectada com Sucesso!
+                      {/* Animações de sucesso */}
+                      <div className="mb-4">
+                        {/* Checkmark animado */}
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
+                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
+                            <svg 
+                              className="w-5 h-5 text-white" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={3} 
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Texto de sucesso animado */}
+                        <div className="space-y-2">
+                          <h3 className="text-2xl font-bold text-green-600 animate-fade-in">
+                            🎉 WhatsApp Conectado!
+                          </h3>
+                          <p className="text-lg text-green-700 font-medium">
+                            Instância Ativa e Funcionando
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600">
-                        Sua instância está ativa e pronta para receber dados do WhatsApp.
-                      </p>
-                      <div className="mt-3 text-xs text-gray-500">
-                        ID da Instância: {instanceId}
+                      
+                      {/* Informações da instância */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-medium text-green-700">
+                            Status: Conectado e Ativo
+                          </span>
+                        </div>
+                        <p className="text-sm text-green-600">
+                          Sua instância está pronta para receber e processar dados do WhatsApp.
+                        </p>
+                      </div>
+                      
+                      {/* ID da instância */}
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                        <p className="text-xs text-gray-500 mb-1">ID da Instância:</p>
+                        <code className="text-xs bg-white px-2 py-1 rounded border font-mono">
+                          {instanceId}
+                        </code>
+                      </div>
+                      
+                      {/* Mensagem de sucesso */}
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-2">
+                          ✅ Conexão estabelecida com sucesso!
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Você pode fechar esta página. A instância continuará funcionando.
+                        </p>
                       </div>
                     </div>
                   )}
