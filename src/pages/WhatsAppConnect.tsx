@@ -284,10 +284,19 @@ export default function WhatsAppConnect() {
       console.log('🔍 Instance Name encontrado:', instanceName);
       
       if (qrCode && instanceId) {
+        console.log('✅ Dados extraídos com sucesso:', { qrCode, instanceId, instanceName });
+        
         setQrCode(qrCode);
         setInstanceId(instanceId);
         setInstanceCreated(true);
         setInstanceStatus('qr_ready');
+        
+        console.log('🔄 Estados atualizados:', { 
+          qrCode: !!qrCode, 
+          instanceId: !!instanceId, 
+          instanceCreated: true, 
+          instanceStatus: 'qr_ready' 
+        });
         
         toast({
           title: "QR Code Gerado!",
@@ -431,24 +440,24 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                   </code>
                 </div>
 
-                <Button
-                  onClick={handleConnect}
-                  disabled={isCreatingInstance || !formData.instanceName}
-                  className="w-full"
-                  size="lg"
-                >
-                  {isCreatingInstance ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Criando Instância...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="h-4 w-4 mr-2" />
-                      Criar Instância
-                    </>
-                  )}
-                </Button>
+                                         <Button
+                           onClick={handleConnect}
+                           disabled={isCreatingInstance || !formData.instanceName}
+                           className="w-full"
+                           size="lg"
+                         >
+                           {isCreatingInstance ? (
+                             <>
+                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                               Conectando WhatsApp...
+                             </>
+                           ) : (
+                             <>
+                               <Zap className="h-4 w-4 mr-2" />
+                               Conectar WhatsApp
+                             </>
+                           )}
+                         </Button>
               </div>
 
               {/* Status da Instância */}
@@ -482,7 +491,7 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                   </div>
 
                   {/* QR Code */}
-                  {instanceStatus === 'qr_ready' && qrCode && (
+                  {(instanceStatus === 'qr_ready' || instanceCreated) && qrCode && (
                     <div className="text-center">
                       <h3 className="font-medium text-gray-800 mb-3">
                         Escaneie o QR Code com seu WhatsApp
