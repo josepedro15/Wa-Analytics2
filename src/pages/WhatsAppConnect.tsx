@@ -147,9 +147,13 @@ export default function WhatsAppConnect() {
               // Atualizar status no banco de dados
               updateInstanceStatusInDatabase(formData.instanceName, 'connected');
               
+              // 🔄 Gerar novo QR code para reconexão da instância existente
+              console.log('🔄 Instância conectada - gerando novo QR code para reconexão...');
+              generateQrCodeForExistingInstance(formData.instanceName);
+              
               toast({
                 title: "WhatsApp Conectado!",
-                description: "Sua instância está ativa e pronta para receber dados.",
+                description: "Sua instância está ativa e pronto para receber dados.",
               });
             }
             return;
@@ -196,6 +200,66 @@ export default function WhatsAppConnect() {
       
     } catch (error) {
       console.log(`❌ Erro na verificação:`, error);
+    }
+  };
+
+  // Função para gerar QR code para instância existente (reconexão)
+  const generateQrCodeForExistingInstance = async (instanceName: string) => {
+    if (!instanceName) return;
+
+    console.log(`🔄 Gerando QR code para instância existente: ${instanceName}`);
+    setIsQrExpired(false);
+    setTimeRemaining(60);
+    setInstanceStatus('creating');
+
+    try {
+      // Usar o endpoint para gerar QR code em instância existente
+      const response = await fetch('https://api.aiensed.com/instance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        },
+        body: JSON.stringify({
+          instanceName: instanceName,
+          qrcode: true,
+          integration: "WHATSAPP-BAILEYS"
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔄 Resposta da regeneração de QR:', data);
+
+        if (data.qrcode && data.instance) {
+          const qrCode = data.qrcode.base64 || data.qrcode;
+          const instanceId = data.instance.instanceId || data.instance.id;
+          
+          setQrCode(qrCode);
+          setInstanceId(instanceId);
+          setInstanceStatus('qr_ready');
+          startQrTimer();
+          
+          console.log('✅ QR code regenerado para instância existente');
+          
+          toast({
+            title: "QR Code Gerado!",
+            description: "Escaneie o QR Code para reconectar à instância existente.",
+          });
+        } else {
+          throw new Error('API não retornou QR code válido');
+        }
+      } else {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao gerar QR code para instância existente:', error);
+      setInstanceStatus('error');
+      toast({
+        title: "Erro ao Gerar QR Code",
+        description: "Não foi possível gerar QR code para reconexão.",
+        variant: "destructive"
+      });
     }
   };
 
