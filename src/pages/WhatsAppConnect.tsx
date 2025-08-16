@@ -449,47 +449,8 @@ export default function WhatsAppConnect() {
     }
   };
 
-  useEffect(() => {
-    const savedState = localStorage.getItem('whatsapp-connect-state');
-    if (savedState) {
-      try {
-        const parsedState = JSON.parse(savedState);
-        
-        if (parsedState.instanceName && parsedState.instanceId) {
-          setFormData({ instanceName: parsedState.instanceName });
-          setInstanceId(parsedState.instanceId);
-          setInstanceCreated(true);
-          
-          if (parsedState.status === 'connected') {
-            setInstanceStatus('connected');
-            setTimeout(() => checkInstanceStatus(), 1000);
-          } else if (parsedState.status === 'qr_ready') {
-            setInstanceStatus('qr_ready');
-            if (parsedState.qrCode) {
-              setQrCode(parsedState.qrCode);
-              startQrTimer();
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ Erro ao restaurar estado:', error);
-        localStorage.removeItem('whatsapp-connect-state');
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (instanceId && formData.instanceName) {
-      const stateToSave = {
-        instanceName: formData.instanceName,
-        instanceId,
-        status: instanceStatus,
-        qrCode: qrCode,
-        timestamp: Date.now()
-      };
-      localStorage.setItem('whatsapp-connect-state', JSON.stringify(stateToSave));
-    }
-  }, [instanceId, formData.instanceName, instanceStatus, qrCode]);
+  // REMOVIDO: localStorage e persistência de estado
+  // Agora só verifica via API em tempo real
 
   useEffect(() => {
     let statusInterval: number;
@@ -933,8 +894,7 @@ export default function WhatsAppConnect() {
                           setQrCode('');
                           setInstanceId('');
                           setFormData({ instanceName: '' });
-                          localStorage.removeItem('whatsapp-connect-state');
-                          console.log('🗑️ Estado limpo do localStorage');
+                          console.log('🗑️ Estado limpo - nova instância');
                         }}
                         variant="outline"
                         size="lg"
