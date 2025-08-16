@@ -34,8 +34,7 @@ export default function WhatsAppConnect() {
   const [timeRemaining, setTimeRemaining] = useState<number>(60);
   const [isQrExpired, setIsQrExpired] = useState(false);
   
-  // 🛡️ Variável de controle para proteger QR code manual
-  const [qrManuallyGenerated, setQrManuallyGenerated] = useState(false);
+  // 🚫 REMOVIDO: Variável de controle que travava o sistema
 
   const generateUniqueName = (baseName: string): string => {
     const timestamp = Date.now();
@@ -180,24 +179,22 @@ export default function WhatsAppConnect() {
               console.log('🔍 Verificando se deve gerar QR automático:');
               console.log('🔍 instanceStatus atual:', instanceStatus);
               console.log('🔍 qrCode existe:', !!qrCode);
-              console.log('🔍 qrManuallyGenerated:', qrManuallyGenerated);
+              // 🚫 REMOVIDO: Referência à variável removida
               console.log('🔍 instanceStatus !== qr_ready:', instanceStatus !== 'qr_ready');
               console.log('🔍 !qrCode:', !qrCode);
               
-              // 🛡️ PROTEÇÃO ROBUSTA: Não gerar se QR já foi gerado
-              if ((instanceStatus !== 'qr_ready' || !qrCode) && !qrManuallyGenerated) {
-                console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
-                console.log('🔄 Chamando generateQrCodeForExistingInstance...');
-                
-                // ⏰ Aguardar um pouco antes de gerar novo QR
-                setTimeout(() => {
-                  console.log('🔄 Executando geração de QR code após delay...');
-                  generateQrCodeForExistingInstance(formData.instanceName);
-                }, 1000);
-              } else {
-                console.log('🛡️ PROTEÇÃO ATIVA: QR code já existe na tela - NÃO sobrescrevendo automaticamente');
-                console.log('🛡️ Estado atual:', { instanceStatus, qrCodeExists: !!qrCode, qrManuallyGenerated });
-              }
+              // 🚫 REMOVIDO: Proteção que impedia mudança de tela
+              // 🚫 REMOVIDO: Verificação qrManuallyGenerated que travava sistema
+              // ✅ AGORA: Sempre gerar QR quando desconectado
+              
+              console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
+              console.log('🔄 Chamando generateQrCodeForExistingInstance...');
+              
+              // ⏰ Aguardar um pouco antes de gerar novo QR
+              setTimeout(() => {
+                console.log('🔄 Executando geração de QR code após delay...');
+                generateQrCodeForExistingInstance(formData.instanceName);
+              }, 1000);
             }
             return;
           }
@@ -332,9 +329,8 @@ export default function WhatsAppConnect() {
             setInstanceStatus('qr_ready');
             startQrTimer();
             
-            // 🛡️ Marcar que QR foi gerado (manual ou automático)
-            setQrManuallyGenerated(true);
-            console.log('🛡️ QR code marcado como protegido contra sobrescrita');
+            // ✅ QR code gerado com sucesso
+            console.log('✅ QR code gerado com sucesso');
             
             toast({
               title: "QR Code Gerado!",
@@ -769,23 +765,19 @@ export default function WhatsAppConnect() {
     }
   }, [user?.id]);
 
+  // 🚫 REMOVIDO: TODOS os intervalos automáticos que causavam loop infinito
+  // 🚫 REMOVIDO: Verificações automáticas que travavam o sistema
+  // 🚫 REMOVIDO: Polling que impedia mudança de tela
+  // 🚫 REMOVIDO: existenceInterval, statusInterval, timerInterval automáticos
+  
+  // ✅ APENAS timer manual para QR code (sem interferir no status)
   useEffect(() => {
-    let statusInterval: number;
     let timerInterval: number;
-    let existenceInterval: number;
-    
-    // Verificar se instância existe constantemente (a cada 3 segundos)
-    // Sempre verificar quando há nome de instância
-    if (formData.instanceName) {
-      existenceInterval = setInterval(checkInstanceExists, 3000);
-    }
     
     if (instanceStatus === 'qr_ready' && instanceId) {
       startQrTimer();
       
-      // Verificar status em tempo real quando aguardando conexão
-      statusInterval = setInterval(checkInstanceStatus, 30000); // A cada 30 segundos (mais lento para evitar sobrecarga)
-      
+      // ⏰ APENAS timer de contagem regressiva (sem verificar status)
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
@@ -797,17 +789,10 @@ export default function WhatsAppConnect() {
       }, 1000);
     }
     
-    if (instanceStatus === 'connected' && instanceId) {
-      // Verificar status a cada 5 segundos quando conectado (mais responsivo)
-      statusInterval = setInterval(checkInstanceStatus, 30000); // A cada 30 segundos (mais lento para evitar sobrecarga)
-    }
-    
     return () => {
-      if (statusInterval) clearInterval(statusInterval);
       if (timerInterval) clearInterval(timerInterval);
-      if (existenceInterval) clearInterval(existenceInterval);
     };
-  }, [instanceStatus, instanceId, formData.instanceName]);
+  }, [instanceStatus, instanceId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
