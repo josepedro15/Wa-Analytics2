@@ -172,6 +172,9 @@ export default function WhatsAppConnect() {
           if (response.ok) {
             responseData = await response.json();
             console.log('✅ Resposta completa:', responseData);
+            console.log('🔍 Chaves da resposta:', Object.keys(responseData));
+            console.log('🔍 Tipo de qrcode:', typeof responseData.qrcode);
+            console.log('🔍 Tamanho do qrcode:', responseData.qrcode?.length || 'N/A');
             success = true;
             break;
           } else if (response.status === 403) {
@@ -212,16 +215,34 @@ export default function WhatsAppConnect() {
           instanceIdData = responseData.data.instanceId;
         }
 
+        console.log('🔍 Dados extraídos:', { qrCodeData, instanceIdData });
+        
         if (qrCodeData) {
-          setQrCode(qrCodeData);
-          setInstanceId(instanceIdData);
-          setInstanceStatus('qr_ready');
-          setInstanceCreated(true);
-          setQrExpirationTime(Date.now() + 60000);
-          setTimeRemaining(60);
-          setIsQrExpired(false);
-          toast.success('QR Code gerado com sucesso!');
+          // Verificar se o QR Code é válido
+          if (typeof qrCodeData === 'string' && qrCodeData.length > 0) {
+            // Se for base64, adicionar prefixo data:image/png;base64,
+            let finalQrCode = qrCodeData;
+            if (qrCodeData.startsWith('data:image/')) {
+              // Já é uma data URL válida
+            } else if (qrCodeData.length > 100) {
+              // Provavelmente é base64, adicionar prefixo
+              finalQrCode = `data:image/png;base64,${qrCodeData}`;
+            }
+            
+            console.log('✅ QR Code válido encontrado:', finalQrCode.substring(0, 100) + '...');
+            setQrCode(finalQrCode);
+            setInstanceId(instanceIdData);
+            setInstanceStatus('qr_ready');
+            setInstanceCreated(true);
+            setQrExpirationTime(Date.now() + 60000);
+            setTimeRemaining(60);
+            setIsQrExpired(false);
+            toast.success('QR Code gerado com sucesso!');
+          } else {
+            throw new Error('QR Code inválido ou vazio');
+          }
         } else {
+          console.error('❌ Estrutura da resposta:', responseData);
           throw new Error('QR Code não encontrado na resposta');
         }
       } else {
@@ -517,11 +538,25 @@ export default function WhatsAppConnect() {
                     )}
                     
                     <div className="bg-white p-4 rounded-lg inline-block border">
-                      <img 
-                        src={qrCode} 
-                        alt="QR Code WhatsApp" 
-                        className={`w-48 h-48 ${isQrExpired ? 'opacity-50' : ''}`}
-                      />
+                      {qrCode ? (
+                        <img 
+                          src={qrCode} 
+                          alt="QR Code WhatsApp" 
+                          className={`w-48 h-48 ${isQrExpired ? 'opacity-50' : ''}`}
+                          onError={(e) => {
+                            console.error('❌ Erro ao carregar QR Code:', e);
+                            toast.error('Erro ao carregar QR Code');
+                          }}
+                        />
+                      ) : (
+                        <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
+                          <div className="text-center text-gray-500">
+                            <div className="text-4xl mb-2">📱</div>
+                            <div className="text-sm">QR Code não carregado</div>
+                            <div className="text-xs mt-1">Verifique o console</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <p className="text-sm text-gray-600 mt-2">
