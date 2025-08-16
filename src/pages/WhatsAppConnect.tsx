@@ -533,6 +533,53 @@ export default function WhatsAppConnect() {
     }
   };
 
+  // Função para carregar instâncias existentes do usuário
+  const loadExistingInstances = async () => {
+    if (!user?.id) return;
+
+    try {
+      console.log('🔍 Carregando instâncias existentes do usuário...');
+      
+      const { data, error } = await supabase
+        .from('whatsapp_instances')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Erro ao carregar instâncias:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        console.log('💾 Instâncias encontradas no banco:', data);
+        
+        // Carregar a instância mais recente
+        const latestInstance = data[0];
+        console.log('🎯 Instância mais recente:', latestInstance);
+        
+        // Restaurar estado da instância
+        setFormData({ instanceName: latestInstance.instance_name });
+        setInstanceId(latestInstance.instance_id);
+        setInstanceCreated(true);
+        
+        if (latestInstance.qr_code) {
+          setQrCode(latestInstance.qr_code);
+        }
+        
+        // Verificar status atual na API
+        setTimeout(() => checkInstanceExists(), 1000);
+        
+      } else {
+        console.log('📭 Nenhuma instância encontrada no banco');
+      }
+      
+    } catch (error) {
+      console.error('❌ Erro ao carregar instâncias:', error);
+    }
+  };
+
   // Função para atualizar status da instância no banco
   const updateInstanceStatusInDatabase = async (instanceName: string, status: string) => {
     if (!user?.id) return;
@@ -556,6 +603,14 @@ export default function WhatsAppConnect() {
       console.error('❌ Erro ao atualizar status:', error);
     }
   };
+
+  // Carregar instâncias existentes ao montar o componente
+  useEffect(() => {
+    if (user?.id) {
+      console.log('🚀 Componente montado, carregando instâncias existentes...');
+      loadExistingInstances();
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     let statusInterval: number;
