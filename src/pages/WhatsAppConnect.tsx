@@ -43,6 +43,20 @@ export default function WhatsAppConnect() {
   const [qrCode, setQrCode] = useState<string>('');
   const [instanceId, setInstanceId] = useState<string>('');
   const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'error'>('idle');
+  
+  // Função para gerar nome único
+  const generateUniqueName = (baseName: string): string => {
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    return `${baseName}-${timestamp}-${randomSuffix}`;
+  };
+  
+  // Função para sugerir nomes alternativos
+  const suggestAlternativeNames = (baseName: string): string => {
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    return `${baseName}-${timestamp}-${randomSuffix}`;
+  };
 
   const validateForm = (): boolean => {
     try {
@@ -131,6 +145,35 @@ export default function WhatsAppConnect() {
                 try {
                   const errorJson = JSON.parse(errorData);
                   console.log(`🚨 Erro 403 em JSON:`, errorJson);
+                  
+                  // Se for erro de nome já em uso, tentar com nome único
+                  if (errorJson.response?.message?.[0]?.includes('already in use')) {
+                    const uniqueName = generateUniqueName(formData.instanceName);
+                    console.log(`🔄 Tentando com nome único: ${uniqueName}`);
+                    
+                    // Tentar novamente com o nome único
+                    const retryResponse = await fetch(endpoint, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'd3050208ba862ee87302278ac4370cb9'
+                      },
+                      body: JSON.stringify({
+                        instanceName: uniqueName,
+                        qrcode: true,
+                        integration: "WHATSAPP-BAILEYS"
+                      })
+                    });
+                    
+                    if (retryResponse.ok) {
+                      workingEndpoint = endpoint;
+                      console.log(`✅ Endpoint funcionando com nome único: ${endpoint}`);
+                      response = retryResponse;
+                      break;
+                    } else {
+                      console.log(`❌ Retry com nome único falhou: ${retryResponse.status}`);
+                    }
+                  }
                 } catch (parseError) {
                   console.log(`🚨 Erro 403 em texto:`, errorData);
                 }
