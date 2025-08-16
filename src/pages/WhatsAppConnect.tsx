@@ -830,11 +830,11 @@ export default function WhatsAppConnect() {
         });
       }, 1000);
       
-      // 🔍 Verificar status a cada 10 segundos (não a cada 3!)
+      // 🔍 Verificar status a cada 60 segundos (muito mais lento para QR)
       statusInterval = setInterval(() => {
         console.log('🔍 Verificação inteligente de status (QR ready)...');
         checkInstanceStatus();
-      }, 10000); // 10 segundos (muito mais lento)
+      }, 60000); // 60 segundos (muito mais lento para QR)
     }
     
     if (instanceStatus === 'connected' && instanceId) {
