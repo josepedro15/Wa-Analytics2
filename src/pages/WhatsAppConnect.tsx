@@ -120,6 +120,24 @@ export default function WhatsAppConnect() {
             break;
           } else {
             console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
+            
+            // Se for 403, vamos tentar ler a resposta de erro
+            if (response.status === 403) {
+              try {
+                const errorData = await response.text();
+                console.log(`🚨 Detalhes do erro 403:`, errorData);
+                
+                // Tentar parsear como JSON se possível
+                try {
+                  const errorJson = JSON.parse(errorData);
+                  console.log(`🚨 Erro 403 em JSON:`, errorJson);
+                } catch (parseError) {
+                  console.log(`🚨 Erro 403 em texto:`, errorData);
+                }
+              } catch (readError) {
+                console.log(`🚨 Não foi possível ler resposta de erro 403:`, readError);
+              }
+            }
           }
         } catch (endpointError) {
           console.log(`❌ Erro no endpoint ${endpoint}:`, endpointError);
