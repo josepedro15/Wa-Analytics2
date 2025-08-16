@@ -174,7 +174,13 @@ export default function WhatsAppConnect() {
               
               // 🔄 Gerar QR code para reconexão quando desconectado
               console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
-              generateQrCodeForExistingInstance(formData.instanceName);
+              console.log('🔄 Chamando generateQrCodeForExistingInstance...');
+              
+              // ⏰ Aguardar um pouco antes de gerar novo QR
+              setTimeout(() => {
+                console.log('🔄 Executando geração de QR code após delay...');
+                generateQrCodeForExistingInstance(formData.instanceName);
+              }, 1000);
             }
             return;
           }
@@ -1057,6 +1063,13 @@ export default function WhatsAppConnect() {
                             console.log('🔍 Status atual:', instanceStatus);
                             console.log('🔍 Instance ID:', instanceId);
                             console.log('🔍 Instance Name:', formData.instanceName);
+                            
+                            // 🔄 Testar geração manual de QR code se desconectado
+                            if (instanceStatus === 'disconnected' && formData.instanceName) {
+                              console.log('🔄 Testando geração manual de QR code...');
+                              generateQrCodeForExistingInstance(formData.instanceName);
+                            }
+                            
                             toast({
                               title: "Debug Info",
                               description: `Status: ${instanceStatus}, ID: ${instanceId}`,
@@ -1066,7 +1079,7 @@ export default function WhatsAppConnect() {
                           size="lg"
                           className="text-gray-600 hover:text-gray-800 rounded-2xl px-6"
                         >
-                          📊 Debug
+                          📊 Debug + QR
                         </Button>
                       </div>
                     </div>
