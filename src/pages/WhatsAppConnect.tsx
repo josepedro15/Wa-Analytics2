@@ -74,50 +74,48 @@ export default function WhatsAppConnect() {
   const checkInstanceStatus = async () => {
     if (!instanceId) return;
 
-    // Testar diferentes endpoints de status
-    const statusEndpoints = [
-      `https://api.aiensed.com/instance/status/${instanceId}`,
-      `https://api.aiensed.com/instance/${instanceId}/status`,
-      `https://api.aiensed.com/instance/connect/${instanceId}`,
-      `https://api.aiensed.com/instance/info/${instanceId}`
-    ];
+    try {
+      console.log(`🔍 Verificando status da instância: ${instanceId}`);
+      
+      // Tentar recriar a instância para ver se já está conectada
+      const response = await fetch('https://api.aiensed.com/instance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        },
+        body: JSON.stringify({
+          instanceName: formData.instanceName,
+          qrcode: false, // Não gerar QR se já conectado
+          integration: "WHATSAPP-BAILEYS"
+        })
+      });
 
-    for (const endpoint of statusEndpoints) {
-      try {
-        console.log(`🔍 Testando endpoint de status: ${endpoint}`);
-        
-        const response = await fetch(endpoint, {
-          headers: {
-            'apikey': 'd3050208ba862ee87302278ac4370cb9'
+      if (response.ok) {
+        const statusData = await response.json();
+        console.log('✅ Resposta da verificação:', statusData);
+
+        // Se não retornou QR code, provavelmente já está conectado
+        if (!statusData.qrcode && statusData.instance) {
+          console.log('🎉 Instância já conectada!');
+          setInstanceStatus('connected');
+          setIsQrExpired(false);
+          toast({
+            title: "WhatsApp Conectado!",
+            description: "Sua instância está ativa e pronta para receber dados.",
+          });
+        } else if (statusData.qrcode) {
+          console.log('📱 QR Code ainda necessário');
+          // Atualizar QR code se necessário
+          if (statusData.qrcode.base64) {
+            setQrCode(statusData.qrcode.base64);
           }
-        });
-
-        if (response.ok) {
-          const statusData = await response.json();
-          console.log('✅ Status da instância:', statusData);
-
-          // Verificar diferentes formatos de resposta
-          const isConnected = 
-            statusData.status === 'connected' || 
-            statusData.connected === true ||
-            statusData.state === 'connected' ||
-            statusData.connectionStatus === 'connected';
-
-          if (isConnected) {
-            setInstanceStatus('connected');
-            setIsQrExpired(false);
-            toast({
-              title: "WhatsApp Conectado!",
-              description: "Sua instância está ativa e pronta para receber dados.",
-            });
-            return; // Parar de testar outros endpoints
-          }
-        } else {
-          console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
         }
-      } catch (error) {
-        console.log(`❌ Erro no endpoint ${endpoint}:`, error);
+      } else {
+        console.log(`❌ Verificação retornou: ${response.status}`);
       }
+    } catch (error) {
+      console.log(`❌ Erro na verificação:`, error);
     }
   };
 
