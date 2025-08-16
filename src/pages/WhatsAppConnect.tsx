@@ -70,18 +70,25 @@ export default function WhatsAppConnect() {
     setIsQrExpired(false);
   };
 
-    // Função para verificar status da instância usando endpoints padrão da Evolution API
+    // Função para verificar status REAL da instância
   const checkInstanceStatus = async () => {
-    if (!instanceId) return;
+    if (!instanceId || !formData.instanceName) return;
 
     try {
-      console.log(`🔍 Verificando status da instância: ${instanceId}`);
+      console.log(`🔍 Verificando status REAL da instância: ${formData.instanceName}`);
       
-      // Tentar usar endpoint raiz para verificar status geral
-      const rootResponse = await fetch('https://api.aiensed.com/', {
+      // Tentar criar a instância novamente para ver se ainda existe
+      const response = await fetch('https://api.aiensed.com/instance/create', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        }
+        },
+        body: JSON.stringify({
+          instanceName: formData.instanceName,
+          qrcode: false, // Não gerar QR, só verificar
+          integration: "WHATSAPP-BAILEYS"
+        })
       });
 
       if (rootResponse.ok) {
