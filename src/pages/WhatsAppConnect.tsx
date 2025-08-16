@@ -1063,68 +1063,69 @@ export default function WhatsAppConnect() {
                 </CardHeader>
                 
                 <CardContent className="p-6">
-                  {/* QR Code Section */}
+                  {/* QR Code Section com layout otimizado */}
                   {(instanceStatus === 'qr_ready' || (instanceCreated && instanceStatus !== 'connected')) && qrCode && (
-                    <div className="text-center space-y-6">
-                      {/* Timer de expiração */}
-                      {!isQrExpired && (
-                        <div className="inline-flex items-center gap-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl shadow-sm">
-                          <Clock className="h-5 w-5 text-yellow-600" />
-                          <span className="text-lg font-semibold text-yellow-700">
-                            QR Code expira em: <strong className="text-2xl">{timeRemaining}s</strong>
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* QR Code expirado */}
-                      {isQrExpired && (
-                        <div className="inline-flex items-center gap-3 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl shadow-sm">
-                          <AlertCircle className="h-5 w-5 text-red-600" />
-                          <span className="text-lg font-semibold text-red-700">
-                            QR Code expirado! Clique em "Gerar Novo QR Code"
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* QR Code Image */}
-                      <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-lg inline-block">
-                        <img 
-                          src={qrCode} 
-                          alt="QR Code WhatsApp" 
-                          className={`w-56 h-56 ${isQrExpired ? 'opacity-50 grayscale' : ''} transition-all duration-300`}
-                        />
-                      </div>
-                      
-                      {/* Instruções */}
-                      <div className="max-w-md mx-auto space-y-3">
-                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200">
-                          <h4 className="font-semibold text-blue-800 mb-2">📱 Como Escanear:</h4>
-                          <ol className="text-sm text-blue-700 space-y-1 text-left">
-                            <li>1. Abra o <strong>WhatsApp Business</strong></li>
-                            <li>2. Vá em <strong>Configurações</strong></li>
-                            <li>3. Toque em <strong>Dispositivos Vinculados</strong></li>
-                            <li>4. Escaneie o QR Code acima</li>
-                          </ol>
-                        </div>
-                        
-                        {/* ID da instância removido da exibição */}
-                      </div>
-                      
-                      {/* Botões de ação */}
-                      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                        {isQrExpired && (
-                          <Button
-                            onClick={regenerateQrCode}
-                            variant="outline"
-                            size="lg"
-                            className="bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 rounded-2xl px-8"
-                          >
-                            <QrCode className="h-5 w-5 mr-2" />
-                            Gerar Novo QR Code
-                          </Button>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                      {/* Coluna Esquerda - Timer e Instruções */}
+                      <div className="space-y-6 order-2 lg:order-1">
+                        {/* Timer de expiração */}
+                        {!isQrExpired && (
+                          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl shadow-sm">
+                            <Clock className="h-5 w-5 text-yellow-600" />
+                            <span className="text-lg font-semibold text-yellow-700">
+                              QR Code expira em: <strong className="text-2xl">{timeRemaining}s</strong>
+                            </span>
+                          </div>
                         )}
                         
-                        {/* Botões Verificar Status e Debug + QR removidos da interface */}
+                        {/* QR Code expirado */}
+                        {isQrExpired && (
+                          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl shadow-sm">
+                            <AlertCircle className="h-5 w-5 text-red-600" />
+                            <span className="text-lg font-semibold text-red-700">
+                              QR Code expirado! Clique em "Gerar Novo QR Code"
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Instruções */}
+                        <div className="space-y-3">
+                          <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                            <h4 className="font-semibold text-blue-800 mb-2">📱 Como Escanear:</h4>
+                            <ol className="text-sm text-blue-700 space-y-1 text-left">
+                              <li>1. Abra o <strong>WhatsApp Business</strong></li>
+                              <li>2. Vá em <strong>Configurações</strong></li>
+                              <li>3. Toque em <strong>Dispositivos Vinculados</strong></li>
+                              <li>4. Escaneie o QR Code acima</li>
+                            </ol>
+                          </div>
+                        </div>
+                        
+                        {/* Botões de ação */}
+                        <div className="flex flex-col sm:flex-row gap-3 justify-start">
+                          {isQrExpired && (
+                            <Button
+                              onClick={regenerateQrCode}
+                              variant="outline"
+                              size="lg"
+                              className="bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 rounded-2xl px-8"
+                            >
+                              <QrCode className="h-5 w-5 mr-2" />
+                              Gerar Novo QR Code
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Coluna Direita - QR Code */}
+                      <div className="order-1 lg:order-2 flex justify-center lg:justify-end">
+                        <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-lg">
+                          <img 
+                            src={qrCode} 
+                            alt="QR Code WhatsApp" 
+                            className={`w-56 h-56 ${isQrExpired ? 'opacity-50 grayscale' : ''} transition-all duration-300`}
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
