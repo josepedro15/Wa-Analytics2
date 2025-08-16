@@ -44,6 +44,87 @@ export default function WhatsAppConnect() {
     setIsQrExpired(false);
   };
 
+  // Função para verificar se a instância existe e seu status
+  const checkInstanceExists = async () => {
+    if (!formData.instanceName) return;
+
+    try {
+      console.log(`🔍 Verificando se instância existe: ${formData.instanceName}`);
+      
+      const response = await fetch('https://api.aiensed.com/instance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        },
+        body: JSON.stringify({
+          instanceName: formData.instanceName,
+          qrcode: false,
+          integration: "WHATSAPP-BAILEYS"
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 Resposta da verificação:', data);
+        
+        // Se retornou instância, ela existe
+        if (data.instance) {
+          // Se não tem instanceId salvo, salvar agora
+          if (!instanceId && data.instance.instanceId) {
+            setInstanceId(data.instance.instanceId);
+            setInstanceCreated(true);
+          }
+          
+          // Se retornou QR code, está aguardando conexão
+          if (data.qrcode) {
+            console.log('📱 Instância existe, aguardando conexão WhatsApp');
+            if (instanceStatus !== 'qr_ready') {
+              setInstanceStatus('qr_ready');
+              // Se não tem QR code salvo, salvar agora
+              if (!qrCode && data.qrcode.base64) {
+                setQrCode(data.qrcode.base64);
+                startQrTimer();
+              }
+            }
+          } else {
+            // Se não tem QR code, está conectada
+            console.log('🎉 WhatsApp CONECTADO! (instância ativa)');
+            if (instanceStatus !== 'connected') {
+              setInstanceStatus('connected');
+              setIsQrExpired(false);
+              toast({
+                title: "WhatsApp Conectado!",
+                description: "Sua instância está ativa e pronta para receber dados.",
+              });
+            }
+          }
+        } else {
+          // Instância não existe
+          console.log('❌ Instância não existe');
+          setInstanceStatus('idle');
+          setInstanceCreated(false);
+          setQrCode('');
+          setInstanceId('');
+        }
+        
+      } else if (response.status === 404) {
+        // Instância não encontrada
+        console.log('📱 Instância não encontrada (404)');
+        setInstanceStatus('idle');
+        setInstanceCreated(false);
+        setQrCode('');
+        setInstanceId('');
+      } else if (response.status === 403) {
+        console.log('🚫 Acesso negado (403)');
+      }
+      
+    } catch (error) {
+      console.log('❌ Erro ao verificar instância:', error);
+      setInstanceStatus('error');
+    }
+  };
+
   // Função para verificar status da instância em tempo real via API
   const checkInstanceStatus = async () => {
     if (!instanceId || !formData.instanceName) return;
@@ -413,6 +494,12 @@ export default function WhatsAppConnect() {
   useEffect(() => {
     let statusInterval: number;
     let timerInterval: number;
+    let existenceInterval: number;
+    
+    // Verificar se instância existe constantemente (a cada 3 segundos)
+    if (formData.instanceName) {
+      existenceInterval = setInterval(checkInstanceExists, 3000);
+    }
     
     if (instanceStatus === 'qr_ready' && instanceId) {
       startQrTimer();
@@ -439,8 +526,9 @@ export default function WhatsAppConnect() {
     return () => {
       if (statusInterval) clearInterval(statusInterval);
       if (timerInterval) clearInterval(timerInterval);
+      if (existenceInterval) clearInterval(existenceInterval);
     };
-  }, [instanceStatus, instanceId]);
+  }, [instanceStatus, instanceId, formData.instanceName]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -605,8 +693,8 @@ export default function WhatsAppConnect() {
               </CardContent>
             </Card>
 
-            {/* Status da Instância com design melhorado */}
-            {instanceStatus !== 'idle' && (
+            {/* Status da Instância com design melhorado - só aparece quando instância existe */}
+            {instanceStatus !== 'idle' && instanceCreated && (
               <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200 p-6">
                   <div className="flex items-center gap-3">
