@@ -981,21 +981,7 @@ export default function WhatsAppConnect() {
                     </div>
                   </div>
 
-                  {/* URL Preview com design moderno */}
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-200 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-indigo-100 rounded-xl">
-                        <QrCode className="h-5 w-5 text-indigo-600" />
-                      </div>
-                      <span className="text-lg font-semibold text-indigo-800">URL da Instância</span>
-                    </div>
-                    
-                    <div className="bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm">
-                      <code className="text-sm font-mono text-indigo-700 break-all bg-indigo-50 px-3 py-2 rounded-lg block">
-                        https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
-                      </code>
-                    </div>
-                  </div>
+                  {/* Campo removido: URL da Instância */}
 
                   {/* Botão principal com design moderno */}
                   <div className="text-center pt-4">
