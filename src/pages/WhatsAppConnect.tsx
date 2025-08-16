@@ -162,6 +162,10 @@ export default function WhatsAppConnect() {
             if (instanceStatus !== 'connected') {
               setInstanceStatus('connected');
               setIsQrExpired(false);
+              
+              // Atualizar status no banco de dados
+              updateInstanceStatusInDatabase(formData.instanceName, 'connected');
+              
               toast({
                 title: "WhatsApp Conectado!",
                 description: "Sua instância está ativa e pronta para receber dados.",
@@ -585,6 +589,8 @@ export default function WhatsAppConnect() {
     if (!user?.id) return;
 
     try {
+      console.log(`💾 Atualizando status no banco: ${instanceName} → ${status}`);
+      
       const { error } = await supabase
         .from('whatsapp_instances')
         .update({ 
@@ -597,7 +603,7 @@ export default function WhatsAppConnect() {
       if (error) {
         console.error('❌ Erro ao atualizar status:', error);
       } else {
-        console.log('✅ Status atualizado no banco:', status);
+        console.log(`✅ Status atualizado no banco: ${instanceName} → ${status}`);
       }
     } catch (error) {
       console.error('❌ Erro ao atualizar status:', error);
