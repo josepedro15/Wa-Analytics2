@@ -80,14 +80,17 @@ export default function WhatsAppConnect() {
           
           // Se retornou instância, ela existe na API
           if (data.instance) {
-            // Se retornou QR code, está aguardando conexão
-            if (data.qrcode) {
-              console.log('📱 Instância existe, aguardando conexão WhatsApp');
-              setInstanceStatus('qr_ready');
-              setQrCode(data.qrcode.base64 || data.qrcode);
-              startQrTimer();
-              updateInstanceStatusInDatabase(formData.instanceName, 'connecting');
-            } else {
+                         // Se retornou QR code, está aguardando conexão
+             if (data.qrcode) {
+               console.log('📱 Instância existe, aguardando conexão WhatsApp');
+               // Só atualiza se não estiver já exibindo QR
+               if (instanceStatus !== 'qr_ready' || !qrCode) {
+                 setInstanceStatus('qr_ready');
+                 setQrCode(data.qrcode.base64 || data.qrcode);
+                 startQrTimer();
+               }
+               updateInstanceStatusInDatabase(formData.instanceName, 'connecting');
+             } else {
               // Se não tem QR code, está conectada
               console.log('🎉 WhatsApp CONECTADO! (instância ativa)');
               setInstanceStatus('connected');
@@ -548,7 +551,8 @@ export default function WhatsAppConnect() {
     let existenceInterval: number;
     
     // Verificar se instância existe constantemente (a cada 3 segundos)
-    if (formData.instanceName) {
+    // MAS só quando não há instância criada ou quando está desconectada
+    if (formData.instanceName && (!instanceCreated || instanceStatus === 'disconnected')) {
       existenceInterval = setInterval(checkInstanceExists, 3000);
     }
     
