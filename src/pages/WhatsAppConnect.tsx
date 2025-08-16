@@ -6,15 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  MessageSquare, 
-  ArrowLeft,
-  Smartphone,
-  Zap
-} from 'lucide-react';
+import { ArrowLeft, Smartphone, Zap } from 'lucide-react';
 import { z } from 'zod';
 
-// Schema de validação para o formulário
 const connectSchema = z.object({
   instanceName: z.string()
     .min(3, 'Nome da instância deve ter pelo menos 3 caracteres')
@@ -29,55 +23,31 @@ export default function WhatsAppConnect() {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState<ConnectFormData>({
-    instanceName: ''
-  });
+  const [formData, setFormData] = useState<ConnectFormData>({ instanceName: '' });
   const [errors, setErrors] = useState<Partial<ConnectFormData>>({});
   const [isCreatingInstance, setIsCreatingInstance] = useState(false);
-  
-  // Estado para controlar o fluxo
   const [instanceCreated, setInstanceCreated] = useState(false);
   const [qrCode, setQrCode] = useState<string>('');
   const [instanceId, setInstanceId] = useState<string>('');
   const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'disconnected' | 'error'>('idle');
-  
-  // Timer para expiração do QR Code
-  const [qrExpirationTime, setQrExpirationTime] = useState<number>(0);
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [timeRemaining, setTimeRemaining] = useState<number>(60);
   const [isQrExpired, setIsQrExpired] = useState(false);
-  
-  // Função para gerar nome único (apenas letras e números)
+
   const generateUniqueName = (baseName: string): string => {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 6);
-    // Remover hífens e usar apenas letras e números
-    return `${baseName}${timestamp}${randomSuffix}`;
-  };
-  
-  // Função para sugerir nomes alternativos (apenas letras e números)
-  const suggestAlternativeNames = (baseName: string): string => {
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 6);
-    // Remover hífens e usar apenas letras e números
     return `${baseName}${timestamp}${randomSuffix}`;
   };
 
-  // Função para iniciar timer de expiração do QR Code (60 segundos)
   const startQrTimer = () => {
-    const expirationTime = Date.now() + (60 * 1000); // 60 segundos
-    setQrExpirationTime(expirationTime);
     setTimeRemaining(60);
     setIsQrExpired(false);
   };
 
-    // Função para verificar status REAL da instância
   const checkInstanceStatus = async () => {
     if (!instanceId || !formData.instanceName) return;
 
     try {
-      console.log(`🔍 Verificando status REAL da instância: ${formData.instanceName}`);
-      
-      // Tentar criar a instância novamente para ver se ainda existe
       const response = await fetch('https://api.aiensed.com/instance/create', {
         method: 'POST',
         headers: {
@@ -86,20 +56,16 @@ export default function WhatsAppConnect() {
         },
         body: JSON.stringify({
           instanceName: formData.instanceName,
-          qrcode: false, // Não gerar QR, só verificar
+          qrcode: false,
           integration: "WHATSAPP-BAILEYS"
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Resposta da verificação:', data);
         
-        // Se retornou QR code, a instância não está conectada
         if (data.qrcode) {
-          console.log('📱 Instância existe mas não está conectada');
           if (instanceStatus === 'connected') {
-            console.log('⚠️ WhatsApp desconectado!');
             setInstanceStatus('disconnected');
             toast({
               title: "WhatsApp Desconectado",
@@ -108,8 +74,6 @@ export default function WhatsAppConnect() {
             });
           }
         } else if (data.instance && !data.qrcode) {
-          // Se não retornou QR code mas retornou instância, está conectada
-          console.log('🎉 WhatsApp conectado! Instância ativa.');
           if (instanceStatus !== 'connected') {
             setInstanceStatus('connected');
             setIsQrExpired(false);
@@ -120,10 +84,7 @@ export default function WhatsAppConnect() {
           }
         }
       } else {
-        console.log(`❌ Instância não existe mais: ${response.status}`);
-        // Se a instância não existe mais, está desconectada
         if (instanceStatus === 'connected') {
-          console.log('⚠️ Instância excluída! WhatsApp desconectado.');
           setInstanceStatus('disconnected');
           toast({
             title: "Instância Excluída",
@@ -137,11 +98,9 @@ export default function WhatsAppConnect() {
     }
   };
 
-  // Função para regenerar QR Code
   const regenerateQrCode = async () => {
     if (!formData.instanceName) return;
 
-    console.log('🔄 Regenerando QR Code...');
     setIsQrExpired(false);
     setTimeRemaining(60);
     setInstanceStatus('creating');
@@ -162,7 +121,6 @@ export default function WhatsAppConnect() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ QR Code regenerado:', data);
 
         if (data.qrcode && data.instance) {
           setQrCode(data.qrcode.base64 || data.qrcode);
@@ -176,7 +134,6 @@ export default function WhatsAppConnect() {
           });
         }
       } else {
-        console.log(`❌ Erro ao regenerar QR Code: ${response.status}`);
         setInstanceStatus('error');
         toast({
           title: "Erro ao Regenerar",
@@ -185,7 +142,6 @@ export default function WhatsAppConnect() {
         });
       }
     } catch (error) {
-      console.log('❌ Erro ao regenerar QR Code:', error);
       setInstanceStatus('error');
       toast({
         title: "Erro ao Regenerar",
@@ -217,7 +173,6 @@ export default function WhatsAppConnect() {
   const handleInputChange = (field: keyof ConnectFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Limpar erro do campo quando usuário começa a digitar
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -237,7 +192,6 @@ export default function WhatsAppConnect() {
     setInstanceStatus('creating');
     
     try {
-      // Testar diferentes endpoints para encontrar o correto
       const endpoints = [
         'https://api.aiensed.com/instance/connect/',
         'https://api.aiensed.com/instance/create',
@@ -247,7 +201,6 @@ export default function WhatsAppConnect() {
       let response;
       let workingEndpoint = '';
       
-      // Tentar cada endpoint até encontrar um que funcione
       for (const endpoint of endpoints) {
         try {
           console.log(`Testando endpoint: ${endpoint}`);
@@ -272,23 +225,17 @@ export default function WhatsAppConnect() {
           } else {
             console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
             
-            // Se for 403, vamos tentar ler a resposta de erro
             if (response.status === 403) {
               try {
                 const errorData = await response.text();
-                console.log(`🚨 Detalhes do erro 403:`, errorData);
                 
-                // Tentar parsear como JSON se possível
                 try {
                   const errorJson = JSON.parse(errorData);
-                  console.log(`🚨 Erro 403 em JSON:`, errorJson);
                   
-                  // Se for erro de nome já em uso, tentar com nome único
                   if (errorJson.response?.message?.[0]?.includes('already in use')) {
                     const uniqueName = generateUniqueName(formData.instanceName);
                     console.log(`🔄 Tentando com nome único: ${uniqueName}`);
                     
-                    // Tentar novamente com o nome único
                     const retryResponse = await fetch(endpoint, {
                       method: 'POST',
                       headers: {
@@ -304,11 +251,9 @@ export default function WhatsAppConnect() {
                     
                     if (retryResponse.ok) {
                       workingEndpoint = endpoint;
-                      console.log(`✅ Endpoint funcionando com nome único: ${endpoint}`);
                       response = retryResponse;
+                      setFormData(prev => ({ ...prev, instanceName: uniqueName }));
                       break;
-                    } else {
-                      console.log(`❌ Retry com nome único falhou: ${retryResponse.status}`);
                     }
                   }
                 } catch (parseError) {
@@ -329,18 +274,12 @@ export default function WhatsAppConnect() {
       }
 
       const data = await response.json();
-      console.log('🔍 Resposta completa da API:', JSON.stringify(data, null, 2));
-      console.log('🔍 Chaves disponíveis na resposta:', Object.keys(data));
-      console.log('🔍 Tipo de dados:', typeof data);
+      console.log('🔍 Resposta completa da API:', data);
       
-      // Passo 2: Extrair dados da resposta - baseado na estrutura real da API
       let qrCode = null;
       let instanceId = null;
       let instanceName = null;
       
-      console.log('🔍 Estrutura da resposta:', data);
-      
-      // Extrair QR Code - tentar diferentes possibilidades
       if (data.qrcode) {
         if (typeof data.qrcode === 'string') {
           qrCode = data.qrcode;
@@ -351,7 +290,6 @@ export default function WhatsAppConnect() {
         }
       }
       
-      // Extrair Instance ID e Name
       if (data.instance) {
         if (typeof data.instance === 'string') {
           instanceId = data.instance;
@@ -366,7 +304,6 @@ export default function WhatsAppConnect() {
         }
       }
       
-      // Fallbacks para outras estruturas possíveis
       if (!instanceId && data.instanceId) instanceId = data.instanceId;
       if (!instanceId && data.instance_id) instanceId = data.instance_id;
       if (!instanceId && data.id) instanceId = data.id;
@@ -375,40 +312,17 @@ export default function WhatsAppConnect() {
       if (!qrCode && data.qr) qrCode = data.qr;
       if (!qrCode && data.qrcode_url) qrCode = data.qrcode_url;
       
-      console.log('🔍 QR Code encontrado:', qrCode);
-      console.log('🔍 Instance ID encontrado:', instanceId);
-      console.log('🔍 Instance Name encontrado:', instanceName);
-      
       if (qrCode && instanceId) {
-        console.log('✅ Dados extraídos com sucesso:', { qrCode, instanceId, instanceName });
-        
         setQrCode(qrCode);
         setInstanceId(instanceId);
         setInstanceCreated(true);
         setInstanceStatus('qr_ready');
-        
-        console.log('🔄 Estados atualizados:', { 
-          qrCode: !!qrCode, 
-          instanceId: !!instanceId, 
-          instanceCreated: true, 
-          instanceStatus: 'qr_ready' 
-        });
         
         toast({
           title: "QR Code Gerado!",
           description: `Instância "${instanceName || instanceId}" criada via ${workingEndpoint}. Agora escaneie o QR Code!`,
         });
       } else {
-        // Mostrar erro mais detalhado
-        const errorMsg = `API respondeu com sucesso, mas não encontrou os dados necessários.
-        
-Resposta recebida: ${JSON.stringify(data, null, 2)}
-
-Chaves disponíveis: ${Object.keys(data).join(', ')}
-
-Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou instance.id`;
-        
-        console.error('❌ Erro detalhado:', errorMsg);
         throw new Error(`API não retornou dados esperados. Verifique o console para detalhes.`);
       }
       
@@ -425,27 +339,19 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
     }
   };
 
-
-
-  // Persistência de estado no localStorage
   useEffect(() => {
-    // Carregar estado salvo ao montar o componente
     const savedState = localStorage.getItem('whatsapp-connect-state');
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState);
-        console.log('🔄 Restaurando estado salvo:', parsedState);
         
         if (parsedState.instanceName && parsedState.instanceId) {
           setFormData({ instanceName: parsedState.instanceName });
           setInstanceId(parsedState.instanceId);
           setInstanceCreated(true);
           
-          // Se estava conectado, verificar se ainda está
           if (parsedState.status === 'connected') {
             setInstanceStatus('connected');
-            console.log('🔄 Restaurando status conectado...');
-            // Verificar status imediatamente
             setTimeout(() => checkInstanceStatus(), 1000);
           } else if (parsedState.status === 'qr_ready') {
             setInstanceStatus('qr_ready');
@@ -462,7 +368,6 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
     }
   }, []);
 
-  // Salvar estado no localStorage quando mudar
   useEffect(() => {
     if (instanceId && formData.instanceName) {
       const stateToSave = {
@@ -473,23 +378,18 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
         timestamp: Date.now()
       };
       localStorage.setItem('whatsapp-connect-state', JSON.stringify(stateToSave));
-      console.log('💾 Estado salvo:', stateToSave);
     }
   }, [instanceId, formData.instanceName, instanceStatus, qrCode]);
 
-  // Timer de expiração do QR Code e verificação de status
   useEffect(() => {
     let statusInterval: number;
     let timerInterval: number;
     
     if (instanceStatus === 'qr_ready' && instanceId) {
-      // Iniciar timer de expiração (60 segundos)
       startQrTimer();
       
-      // Verificar status da instância a cada 5 segundos
       statusInterval = setInterval(checkInstanceStatus, 5000);
       
-      // Timer de contagem regressiva
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
@@ -501,9 +401,8 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
       }, 1000);
     }
     
-    // Se está conectado, continuar verificando status
     if (instanceStatus === 'connected' && instanceId) {
-      statusInterval = setInterval(checkInstanceStatus, 10000); // Verificar a cada 10 segundos
+      statusInterval = setInterval(checkInstanceStatus, 10000);
     }
     
     return () => {
@@ -514,7 +413,6 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50">
-      {/* Header com gradiente */}
       <div className="bg-gradient-to-r from-emerald-600 via-blue-600 to-indigo-600 text-white">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
@@ -536,13 +434,12 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
               </p>
             </div>
             
-            <div className="w-20"></div> {/* Espaçador para centralizar */}
+            <div className="w-20"></div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Debug Info - mais discreto */}
         <div className="mb-6 p-3 bg-blue-50/50 border border-blue-200/50 rounded-xl backdrop-blur-sm">
           <p className="text-xs text-blue-700 text-center">
             <strong>Debug:</strong> Usuário: {user?.email || 'Não autenticado'}
@@ -550,7 +447,6 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Coluna Principal - Formulário */}
           <div className="lg:col-span-2">
             <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-emerald-100">
@@ -565,317 +461,297 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                {/* Formulário com design moderno */}
                 <div className="space-y-6">
-                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-2xl border border-emerald-100">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="instanceName" className="text-lg font-semibold text-emerald-800 mb-2 block">
-                        🏷️ Nome da Instância
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id="instanceName"
-                          type="text"
-                          placeholder="Ex: lojamoveis"
-                          value={formData.instanceName}
-                          onChange={(e) => handleInputChange('instanceName', e.target.value)}
-                          className={`text-lg p-4 border-2 transition-all duration-300 ${
-                            errors.instanceName 
-                              ? "border-red-400 focus:border-red-500 focus:ring-red-200" 
-                              : "border-emerald-200 focus:border-emerald-500 focus:ring-emerald-200"
-                          } rounded-xl focus:ring-4`}
-                          disabled={isCreatingInstance}
-                        />
-                        {errors.instanceName && (
-                          <p className="mt-2 text-sm text-red-600 font-medium">{errors.instanceName}</p>
+                  <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-2xl border border-emerald-100">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="instanceName" className="text-lg font-semibold text-emerald-800 mb-2 block">
+                          🏷️ Nome da Instância
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="instanceName"
+                            type="text"
+                            placeholder="Ex: lojamoveis"
+                            value={formData.instanceName}
+                            onChange={(e) => handleInputChange('instanceName', e.target.value)}
+                            className={`text-lg p-4 border-2 transition-all duration-300 ${
+                              errors.instanceName 
+                                ? "border-red-400 focus:border-red-500 focus:ring-red-200" 
+                                : "border-emerald-200 focus:border-emerald-500 focus:ring-emerald-200"
+                            } rounded-xl focus:ring-4`}
+                            disabled={isCreatingInstance}
+                          />
+                          {errors.instanceName && (
+                            <p className="mt-2 text-sm text-red-600 font-medium">{errors.instanceName}</p>
+                          )}
+                        </div>
+                        <p className="mt-3 text-sm text-emerald-700 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                          💡 <strong>Dica:</strong> Use apenas letras minúsculas e números (sem hífens ou caracteres especiais). 
+                          Ex: lojamoveis, empresaabc, vendas2024
+                        </p>
+                      </div>
+
+                      <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
+                        <p className="text-sm font-medium text-emerald-800 mb-2">
+                          🔗 URL da instância:
+                        </p>
+                        <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                          <code className="text-sm font-mono text-emerald-700 break-all">
+                            https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
+                          </code>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <Button
+                      onClick={handleConnect}
+                      disabled={isCreatingInstance || !formData.instanceName}
+                      className={`w-full max-w-md h-16 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300 ${
+                        isCreatingInstance || !formData.instanceName
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 hover:scale-105 hover:shadow-xl'
+                      }`}
+                      size="lg"
+                    >
+                      {isCreatingInstance ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                          Conectando WhatsApp...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-6 w-6 mr-3" />
+                          Conectar WhatsApp
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {instanceStatus !== 'idle' && (
+                  <div className="mt-6 p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                      {instanceStatus === 'creating' && (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                          <span className="text-blue-600 font-medium">Criando instância...</span>
+                        </>
+                      )}
+                      {instanceStatus === 'qr_ready' && (
+                        <>
+                          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                          <span className="text-green-600 font-medium">QR Code Gerado!</span>
+                        </>
+                      )}
+                      {instanceStatus === 'connected' && (
+                        <>
+                          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                          <span className="text-green-600 font-medium">WhatsApp Conectado!</span>
+                        </>
+                      )}
+                      {instanceStatus === 'error' && (
+                        <>
+                          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                          <span className="text-red-600 font-medium">Erro na Conexão</span>
+                        </>
+                      )}
+                      {instanceStatus === 'disconnected' && (
+                        <>
+                          <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                          <span className="text-orange-600 font-medium">WhatsApp Desconectado</span>
+                        </>
+                      )}
+                    </div>
+
+                    {(instanceStatus === 'qr_ready' || (instanceCreated && instanceStatus !== 'connected')) && qrCode && (
+                      <div className="text-center">
+                        <h3 className="font-medium text-gray-800 mb-3">
+                          Escaneie o QR Code com seu WhatsApp
+                        </h3>
+                        
+                        {!isQrExpired && (
+                          <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                              <span className="text-sm text-yellow-700">
+                                QR Code expira em: <strong>{timeRemaining}s</strong>
+                              </span>
+                            </div>
+                          </div>
                         )}
-                      </div>
-                      <p className="mt-3 text-sm text-emerald-700 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                        💡 <strong>Dica:</strong> Use apenas letras minúsculas e números (sem hífens ou caracteres especiais). 
-                        Ex: lojamoveis, empresaabc, vendas2024
-                      </p>
-                    </div>
-
-                    {/* URL Preview com design moderno */}
-                    <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
-                      <p className="text-sm font-medium text-emerald-800 mb-2">
-                        🔗 URL da instância:
-                      </p>
-                      <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                        <code className="text-sm font-mono text-emerald-700 break-all">
-                          https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
-                        </code>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botão principal com design moderno */}
-                <div className="text-center">
-                  <Button
-                    onClick={handleConnect}
-                    disabled={isCreatingInstance || !formData.instanceName}
-                    className={`w-full max-w-md h-16 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300 ${
-                      isCreatingInstance || !formData.instanceName
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 hover:scale-105 hover:shadow-xl'
-                    }`}
-                    size="lg"
-                  >
-                    {isCreatingInstance ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                        Conectando WhatsApp...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="h-6 w-6 mr-3" />
-                        Conectar WhatsApp
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Status da Instância */}
-              {instanceStatus !== 'idle' && (
-                <div className="mt-6 p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    {instanceStatus === 'creating' && (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                        <span className="text-blue-600 font-medium">Criando instância...</span>
-                      </>
-                    )}
-                    {instanceStatus === 'qr_ready' && (
-                      <>
-                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                        <span className="text-green-600 font-medium">QR Code Gerado!</span>
-                      </>
-                    )}
-                    {instanceStatus === 'connected' && (
-                      <>
-                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                        <span className="text-green-600 font-medium">WhatsApp Conectado!</span>
-                      </>
-                    )}
-                    {instanceStatus === 'error' && (
-                      <>
-                        <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                        <span className="text-red-600 font-medium">Erro na Conexão</span>
-                      </>
-                    )}
-                    {instanceStatus === 'disconnected' && (
-                      <>
-                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                        <span className="text-orange-600 font-medium">WhatsApp Desconectado</span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* QR Code - só mostra quando não está conectado */}
-                  {(instanceStatus === 'qr_ready' || (instanceCreated && instanceStatus !== 'connected')) && qrCode && (
-                    <div className="text-center">
-                      <h3 className="font-medium text-gray-800 mb-3">
-                        Escaneie o QR Code com seu WhatsApp
-                      </h3>
-                      
-                      {/* Timer de expiração */}
-                      {!isQrExpired && (
-                        <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm text-yellow-700">
-                              QR Code expira em: <strong>{timeRemaining}s</strong>
-                            </span>
+                        
+                        {isQrExpired && (
+                          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                              <span className="text-sm text-red-700">
+                                QR Code expirado! Clique em "Gerar Novo QR Code"
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* QR Code expirado */}
-                      {isQrExpired && (
-                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            <span className="text-sm text-red-700">
-                              QR Code expirado! Clique em "Gerar Novo QR Code"
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="bg-white p-4 rounded-lg inline-block border">
-                        <img 
-                          src={qrCode} 
-                          alt="QR Code WhatsApp" 
-                          className={`w-48 h-48 ${isQrExpired ? 'opacity-50' : ''}`}
-                        />
-                      </div>
-                      
-                      <p className="text-sm text-gray-600 mt-2">
-                        Abra o WhatsApp Business → Configurações → Dispositivos Vinculados
-                      </p>
-                      
-                      <div className="mt-3 text-xs text-gray-500">
-                        ID da Instância: {instanceId}
-                      </div>
-                      
-                      {/* Botão para gerar novo QR Code quando expirar */}
-                      {isQrExpired && (
-                        <div className="mt-3">
-                          <Button
-                            onClick={regenerateQrCode}
-                            variant="outline"
-                            size="sm"
-                          >
-                            Gerar Novo QR Code
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Status Conectado */}
-                  {instanceStatus === 'connected' && (
-                    <div className="text-center">
-                      {/* Animações de sucesso */}
-                      <div className="mb-4">
-                        {/* Checkmark animado */}
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
-                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
-                            <svg 
-                              className="w-5 h-5 text-white" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={3} 
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </div>
+                        )}
+                        
+                        <div className="bg-white p-4 rounded-lg inline-block border">
+                          <img 
+                            src={qrCode} 
+                            alt="QR Code WhatsApp" 
+                            className={`w-48 h-48 ${isQrExpired ? 'opacity-50' : ''}`}
+                          />
                         </div>
                         
-                        {/* Texto de sucesso animado */}
-                        <div className="space-y-2">
-                          <h3 className="text-2xl font-bold text-green-600 animate-fade-in">
+                        <p className="text-sm text-gray-600 mt-2">
+                          Abra o WhatsApp Business → Configurações → Dispositivos Vinculados
+                        </p>
+                        
+                        <div className="mt-3 text-xs text-gray-500">
+                          ID da Instância: {instanceId}
+                        </div>
+                        
+                        {isQrExpired && (
+                          <div className="mt-3">
+                            <Button
+                              onClick={regenerateQrCode}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Gerar Novo QR Code
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {instanceStatus === 'connected' && (
+                      <div className="text-center">
+                        <div className="mb-4">
+                          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
+                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                              <svg 
+                                className="w-5 h-5 text-white" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={3} 
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          
+                          <h3 className="text-2xl font-bold text-green-600 mb-2">
                             🎉 WhatsApp Conectado!
                           </h3>
                           <p className="text-lg text-green-700 font-medium">
                             Instância Ativa e Funcionando
                           </p>
                         </div>
-                      </div>
-                      
-                      {/* Informações da instância */}
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-sm font-medium text-green-700">
-                            Status: Conectado e Ativo
-                          </span>
-                        </div>
-                        <p className="text-sm text-green-600">
-                          Sua instância está pronta para receber e processar dados do WhatsApp.
-                        </p>
-                      </div>
-                      
-                      {/* ID da instância */}
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                        <p className="text-xs text-gray-500 mb-1">ID da Instância:</p>
-                        <code className="text-xs bg-white px-2 py-1 rounded border font-mono">
-                          {instanceId}
-                        </code>
-                      </div>
-                      
-                      {/* Mensagem de sucesso */}
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-2">
-                          ✅ Conexão estabelecida com sucesso!
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Você pode fechar esta página. A instância continuará funcionando.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status Desconectado */}
-                  {instanceStatus === 'disconnected' && (
-                    <div className="text-center">
-                      <div className="mb-4">
-                        {/* Ícone de desconexão */}
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-3">
-                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                            <svg 
-                              className="w-5 h-5 text-white" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={3} 
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
+                        
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-green-700">
+                              Status: Conectado e Ativo
+                            </span>
                           </div>
+                          <p className="text-sm text-green-600">
+                            Sua instância está pronta para receber e processar dados do WhatsApp.
+                          </p>
                         </div>
                         
-                        <h3 className="text-2xl font-bold text-orange-600 mb-2">
-                          ⚠️ WhatsApp Desconectado
-                        </h3>
-                        <p className="text-lg text-orange-700 font-medium">
-                          A conexão foi perdida
-                        </p>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+                          <p className="text-xs text-gray-500 mb-1">ID da Instância:</p>
+                          <code className="text-xs bg-white px-2 py-1 rounded border font-mono">
+                            {instanceId}
+                          </code>
+                        </div>
+                        
+                        <div className="text-center">
+                          <p className="text-sm text-gray-600 mb-2">
+                            ✅ Conexão estabelecida com sucesso!
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Você pode fechar esta página. A instância continuará funcionando.
+                          </p>
+                        </div>
                       </div>
-                      
-                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                        <p className="text-sm text-orange-600">
-                          Sua instância foi desconectada. Gere um novo QR Code para reconectar.
-                        </p>
-                      </div>
-                      
-                      <Button
-                        onClick={regenerateQrCode}
-                        className="bg-orange-600 hover:bg-orange-700"
-                        size="lg"
-                      >
-                        Reconectar WhatsApp
-                      </Button>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Botão para nova instância */}
-                  {instanceStatus === 'connected' && (
-                    <div className="mt-4 text-center">
-                      <Button
-                        onClick={() => {
-                          setInstanceStatus('idle');
-                          setInstanceCreated(false);
-                          setQrCode('');
-                          setInstanceId('');
-                          setFormData({ instanceName: '' });
-                          // Limpar estado salvo
-                          localStorage.removeItem('whatsapp-connect-state');
-                          console.log('🗑️ Estado limpo do localStorage');
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Criar Nova Instância
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    {instanceStatus === 'disconnected' && (
+                      <div className="text-center">
+                        <div className="mb-4">
+                          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-3">
+                            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                              <svg 
+                                className="w-5 h-5 text-white" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round" 
+                                  strokeWidth={3} 
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          
+                          <h3 className="text-2xl font-bold text-orange-600 mb-2">
+                            ⚠️ WhatsApp Desconectado
+                          </h3>
+                          <p className="text-lg text-orange-700 font-medium">
+                            A conexão foi perdida
+                          </p>
+                        </div>
+                        
+                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                          <p className="text-sm text-orange-600">
+                            Sua instância foi desconectada. Gere um novo QR Code para reconectar.
+                          </p>
+                        </div>
+                        
+                        <Button
+                          onClick={regenerateQrCode}
+                          className="bg-orange-600 hover:bg-orange-700"
+                          size="lg"
+                        >
+                          Reconectar WhatsApp
+                        </Button>
+                      </div>
+                    )}
+
+                    {instanceStatus === 'connected' && (
+                      <div className="mt-4 text-center">
+                        <Button
+                          onClick={() => {
+                            setInstanceStatus('idle');
+                            setInstanceCreated(false);
+                            setQrCode('');
+                            setInstanceId('');
+                            setFormData({ instanceName: '' });
+                            localStorage.removeItem('whatsapp-connect-state');
+                            console.log('🗑️ Estado limpo do localStorage');
+                          }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Criar Nova Instância
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
