@@ -61,18 +61,13 @@ export default function WhatsAppConnect() {
         setInstanceId(dbInstance.instance_id);
         setInstanceCreated(true);
         
-        // Verificar status na API
-        const response = await fetch('https://api.aiensed.com/instance/create', {
-          method: 'POST',
+        // Verificar status na API via GET /instance/connectionState/{instance}
+        const response = await fetch(`https://api.aiensed.com/instance/connectionState/${formData.instanceName}`, {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'apikey': 'd3050208ba862ee87302278ac4370cb9'
-          },
-          body: JSON.stringify({
-            instanceName: formData.instanceName,
-            qrcode: false,
-            integration: "WHATSAPP-BAILEYS"
-          })
+          }
         });
         
         if (response.ok) {
@@ -81,19 +76,14 @@ export default function WhatsAppConnect() {
           
           // Se retornou instância, ela existe na API
           if (data.instance) {
-            // Se retornou QR code, está conectada
-            if (data.qrcode) {
-              console.log('🎉 WhatsApp CONECTADO! (instância ativa com QR)');
-              // Só atualiza se não estiver já exibindo QR
-              if (instanceStatus !== 'qr_ready' || !qrCode) {
-                setInstanceStatus('qr_ready');
-                setQrCode(data.qrcode.base64 || data.qrcode);
-                startQrTimer();
-              }
+            // Verificar se está conectada (state: "open")
+            if (data.instance.state === 'open') {
+              console.log('🎉 WhatsApp CONECTADO! (state: open)');
+              setInstanceStatus('connected');
               updateInstanceStatusInDatabase(formData.instanceName, 'connected');
             } else {
-              // Se não tem QR code, está desconectada
-              console.log('📱 WhatsApp DESCONECTADO! (instância inativa sem QR)');
+              // Se não está conectada (state: "closed" ou outro)
+              console.log(`📱 WhatsApp DESCONECTADO! (state: ${data.instance.state})`);
               setInstanceStatus('disconnected');
               
               // Deletar instância desconectada do banco
@@ -103,13 +93,13 @@ export default function WhatsAppConnect() {
             // Instância não existe na API (foi excluída)
             console.log('❌ Instância não existe na API (foi excluída)');
             setInstanceStatus('disconnected');
-            updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
+            deleteInstanceFromDatabase(formData.instanceName);
           }
         } else if (response.status === 404) {
           // Instância não encontrada na API
           console.log('📱 Instância não encontrada na API (404)');
           setInstanceStatus('disconnected');
-          updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
+          deleteInstanceFromDatabase(formData.instanceName);
         }
       } else {
         // Instância não existe no banco
@@ -134,28 +124,23 @@ export default function WhatsAppConnect() {
       console.log(`🔍 Verificando status da instância: ${formData.instanceName} (ID: ${instanceId})`);
       console.log(`🔍 Status atual: ${instanceStatus}`);
       
-      // Verificar status da instância via POST /instance/create com qrcode: false
+      // Verificar status da instância via GET /instance/connectionState/{instance}
       try {
-        const statusResponse = await fetch('https://api.aiensed.com/instance/create', {
-          method: 'POST',
+        const statusResponse = await fetch(`https://api.aiensed.com/instance/connectionState/${formData.instanceName}`, {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'apikey': 'd3050208ba862ee87302278ac4370cb9'
-          },
-          body: JSON.stringify({
-            instanceName: formData.instanceName,
-            qrcode: false,
-            integration: "WHATSAPP-BAILEYS"
-          })
+          }
         });
         
         if (statusResponse.ok) {
           const statusData = await statusResponse.json();
           console.log('🔍 Resposta da verificação de status:', statusData);
           
-          // Se retornou instância com QR code, está conectada
-          if (statusData.instance && statusData.qrcode) {
-            console.log('🎉 WhatsApp CONECTADO! (instância ativa com QR)');
+          // Verificar se a instância está conectada (state: "open")
+          if (statusData.instance && statusData.instance.state === 'open') {
+            console.log('🎉 WhatsApp CONECTADO! (state: open)');
             if (instanceStatus !== 'connected') {
               setInstanceStatus('connected');
               setIsQrExpired(false);
@@ -171,9 +156,9 @@ export default function WhatsAppConnect() {
             return;
           }
           
-          // Se retornou instância mas sem QR code, está desconectada
-          if (statusData.instance && !statusData.qrcode) {
-            console.log('📱 WhatsApp DESCONECTADO! (instância inativa sem QR)');
+          // Se a instância existe mas não está conectada (state: "closed" ou outro)
+          if (statusData.instance && statusData.instance.state !== 'open') {
+            console.log(`📱 WhatsApp DESCONECTADO! (state: ${statusData.instance.state})`);
             if (instanceStatus !== 'disconnected') {
               setInstanceStatus('disconnected');
               
@@ -187,11 +172,9 @@ export default function WhatsAppConnect() {
           console.log('📱 Instância não encontrada (404) - foi excluída');
           if (instanceStatus === 'connected') {
             setInstanceStatus('disconnected');
-            toast({
-              title: "WhatsApp Desconectado",
-              description: "A instância foi removida da API.",
-              variant: "destructive"
-            });
+            
+            // Deletar instância do banco pois não existe mais
+            deleteInstanceFromDatabase(formData.instanceName);
           }
           return;
         } else if (statusResponse.status === 403) {
