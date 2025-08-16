@@ -58,6 +58,9 @@ export default function WhatsAppConnect() {
         'https://api.aiensed.com/instance/connect/'
       ];
       
+      // Primeiro, tentar verificar se a instância ainda existe
+      console.log('🔍 Verificando se a instância ainda existe na API...');
+      
       let response;
       let workingEndpoint = '';
       
@@ -103,6 +106,21 @@ export default function WhatsAppConnect() {
               } catch (readError) {
                 console.log(`🚨 Não foi possível ler resposta de erro 403:`, readError);
               }
+            }
+            
+            // Se for 404, a instância foi excluída
+            if (response.status === 404) {
+              console.log('🗑️ Instância não encontrada (404) - foi excluída da API');
+              if (instanceStatus === 'connected') {
+                console.log('🔄 Mudando status de connected para disconnected (instância excluída)');
+                setInstanceStatus('disconnected');
+                toast({
+                  title: "Instância Excluída",
+                  description: "A instância foi removida da API. Crie uma nova instância.",
+                  variant: "destructive"
+                });
+              }
+              return; // Parar verificação
             }
           }
         } catch (endpointError) {
