@@ -866,33 +866,35 @@ export default function WhatsAppConnect() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header com design moderno */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative container mx-auto px-6 py-8">
+      {/* Header com design moderno e elegante */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white shadow-2xl">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+        
+        <div className="relative container mx-auto px-6 py-12">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="text-white hover:bg-white/20 transition-all duration-300 rounded-xl px-6 py-3"
+              className="text-white hover:bg-white/20 hover:scale-105 transition-all duration-300 rounded-2xl px-8 py-4 border border-white/20 backdrop-blur-sm"
             >
-              <ArrowLeft className="h-5 w-5 mr-3" />
-              <span className="font-medium">Voltar ao Dashboard</span>
+              <ArrowLeft className="h-6 w-6 mr-3" />
+              <span className="font-semibold text-lg">Voltar ao Dashboard</span>
             </Button>
             
-            <div className="text-center flex-1">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 backdrop-blur-sm">
-                <Smartphone className="h-8 w-8 text-white" />
+            <div className="text-center flex-1 max-w-4xl mx-auto">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl mb-6 backdrop-blur-md border border-white/20">
+                <Smartphone className="h-10 w-10 text-white" />
               </div>
-              <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <h1 className="text-6xl font-black mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent leading-tight">
                 Conectar WhatsApp
               </h1>
-              <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+              <p className="text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed font-light">
                 Configure sua instância para análise de dados e integração com o sistema
               </p>
             </div>
             
-            <div className="w-32"></div>
+            <div className="w-40"></div>
           </div>
         </div>
       </div>
@@ -912,18 +914,18 @@ export default function WhatsAppConnect() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {/* Coluna Principal - Formulário */}
           <div className="xl:col-span-2 space-y-8">
-            {/* Card de Configuração */}
-            <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-blue-100 p-8">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl">
-                    <Smartphone className="h-8 w-8 text-white" />
+            {/* Card de Configuração com design premium */}
+            <Card className="shadow-2xl border-0 bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30 backdrop-blur-sm rounded-3xl overflow-hidden border border-blue-100/50">
+              <CardHeader className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white p-10">
+                <div className="flex items-center gap-6">
+                  <div className="p-4 bg-white/20 rounded-3xl backdrop-blur-md border border-white/30">
+                    <Smartphone className="h-10 w-10 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-3xl font-bold text-gray-800 mb-2">
+                    <CardTitle className="text-4xl font-black text-white mb-3">
                       Configuração da Instância
                     </CardTitle>
-                    <CardDescription className="text-lg text-gray-600 leading-relaxed">
+                    <CardDescription className="text-xl text-blue-100 leading-relaxed font-light">
                       Crie uma nova instância do WhatsApp para análise de dados
                     </CardDescription>
                   </div>
