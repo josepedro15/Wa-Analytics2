@@ -65,17 +65,16 @@ export default function WhatsAppConnect() {
         try {
           console.log(`🔍 Tentando endpoint: ${endpoint}`);
           
-          response = await fetch(endpoint, {
-            method: 'POST',
+          // Para verificar status, usar GET em vez de POST
+          const url = endpoint.includes('?') 
+            ? `${endpoint}&instance=${formData.instanceName}`
+            : `${endpoint}?instance=${formData.instanceName}`;
+            
+          response = await fetch(url, {
+            method: 'GET',
             headers: {
-              'Content-Type': 'application/json',
               'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            },
-            body: JSON.stringify({
-              instanceName: formData.instanceName,
-              qrcode: false,
-              integration: "WHATSAPP-BAILEYS"
-            })
+            }
           });
           
           if (response.ok) {
@@ -98,7 +97,33 @@ export default function WhatsAppConnect() {
       console.log(`🔍 Resposta da API: ${response.status} ${response.statusText}`);
 
       if (response.ok) {
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          // Se não for JSON, tentar ler como texto
+          const textResponse = await response.text();
+          console.log('🔍 Resposta não-JSON:', textResponse);
+          
+          // Se a resposta for "ok" ou similar, considerar conectado
+          if (textResponse.toLowerCase().includes('ok') || textResponse.toLowerCase().includes('connected')) {
+            console.log('🎉 WhatsApp CONECTADO! (resposta de texto indica sucesso)');
+            if (instanceStatus !== 'connected') {
+              setInstanceStatus('connected');
+              setIsQrExpired(false);
+              toast({
+                title: "WhatsApp Conectado!",
+                description: "Sua instância está ativa e pronta para receber dados.",
+              });
+            }
+            return;
+          }
+          
+          // Se não conseguir interpretar, considerar desconectado
+          console.log('❓ Resposta de texto não interpretável');
+          return;
+        }
+        
         console.log('🔍 Dados da resposta:', data);
         console.log('🔍 Tem qrcode?', !!data.qrcode);
         console.log('🔍 Tem instance?', !!data.instance);
@@ -126,6 +151,16 @@ export default function WhatsAppConnect() {
             });
           } else {
             console.log('✅ Já está conectado, mantendo status');
+          }
+        } else if (data.status === 'connected' || data.connected === true) {
+          console.log('🎉 WhatsApp CONECTADO! (status explícito)');
+          if (instanceStatus !== 'connected') {
+            setInstanceStatus('connected');
+            setIsQrExpired(false);
+            toast({
+              title: "WhatsApp Conectado!",
+              description: "Sua instância está ativa e pronta para receber dados.",
+            });
           }
         } else {
           console.log('❓ Resposta inesperada da API:', data);
