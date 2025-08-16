@@ -193,6 +193,59 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_instances: {
+        Row: {
+          id: string
+          user_id: string
+          instance_name: string
+          instance_id: string
+          status: string
+          qr_code: string | null
+          phone_number: string | null
+          created_at: string
+          updated_at: string
+          last_activity: string | null
+          message_count: number | null
+          is_active: boolean | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          instance_name: string
+          instance_id: string
+          status?: string
+          qr_code?: string | null
+          phone_number?: string | null
+          created_at?: string
+          updated_at?: string
+          last_activity?: string | null
+          message_count?: number | null
+          is_active?: boolean | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          instance_name?: string
+          instance_id?: string
+          status?: string
+          qr_code?: string | null
+          phone_number?: string | null
+          created_at?: string
+          updated_at?: string
+          last_activity?: string | null
+          message_count?: number | null
+          is_active?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_instances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       mensagens: {
         Row: {
           atendimento_id: string

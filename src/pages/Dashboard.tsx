@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { ExportModal } from '@/components/ExportModal';
 import { FilterModal } from '@/components/FilterModal';
+import { WhatsAppStatus } from '@/components/WhatsAppStatus';
 import { 
   MessageSquare, 
   TrendingUp, 
@@ -354,6 +355,14 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex gap-3">
+              <Button 
+                onClick={() => navigate('/whatsapp-connect')}
+                size="lg" 
+                className="gap-2 bg-green-600 hover:bg-green-700"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Conectar WhatsApp
+              </Button>
               <FilterModal 
                 onFilterChange={(date) => {
                   setSelectedDate(date);
@@ -538,6 +547,9 @@ export default function Dashboard() {
 
         {/* Seção de Destaques e Ações */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Status WhatsApp */}
+          <WhatsAppStatus />
+          
           {/* Destaque do Período */}
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
