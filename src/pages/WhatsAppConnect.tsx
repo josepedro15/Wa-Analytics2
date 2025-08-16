@@ -871,30 +871,30 @@ export default function WhatsAppConnect() {
         {/* Background pattern simples */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30"></div>
         
-        <div className="relative container mx-auto px-6 py-12">
+        <div className="relative container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="text-white hover:bg-white/20 hover:scale-105 transition-all duration-300 rounded-2xl px-8 py-4 border border-white/20 backdrop-blur-sm"
+              className="text-white hover:bg-white/20 transition-all duration-300 rounded-xl px-4 py-2 border border-white/20 backdrop-blur-sm"
             >
-              <ArrowLeft className="h-6 w-6 mr-3" />
-              <span className="font-semibold text-lg">Voltar ao Dashboard</span>
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              <span className="font-medium text-sm">Voltar ao Dashboard</span>
             </Button>
             
-            <div className="text-center flex-1 max-w-4xl mx-auto">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl mb-6 backdrop-blur-md border border-white/20">
-                <Smartphone className="h-10 w-10 text-white" />
+            <div className="text-center flex-1 max-w-2xl mx-auto">
+              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-white/20 to-white/10 rounded-xl mb-3 backdrop-blur-md border border-white/20">
+                <Smartphone className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-6xl font-black mb-4 bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent leading-tight">
+              <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent">
                 Conectar WhatsApp
               </h1>
-              <p className="text-2xl text-blue-100 max-w-3xl mx-auto leading-relaxed font-light">
+              <p className="text-sm text-blue-100 max-w-xl mx-auto leading-relaxed">
                 Configure sua instância para análise de dados e integração com o sistema
               </p>
             </div>
             
-            <div className="w-40"></div>
+            <div className="w-20"></div>
           </div>
         </div>
       </div>
