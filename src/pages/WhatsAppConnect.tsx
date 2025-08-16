@@ -81,25 +81,25 @@ export default function WhatsAppConnect() {
           
           // Se retornou instância, ela existe na API
           if (data.instance) {
-                         // Se retornou QR code, está aguardando conexão
-             if (data.qrcode) {
-               console.log('📱 Instância existe, aguardando conexão WhatsApp');
-               // Só atualiza se não estiver já exibindo QR
-               if (instanceStatus !== 'qr_ready' || !qrCode) {
-                 setInstanceStatus('qr_ready');
-                 setQrCode(data.qrcode.base64 || data.qrcode);
-                 startQrTimer();
-               }
-               updateInstanceStatusInDatabase(formData.instanceName, 'connecting');
-             } else {
-              // Se não tem QR code, está conectada
-              console.log('🎉 WhatsApp CONECTADO! (instância ativa)');
-              setInstanceStatus('connected');
-              setIsQrExpired(false);
+            // Se retornou QR code, está conectada
+            if (data.qrcode) {
+              console.log('🎉 WhatsApp CONECTADO! (instância ativa com QR)');
+              // Só atualiza se não estiver já exibindo QR
+              if (instanceStatus !== 'qr_ready' || !qrCode) {
+                setInstanceStatus('qr_ready');
+                setQrCode(data.qrcode.base64 || data.qrcode);
+                startQrTimer();
+              }
               updateInstanceStatusInDatabase(formData.instanceName, 'connected');
+            } else {
+              // Se não tem QR code, está desconectada
+              console.log('📱 WhatsApp DESCONECTADO! (instância inativa sem QR)');
+              setInstanceStatus('disconnected');
+              updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
               toast({
-                title: "WhatsApp Conectado!",
-                description: "Sua instância está ativa e pronta para receber dados.",
+                title: "WhatsApp Desconectado",
+                description: "A instância foi desconectada ou não está ativa.",
+                variant: "destructive"
               });
             }
           } else {
@@ -156,9 +156,9 @@ export default function WhatsAppConnect() {
           const statusData = await statusResponse.json();
           console.log('🔍 Resposta da verificação de status:', statusData);
           
-          // Se retornou instância mas sem QR code, está conectada
-          if (statusData.instance && !statusData.qrcode) {
-            console.log('🎉 WhatsApp CONECTADO! (instância ativa sem QR)');
+          // Se retornou instância com QR code, está conectada
+          if (statusData.instance && statusData.qrcode) {
+            console.log('🎉 WhatsApp CONECTADO! (instância ativa com QR)');
             if (instanceStatus !== 'connected') {
               setInstanceStatus('connected');
               setIsQrExpired(false);
@@ -174,11 +174,20 @@ export default function WhatsAppConnect() {
             return;
           }
           
-          // Se retornou QR code, ainda não está conectada
-          if (statusData.qrcode) {
-            console.log('📱 WhatsApp ainda não conectado (QR code presente)');
-            if (instanceStatus !== 'qr_ready') {
-              setInstanceStatus('qr_ready');
+          // Se retornou instância mas sem QR code, está desconectada
+          if (statusData.instance && !statusData.qrcode) {
+            console.log('📱 WhatsApp DESCONECTADO! (instância inativa sem QR)');
+            if (instanceStatus !== 'disconnected') {
+              setInstanceStatus('disconnected');
+              
+              // Atualizar status no banco de dados
+              updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
+              
+              toast({
+                title: "WhatsApp Desconectado",
+                description: "A instância foi desconectada ou não está ativa.",
+                variant: "destructive"
+              });
             }
             return;
           }
