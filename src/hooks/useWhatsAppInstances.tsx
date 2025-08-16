@@ -67,7 +67,7 @@ export function useWhatsAppInstances() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.id}`
+          'Authorization': `Bearer d3050208ba862ee87302278ac4370cb9`
         },
         body: JSON.stringify(instanceData)
       });
@@ -173,7 +173,7 @@ export function useWhatsAppInstances() {
       const response = await fetch(`https://api.aiensed.com/instance/delete/${instanceId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${user?.id}`
+          'Authorization': `Bearer d3050208ba862ee87302278ac4370cb9`
         }
       });
 
@@ -221,11 +221,11 @@ export function useWhatsAppInstances() {
 
     try {
       const statusPromises = instances.map(async (instance) => {
-        const response = await fetch(`https://api.aiensed.com/instance/status/${instance.instance_id}`, {
-          headers: {
-            'Authorization': `Bearer ${user?.id}`
-          }
-        });
+              const response = await fetch(`https://api.aiensed.com/instance/status/${instance.instance_id}`, {
+        headers: {
+          'Authorization': `Bearer d3050208ba862ee87302278ac4370cb9`
+        }
+      });
 
         if (response.ok) {
           const statusData = await response.json();
