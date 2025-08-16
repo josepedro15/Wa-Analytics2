@@ -41,6 +41,11 @@ export default function WhatsAppConnect() {
   const [instanceId, setInstanceId] = useState<string>('');
   const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'error'>('idle');
   
+  // Timer para expiração do QR Code
+  const [qrExpirationTime, setQrExpirationTime] = useState<number>(0);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [isQrExpired, setIsQrExpired] = useState(false);
+  
   // Função para gerar nome único (apenas letras e números)
   const generateUniqueName = (baseName: string): string => {
     const timestamp = Date.now();
@@ -55,6 +60,43 @@ export default function WhatsAppConnect() {
     const randomSuffix = Math.random().toString(36).substring(2, 6);
     // Remover hífens e usar apenas letras e números
     return `${baseName}${timestamp}${randomSuffix}`;
+  };
+
+  // Função para iniciar timer de expiração do QR Code (60 segundos)
+  const startQrTimer = () => {
+    const expirationTime = Date.now() + (60 * 1000); // 60 segundos
+    setQrExpirationTime(expirationTime);
+    setTimeRemaining(60);
+    setIsQrExpired(false);
+  };
+
+  // Função para verificar status da instância
+  const checkInstanceStatus = async () => {
+    if (!instanceId) return;
+
+    try {
+      const response = await fetch(`https://api.aiensed.com/instance/status/${instanceId}`, {
+        headers: {
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        }
+      });
+
+      if (response.ok) {
+        const statusData = await response.json();
+        console.log('🔍 Status da instância:', statusData);
+
+        if (statusData.status === 'connected' || statusData.connected === true) {
+          setInstanceStatus('connected');
+          setIsQrExpired(false);
+          toast({
+            title: "WhatsApp Conectado!",
+            description: "Sua instância está ativa e pronta para receber dados.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+    }
   };
 
   const validateForm = (): boolean => {
@@ -278,43 +320,35 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
     }
   };
 
-  // Função para verificar status da instância
-  const checkInstanceStatus = async () => {
-    if (!instanceId) return;
-    
-    try {
-      const response = await fetch(`https://api.aiensed.com/instance/status/${instanceId}`, {
-        headers: {
-          'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        }
-      });
 
-      if (response.ok) {
-        const statusData = await response.json();
-        
-        if (statusData.status === 'connected') {
-          setInstanceStatus('connected');
-          toast({
-            title: "Conectado!",
-            description: "WhatsApp conectado com sucesso! A instância está ativa.",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao verificar status:', error);
-    }
-  };
 
-  // Verificar status periodicamente quando QR estiver pronto
+  // Timer de expiração do QR Code e verificação de status
   useEffect(() => {
-    let interval: number;
+    let statusInterval: number;
+    let timerInterval: number;
     
     if (instanceStatus === 'qr_ready' && instanceId) {
-      interval = setInterval(checkInstanceStatus, 5000); // Verificar a cada 5 segundos
+      // Iniciar timer de expiração (60 segundos)
+      startQrTimer();
+      
+      // Verificar status da instância a cada 5 segundos
+      statusInterval = setInterval(checkInstanceStatus, 5000);
+      
+      // Timer de contagem regressiva
+      timerInterval = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            setIsQrExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (statusInterval) clearInterval(statusInterval);
+      if (timerInterval) clearInterval(timerInterval);
     };
   }, [instanceStatus, instanceId]);
 
@@ -453,19 +487,63 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                       <h3 className="font-medium text-gray-800 mb-3">
                         Escaneie o QR Code com seu WhatsApp
                       </h3>
+                      
+                      {/* Timer de expiração */}
+                      {!isQrExpired && (
+                        <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm text-yellow-700">
+                              QR Code expira em: <strong>{timeRemaining}s</strong>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* QR Code expirado */}
+                      {isQrExpired && (
+                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            <span className="text-sm text-red-700">
+                              QR Code expirado! Clique em "Gerar Novo QR Code"
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="bg-white p-4 rounded-lg inline-block border">
                         <img 
                           src={qrCode} 
                           alt="QR Code WhatsApp" 
-                          className="w-48 h-48"
+                          className={`w-48 h-48 ${isQrExpired ? 'opacity-50' : ''}`}
                         />
                       </div>
+                      
                       <p className="text-sm text-gray-600 mt-2">
                         Abra o WhatsApp Business → Configurações → Dispositivos Vinculados
                       </p>
+                      
                       <div className="mt-3 text-xs text-gray-500">
                         ID da Instância: {instanceId}
                       </div>
+                      
+                      {/* Botão para gerar novo QR Code quando expirar */}
+                      {isQrExpired && (
+                        <div className="mt-3">
+                          <Button
+                            onClick={() => {
+                              setIsQrExpired(false);
+                              setTimeRemaining(60);
+                              startQrTimer();
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Gerar Novo QR Code
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
 
