@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Smartphone, Zap } from 'lucide-react';
+import { ArrowLeft, Smartphone, Zap, CheckCircle, AlertCircle, Clock, QrCode, Wifi, WifiOff } from 'lucide-react';
 import { z } from 'zod';
 
 const connectSchema = z.object({
@@ -472,370 +472,518 @@ export default function WhatsAppConnect() {
   }, [instanceStatus, instanceId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50">
-      <div className="bg-gradient-to-r from-emerald-600 via-blue-600 to-indigo-600 text-white">
-        <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Header com design moderno */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 transition-all duration-300 rounded-xl px-6 py-3"
             >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar ao Dashboard
+              <ArrowLeft className="h-5 w-5 mr-3" />
+              <span className="font-medium">Voltar ao Dashboard</span>
             </Button>
             
-            <div className="text-center">
-              <h1 className="text-4xl font-bold mb-2">
-                📱 Conectar WhatsApp
+            <div className="text-center flex-1">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 backdrop-blur-sm">
+                <Smartphone className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                Conectar WhatsApp
               </h1>
-              <p className="text-emerald-100 text-lg">
-                Configure sua instância para análise de dados
+              <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+                Configure sua instância para análise de dados e integração com o sistema
               </p>
             </div>
             
-            <div className="w-20"></div>
+            <div className="w-32"></div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 p-3 bg-blue-50/50 border border-blue-200/50 rounded-xl backdrop-blur-sm">
-          <p className="text-xs text-blue-700 text-center">
-            <strong>Debug:</strong> Usuário: {user?.email || 'Não autenticado'}
-          </p>
+      <div className="container mx-auto px-6 py-12">
+        {/* Debug Info com design melhorado */}
+        <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl backdrop-blur-sm shadow-sm">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            <p className="text-sm text-blue-700 font-medium">
+              <strong>Debug:</strong> Usuário: {user?.email || 'Não autenticado'}
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-emerald-100">
-                <CardTitle className="flex items-center gap-3 text-2xl text-emerald-800">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <Smartphone className="h-6 w-6 text-emerald-600" />
+        {/* Layout principal com grid responsivo */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {/* Coluna Principal - Formulário */}
+          <div className="xl:col-span-2 space-y-8">
+            {/* Card de Configuração */}
+            <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-blue-100 p-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl">
+                    <Smartphone className="h-8 w-8 text-white" />
                   </div>
-                  Configuração da Instância
-                </CardTitle>
-                <CardDescription className="text-emerald-700 text-lg">
-                  Crie uma nova instância do WhatsApp para análise de dados
-                </CardDescription>
+                  <div>
+                    <CardTitle className="text-3xl font-bold text-gray-800 mb-2">
+                      Configuração da Instância
+                    </CardTitle>
+                    <CardDescription className="text-lg text-gray-600 leading-relaxed">
+                      Crie uma nova instância do WhatsApp para análise de dados
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="p-6 space-y-6">
+              
+              <CardContent className="p-8 space-y-8">
+                {/* Formulário com design moderno */}
                 <div className="space-y-6">
-                  <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-2xl border border-emerald-100">
+                  {/* Campo Nome da Instância */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-3xl border border-blue-100 shadow-sm">
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="instanceName" className="text-lg font-semibold text-emerald-800 mb-2 block">
+                      <div className="flex items-center gap-3">
+                        <Label htmlFor="instanceName" className="text-xl font-semibold text-gray-800">
                           🏷️ Nome da Instância
                         </Label>
-                        <div className="relative">
-                          <Input
-                            id="instanceName"
-                            type="text"
-                            placeholder="Ex: lojamoveis"
-                            value={formData.instanceName}
-                            onChange={(e) => handleInputChange('instanceName', e.target.value)}
-                            className={`text-lg p-4 border-2 transition-all duration-300 ${
-                              errors.instanceName 
-                                ? "border-red-400 focus:border-red-500 focus:ring-red-200" 
-                                : "border-emerald-200 focus:border-emerald-500 focus:ring-emerald-200"
-                            } rounded-xl focus:ring-4`}
-                            disabled={isCreatingInstance}
-                          />
-                          {errors.instanceName && (
-                            <p className="mt-2 text-sm text-red-600 font-medium">{errors.instanceName}</p>
-                          )}
+                        <div className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                          Obrigatório
                         </div>
-                        <p className="mt-3 text-sm text-emerald-700 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                          💡 <strong>Dica:</strong> Use apenas letras minúsculas e números (sem hífens ou caracteres especiais). 
-                          Ex: lojamoveis, empresaabc, vendas2024
-                        </p>
                       </div>
-
-                      <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
-                        <p className="text-sm font-medium text-emerald-800 mb-2">
-                          🔗 URL da instância:
-                        </p>
-                        <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
-                          <code className="text-sm font-mono text-emerald-700 break-all">
-                            https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
-                          </code>
+                      
+                      <div className="relative">
+                        <Input
+                          id="instanceName"
+                          type="text"
+                          placeholder="Ex: lojamoveis, empresaabc, vendas2024"
+                          value={formData.instanceName}
+                          onChange={(e) => handleInputChange('instanceName', e.target.value)}
+                          className={`text-lg p-5 border-2 transition-all duration-300 ${
+                            errors.instanceName 
+                              ? "border-red-400 focus:border-red-500 focus:ring-red-200" 
+                              : "border-blue-200 focus:border-blue-500 focus:ring-blue-200"
+                          } rounded-2xl focus:ring-4 focus:ring-blue-100`}
+                          disabled={isCreatingInstance}
+                        />
+                        {errors.instanceName && (
+                          <p className="mt-3 text-sm text-red-600 font-medium flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            {errors.instanceName}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="bg-white p-4 rounded-2xl border border-blue-200 shadow-sm">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-blue-700">Dica de Nomenclatura</span>
                         </div>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Use apenas <strong>letras minúsculas</strong> e <strong>números</strong> (sem hífens ou caracteres especiais). 
+                          Exemplos: <code className="bg-gray-100 px-2 py-1 rounded text-blue-600">lojamoveis</code>, 
+                          <code className="bg-gray-100 px-2 py-1 rounded text-blue-600">empresaabc</code>, 
+                          <code className="bg-gray-100 px-2 py-1 rounded text-blue-600">vendas2024</code>
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-center">
+                  {/* URL Preview com design moderno */}
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-3xl border border-indigo-200 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-indigo-100 rounded-xl">
+                        <QrCode className="h-5 w-5 text-indigo-600" />
+                      </div>
+                      <span className="text-lg font-semibold text-indigo-800">URL da Instância</span>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm">
+                      <code className="text-sm font-mono text-indigo-700 break-all bg-indigo-50 px-3 py-2 rounded-lg block">
+                        https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
+                      </code>
+                    </div>
+                  </div>
+
+                  {/* Botão principal com design moderno */}
+                  <div className="text-center pt-4">
                     <Button
                       onClick={handleConnect}
                       disabled={isCreatingInstance || !formData.instanceName}
-                      className={`w-full max-w-md h-16 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300 ${
+                      className={`w-full max-w-lg h-20 text-xl font-bold rounded-3xl shadow-2xl transition-all duration-500 ${
                         isCreatingInstance || !formData.instanceName
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 hover:scale-105 hover:shadow-xl'
+                          ? 'bg-gray-400 cursor-not-allowed shadow-none'
+                          : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 hover:scale-105 hover:shadow-3xl'
                       }`}
                       size="lg"
                     >
                       {isCreatingInstance ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                          Conectando WhatsApp...
-                        </>
+                        <div className="flex items-center gap-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          <span>Conectando WhatsApp...</span>
+                        </div>
                       ) : (
-                        <>
-                          <Zap className="h-6 w-6 mr-3" />
-                          Conectar WhatsApp
-                        </>
+                        <div className="flex items-center gap-4">
+                          <Zap className="h-7 w-7" />
+                          <span>Conectar WhatsApp</span>
+                        </div>
                       )}
                     </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {instanceStatus !== 'idle' && (
-                  <div className="mt-6 p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-3">
-                      {instanceStatus === 'creating' && (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                          <span className="text-blue-600 font-medium">Criando instância...</span>
-                        </>
-                      )}
-                      {instanceStatus === 'qr_ready' && (
-                        <>
-                          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                          <span className="text-green-600 font-medium">QR Code Gerado!</span>
-                        </>
-                      )}
-                      {instanceStatus === 'connected' && (
-                        <>
-                          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                          <span className="text-green-600 font-medium">WhatsApp Conectado!</span>
-                        </>
-                      )}
-                      {instanceStatus === 'error' && (
-                        <>
-                          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                          <span className="text-red-600 font-medium">Erro na Conexão</span>
-                        </>
-                      )}
-                      {instanceStatus === 'disconnected' && (
-                        <>
-                          <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                          <span className="text-orange-600 font-medium">WhatsApp Desconectado</span>
-                        </>
-                      )}
-                    </div>
-
-                    {(instanceStatus === 'qr_ready' || (instanceCreated && instanceStatus !== 'connected')) && qrCode && (
-                      <div className="text-center">
-                        <h3 className="font-medium text-gray-800 mb-3">
-                          Escaneie o QR Code com seu WhatsApp
-                        </h3>
-                        
-                        {!isQrExpired && (
-                          <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                              <span className="text-sm text-yellow-700">
-                                QR Code expira em: <strong>{timeRemaining}s</strong>
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {isQrExpired && (
-                          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                              <span className="text-sm text-red-700">
-                                QR Code expirado! Clique em "Gerar Novo QR Code"
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="bg-white p-4 rounded-lg inline-block border">
-                          <img 
-                            src={qrCode} 
-                            alt="QR Code WhatsApp" 
-                            className={`w-48 h-48 ${isQrExpired ? 'opacity-50' : ''}`}
-                          />
-                        </div>
-                        
-                        <p className="text-sm text-gray-600 mt-2">
-                          Abra o WhatsApp Business → Configurações → Dispositivos Vinculados
-                        </p>
-                        
-                        <div className="mt-3 text-xs text-gray-500">
-                          ID da Instância: {instanceId}
-                        </div>
-                        
-                        {isQrExpired && (
-                          <div className="mt-3">
-                            <Button
-                              onClick={regenerateQrCode}
-                              variant="outline"
-                              size="sm"
-                            >
-                              Gerar Novo QR Code
-                            </Button>
-                          </div>
-                        )}
-                        
-                        {/* Botão para verificar status manualmente */}
-                        <div className="mt-3">
-                          <Button
-                            onClick={checkInstanceStatus}
-                            variant="outline"
-                            size="sm"
-                            className="mr-2"
-                          >
-                            🔍 Verificar Status
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              console.log('🔍 Status atual:', instanceStatus);
-                              console.log('🔍 Instance ID:', instanceId);
-                              console.log('🔍 Instance Name:', formData.instanceName);
-                              toast({
-                                title: "Debug Info",
-                                description: `Status: ${instanceStatus}, ID: ${instanceId}`,
-                              });
-                            }}
-                            variant="ghost"
-                            size="sm"
-                          >
-                            📊 Debug
-                          </Button>
-                        </div>
+            {/* Status da Instância com design melhorado */}
+            {instanceStatus !== 'idle' && (
+              <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200 p-6">
+                  <div className="flex items-center gap-3">
+                    {instanceStatus === 'creating' && (
+                      <div className="p-2 bg-blue-100 rounded-xl">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                       </div>
                     )}
-
+                    {instanceStatus === 'qr_ready' && (
+                      <div className="p-2 bg-green-100 rounded-xl">
+                        <QrCode className="h-6 w-6 text-green-600" />
+                      </div>
+                    )}
                     {instanceStatus === 'connected' && (
-                      <div className="text-center">
-                        <div className="mb-4">
-                          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-3">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <svg 
-                                className="w-5 h-5 text-white" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                              >
-                                <path 
-                                  strokeLinecap="round" 
-                                  strokeLinejoin="round" 
-                                  strokeWidth={3} 
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                          
-                          <h3 className="text-2xl font-bold text-green-600 mb-2">
-                            🎉 WhatsApp Conectado!
-                          </h3>
-                          <p className="text-lg text-green-700 font-medium">
-                            Instância Ativa e Funcionando
-                          </p>
+                      <div className="p-2 bg-green-100 rounded-xl">
+                        <Wifi className="h-6 w-6 text-green-600" />
+                      </div>
+                    )}
+                    {instanceStatus === 'error' && (
+                      <div className="p-2 bg-red-100 rounded-xl">
+                        <AlertCircle className="h-6 w-6 text-red-600" />
+                      </div>
+                    )}
+                    {instanceStatus === 'disconnected' && (
+                      <div className="p-2 bg-orange-100 rounded-xl">
+                        <WifiOff className="h-6 w-6 text-orange-600" />
+                      </div>
+                    )}
+                    
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">
+                        {instanceStatus === 'creating' && 'Criando Instância...'}
+                        {instanceStatus === 'qr_ready' && 'QR Code Gerado!'}
+                        {instanceStatus === 'connected' && 'WhatsApp Conectado!'}
+                        {instanceStatus === 'error' && 'Erro na Conexão'}
+                        {instanceStatus === 'disconnected' && 'WhatsApp Desconectado'}
+                      </h3>
+                      <p className="text-gray-600">
+                        {instanceStatus === 'creating' && 'Aguarde enquanto criamos sua instância...'}
+                        {instanceStatus === 'qr_ready' && 'Escaneie o QR Code com seu WhatsApp'}
+                        {instanceStatus === 'connected' && 'Sua instância está ativa e funcionando'}
+                        {instanceStatus === 'error' && 'Ocorreu um erro durante a conexão'}
+                        {instanceStatus === 'disconnected' && 'A conexão foi perdida'}
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="p-6">
+                  {/* QR Code Section */}
+                  {(instanceStatus === 'qr_ready' || (instanceCreated && instanceStatus !== 'connected')) && qrCode && (
+                    <div className="text-center space-y-6">
+                      {/* Timer de expiração */}
+                      {!isQrExpired && (
+                        <div className="inline-flex items-center gap-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl shadow-sm">
+                          <Clock className="h-5 w-5 text-yellow-600" />
+                          <span className="text-lg font-semibold text-yellow-700">
+                            QR Code expira em: <strong className="text-2xl">{timeRemaining}s</strong>
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* QR Code expirado */}
+                      {isQrExpired && (
+                        <div className="inline-flex items-center gap-3 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl shadow-sm">
+                          <AlertCircle className="h-5 w-5 text-red-600" />
+                          <span className="text-lg font-semibold text-red-700">
+                            QR Code expirado! Clique em "Gerar Novo QR Code"
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* QR Code Image */}
+                      <div className="bg-white p-6 rounded-3xl border-2 border-gray-200 shadow-lg inline-block">
+                        <img 
+                          src={qrCode} 
+                          alt="QR Code WhatsApp" 
+                          className={`w-56 h-56 ${isQrExpired ? 'opacity-50 grayscale' : ''} transition-all duration-300`}
+                        />
+                      </div>
+                      
+                      {/* Instruções */}
+                      <div className="max-w-md mx-auto space-y-3">
+                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200">
+                          <h4 className="font-semibold text-blue-800 mb-2">📱 Como Escanear:</h4>
+                          <ol className="text-sm text-blue-700 space-y-1 text-left">
+                            <li>1. Abra o <strong>WhatsApp Business</strong></li>
+                            <li>2. Vá em <strong>Configurações</strong></li>
+                            <li>3. Toque em <strong>Dispositivos Vinculados</strong></li>
+                            <li>4. Escaneie o QR Code acima</li>
+                          </ol>
                         </div>
                         
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                          <div className="flex items-center justify-center gap-2 mb-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium text-green-700">
-                              Status: Conectado e Ativo
-                            </span>
-                          </div>
-                          <p className="text-sm text-green-600">
-                            Sua instância está pronta para receber e processar dados do WhatsApp.
-                          </p>
-                        </div>
-                        
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                          <p className="text-xs text-gray-500 mb-1">ID da Instância:</p>
-                          <code className="text-xs bg-white px-2 py-1 rounded border font-mono">
-                            {instanceId}
-                          </code>
-                        </div>
-                        
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-2">
-                            ✅ Conexão estabelecida com sucesso!
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Você pode fechar esta página. A instância continuará funcionando.
+                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                          <p className="text-xs text-gray-600">
+                            <strong>ID da Instância:</strong> {instanceId}
                           </p>
                         </div>
                       </div>
-                    )}
-
-                    {instanceStatus === 'disconnected' && (
-                      <div className="text-center">
-                        <div className="mb-4">
-                          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-3">
-                            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                              <svg 
-                                className="w-5 h-5 text-white" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                              >
-                                <path 
-                                  strokeLinecap="round" 
-                                  strokeLinejoin="round" 
-                                  strokeWidth={3} 
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                          
-                          <h3 className="text-2xl font-bold text-orange-600 mb-2">
-                            ⚠️ WhatsApp Desconectado
-                          </h3>
-                          <p className="text-lg text-orange-700 font-medium">
-                            A conexão foi perdida
-                          </p>
-                        </div>
-                        
-                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                          <p className="text-sm text-orange-600">
-                            Sua instância foi desconectada. Gere um novo QR Code para reconectar.
-                          </p>
-                        </div>
+                      
+                      {/* Botões de ação */}
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                        {isQrExpired && (
+                          <Button
+                            onClick={regenerateQrCode}
+                            variant="outline"
+                            size="lg"
+                            className="bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 rounded-2xl px-8"
+                          >
+                            <QrCode className="h-5 w-5 mr-2" />
+                            Gerar Novo QR Code
+                          </Button>
+                        )}
                         
                         <Button
-                          onClick={regenerateQrCode}
-                          className="bg-orange-600 hover:bg-orange-700"
+                          onClick={checkInstanceStatus}
+                          variant="outline"
                           size="lg"
+                          className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 rounded-2xl px-8"
                         >
-                          Reconectar WhatsApp
+                          <CheckCircle className="h-5 w-5 mr-2" />
+                          Verificar Status
                         </Button>
-                      </div>
-                    )}
-
-                    {instanceStatus === 'connected' && (
-                      <div className="mt-4 text-center">
+                        
                         <Button
                           onClick={() => {
-                            setInstanceStatus('idle');
-                            setInstanceCreated(false);
-                            setQrCode('');
-                            setInstanceId('');
-                            setFormData({ instanceName: '' });
-                            localStorage.removeItem('whatsapp-connect-state');
-                            console.log('🗑️ Estado limpo do localStorage');
+                            console.log('🔍 Status atual:', instanceStatus);
+                            console.log('🔍 Instance ID:', instanceId);
+                            console.log('🔍 Instance Name:', formData.instanceName);
+                            toast({
+                              title: "Debug Info",
+                              description: `Status: ${instanceStatus}, ID: ${instanceId}`,
+                            });
                           }}
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="lg"
+                          className="text-gray-600 hover:text-gray-800 rounded-2xl px-6"
                         >
-                          Criar Nova Instância
+                          📊 Debug
                         </Button>
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  {/* Status Conectado */}
+                  {instanceStatus === 'connected' && (
+                    <div className="text-center space-y-6">
+                      <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full mb-6 shadow-lg">
+                        <CheckCircle className="h-12 w-12 text-green-600" />
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-3xl font-bold text-green-600">
+                          🎉 WhatsApp Conectado!
+                        </h3>
+                        <p className="text-xl text-green-700 font-medium">
+                          Instância Ativa e Funcionando
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-3xl p-6 shadow-sm">
+                        <div className="flex items-center justify-center gap-3 mb-4">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-lg font-semibold text-green-700">
+                            Status: Conectado e Ativo
+                          </span>
+                        </div>
+                        <p className="text-green-600 leading-relaxed">
+                          Sua instância está pronta para receber e processar dados do WhatsApp.
+                          Os dados serão coletados automaticamente e estarão disponíveis no dashboard.
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 max-w-md mx-auto">
+                        <p className="text-sm text-gray-500 mb-2">ID da Instância:</p>
+                        <code className="text-sm bg-white px-3 py-2 rounded-xl border font-mono text-gray-700 break-all">
+                          {instanceId}
+                        </code>
+                      </div>
+                      
+                      <div className="bg-green-50 border border-green-200 rounded-2xl p-6 max-w-lg mx-auto">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                          <CheckCircle className="h-6 w-6 text-green-600" />
+                          <span className="text-lg font-semibold text-green-700">
+                            Conexão Estabelecida com Sucesso!
+                          </span>
+                        </div>
+                        <p className="text-green-600">
+                          Você pode fechar esta página. A instância continuará funcionando e coletando dados automaticamente.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status Desconectado */}
+                  {instanceStatus === 'disconnected' && (
+                    <div className="text-center space-y-6">
+                      <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-orange-100 to-red-100 rounded-full mb-6 shadow-lg">
+                        <WifiOff className="h-12 w-12 text-orange-600" />
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-3xl font-bold text-orange-600">
+                          ⚠️ WhatsApp Desconectado
+                        </h3>
+                        <p className="text-xl text-orange-700 font-medium">
+                          A conexão foi perdida
+                        </p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-3xl p-6 shadow-sm">
+                        <p className="text-orange-700 leading-relaxed">
+                          Sua instância foi desconectada ou removida da API. 
+                          Gere um novo QR Code para reconectar e continuar coletando dados.
+                        </p>
+                      </div>
+                      
+                      <Button
+                        onClick={regenerateQrCode}
+                        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-2xl px-8 py-4 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                        size="lg"
+                      >
+                        <Wifi className="h-6 w-6 mr-3" />
+                        Reconectar WhatsApp
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Botão para nova instância */}
+                  {instanceStatus === 'connected' && (
+                    <div className="text-center pt-6">
+                      <Button
+                        onClick={() => {
+                          setInstanceStatus('idle');
+                          setInstanceCreated(false);
+                          setQrCode('');
+                          setInstanceId('');
+                          setFormData({ instanceName: '' });
+                          localStorage.removeItem('whatsapp-connect-state');
+                          console.log('🗑️ Estado limpo do localStorage');
+                        }}
+                        variant="outline"
+                        size="lg"
+                        className="border-gray-300 text-gray-700 hover:bg-gray-50 rounded-2xl px-8 py-3"
+                      >
+                        <Smartphone className="h-5 w-5 mr-2" />
+                        Criar Nova Instância
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Sidebar com informações e ajuda */}
+          <div className="space-y-6">
+            {/* Card de Status da API */}
+            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-200 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-xl">
+                    <Wifi className="h-5 w-5 text-indigo-600" />
                   </div>
-                )}
+                  <CardTitle className="text-lg font-bold text-indigo-800">
+                    Status da API
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-700">API Evolution ativa</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-700">Endpoints oficiais</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-gray-700">Integração N8N</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card de Ajuda */}
+            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-xl">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <CardTitle className="text-lg font-bold text-green-800">
+                    Como Funciona
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4 text-sm text-gray-600">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                    <p>Digite o nome da instância (apenas letras e números)</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <p>Clique em "Conectar WhatsApp" para gerar o QR Code</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                    <p>Escaneie o QR Code com seu WhatsApp Business</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2"></div>
+                    <p>A instância será criada e conectada automaticamente</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Card de Informações Técnicas */}
+            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-xl">
+                    <Smartphone className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-lg font-bold text-blue-800">
+                    Informações Técnicas
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3 text-sm text-gray-600">
+                  <div>
+                    <strong className="text-gray-800">API:</strong> Evolution API
+                  </div>
+                  <div>
+                    <strong className="text-gray-800">Endpoint:</strong> aiensed.com
+                  </div>
+                  <div>
+                    <strong className="text-gray-800">Integração:</strong> N8N Workflow
+                  </div>
+                  <div>
+                    <strong className="text-gray-800">Status:</strong> Verificação automática
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
