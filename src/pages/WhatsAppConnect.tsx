@@ -210,51 +210,97 @@ export default function WhatsAppConnect() {
     setTimeRemaining(60);
     setInstanceStatus('creating');
 
-    try {
-      // 🎯 USAR ENDPOINT CORRETO: GET /instance/connect/{instance}
-      const response = await fetch(`https://api.aiensed.com/instance/connect/${instanceName}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        }
-      });
+    // 🔍 TESTAR MÚLTIPLOS ENDPOINTS PARA ENCONTRAR O CORRETO
+    const endpoints = [
+      `https://api.aiensed.com/instance/connect/${instanceName}`,
+      `https://api.aiensed.com/instance/${instanceName}/connect`,
+      `https://api.aiensed.com/instance/connect?instance=${instanceName}`,
+      `https://api.aiensed.com/instance/create`
+    ];
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔄 Resposta da regeneração de QR:', data);
-
-        // 📱 Extrair dados do endpoint correto
-        if (data.code) {
-          const qrCode = data.code; // Base64 do QR code
-          const pairingCode = data.pairingCode; // Código de pareamento
-          const count = data.count; // Contador de tentativas
-          
-          setQrCode(qrCode);
-          setInstanceStatus('qr_ready');
-          startQrTimer();
-          
-          console.log('✅ QR code regenerado para instância existente:', { pairingCode, count });
-          
-          toast({
-            title: "QR Code Gerado!",
-            description: `Escaneie o QR Code para reconectar. Código: ${pairingCode}`,
+    for (let i = 0; i < endpoints.length; i++) {
+      const endpoint = endpoints[i];
+      console.log(`🔍 Testando endpoint ${i + 1}/${endpoints.length}: ${endpoint}`);
+      
+      try {
+        let response;
+        
+        if (endpoint.includes('/instance/create')) {
+          // Endpoint POST com body
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            },
+            body: JSON.stringify({
+              instanceName: instanceName,
+              qrcode: true,
+              integration: "WHATSAPP-BAILEYS"
+            })
           });
         } else {
-          throw new Error('API não retornou QR code válido');
+          // Endpoints GET
+          response = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            }
+          });
         }
-      } else {
-        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+
+        console.log(`🔍 Endpoint ${endpoint}: Status ${response.status}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`🔍 Resposta do endpoint ${endpoint}:`, data);
+          
+          // 📱 Tentar extrair QR code de diferentes formatos
+          let qrCode = null;
+          let pairingCode = null;
+          
+          if (data.code) {
+            qrCode = data.code;
+            pairingCode = data.pairingCode || 'N/A';
+          } else if (data.qrcode) {
+            qrCode = data.qrcode.base64 || data.qrcode;
+            pairingCode = 'N/A';
+          } else if (data.qrCode) {
+            qrCode = data.qrCode;
+            pairingCode = 'N/A';
+          }
+          
+          if (qrCode) {
+            console.log('✅ QR code encontrado!', { endpoint, qrCode: qrCode.substring(0, 50) + '...', pairingCode });
+            
+            setQrCode(qrCode);
+            setInstanceStatus('qr_ready');
+            startQrTimer();
+            
+            toast({
+              title: "QR Code Gerado!",
+              description: `Endpoint: ${endpoint.split('/').pop()}. Código: ${pairingCode}`,
+            });
+            
+            return; // Sucesso - sair do loop
+          }
+        } else {
+          console.log(`❌ Endpoint ${endpoint} falhou: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error(`❌ Erro no endpoint ${endpoint}:`, error);
       }
-    } catch (error) {
-      console.error('❌ Erro ao gerar QR code para instância existente:', error);
-      setInstanceStatus('error');
-      toast({
-        title: "Erro ao Gerar QR Code",
-        description: "Não foi possível gerar QR code para reconexão.",
-        variant: "destructive"
-      });
     }
+    
+    // 🚫 Se chegou até aqui, nenhum endpoint funcionou
+    console.error('❌ Nenhum endpoint funcionou para gerar QR code');
+    setInstanceStatus('error');
+    toast({
+      title: "Erro ao Gerar QR Code",
+      description: "Todos os endpoints testados falharam. Verifique o console.",
+      variant: "destructive"
+    });
   };
 
   const regenerateQrCode = async () => {
