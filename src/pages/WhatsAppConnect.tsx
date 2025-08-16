@@ -80,25 +80,32 @@ export default function WhatsAppConnect() {
             if (data.instance.state === 'open') {
               console.log('🎉 WhatsApp CONECTADO! (state: open)');
               setInstanceStatus('connected');
+              
+              // 🔄 SEMPRE atualizar banco com status real da API
               updateInstanceStatusInDatabase(formData.instanceName, 'connected');
             } else {
               // Se não está conectada (state: "closed" ou outro)
               console.log(`📱 WhatsApp DESCONECTADO! (state: ${data.instance.state})`);
               setInstanceStatus('disconnected');
               
-                          // Instância desconectada - manter no banco para histórico
+              // 🔄 SEMPRE atualizar banco com status real da API
+              updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
             }
           } else {
             // Instância não existe na API (foi excluída)
             console.log('❌ Instância não existe na API (foi excluída)');
             setInstanceStatus('disconnected');
-            // Instância não existe mais - manter no banco para histórico
+            
+            // 🔄 SEMPRE atualizar banco com status real da API
+            updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
           }
         } else if (response.status === 404) {
           // Instância não encontrada na API
           console.log('📱 Instância não encontrada na API (404)');
           setInstanceStatus('disconnected');
-          // Instância não encontrada - manter no banco para histórico
+          
+          // 🔄 SEMPRE atualizar banco com status real da API
+          updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
         }
       } else {
         // Instância não existe no banco
@@ -140,12 +147,13 @@ export default function WhatsAppConnect() {
           // Verificar se a instância está conectada (state: "open")
           if (statusData.instance && statusData.instance.state === 'open') {
             console.log('🎉 WhatsApp CONECTADO! (state: open)');
+            
+            // 🔄 SEMPRE atualizar banco com status real da API
+            updateInstanceStatusInDatabase(formData.instanceName, 'connected');
+            
             if (instanceStatus !== 'connected') {
               setInstanceStatus('connected');
               setIsQrExpired(false);
-              
-              // Atualizar status no banco de dados
-              updateInstanceStatusInDatabase(formData.instanceName, 'connected');
               
               toast({
                 title: "WhatsApp Conectado!",
