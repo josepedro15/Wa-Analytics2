@@ -44,6 +44,7 @@ export default function WhatsAppConnect() {
     setIsQrExpired(false);
   };
 
+  // Função para verificar status da instância usando endpoints oficiais
   const checkInstanceStatus = async () => {
     if (!instanceId || !formData.instanceName) return;
 
@@ -51,41 +52,33 @@ export default function WhatsAppConnect() {
       console.log(`🔍 Verificando status da instância: ${formData.instanceName} (ID: ${instanceId})`);
       console.log(`🔍 Status atual: ${instanceStatus}`);
       
-      // Tentar diferentes abordagens para verificar status
-      console.log('🔍 Verificando status da instância...');
-      
-      let response;
-      let workingEndpoint = '';
-      
-      // Primeiro, tentar verificar se a instância está conectada
+      // Primeiro, verificar se a API está ativa
       try {
-        console.log('🔍 Tentando verificar status via GET simples...');
-        
-        // Tentar GET simples para ver se a instância responde
-        const simpleResponse = await fetch(`https://api.aiensed.com/`, {
+        const rootResponse = await fetch('https://api.aiensed.com/', {
           method: 'GET',
           headers: {
             'apikey': 'd3050208ba862ee87302278ac4370cb9'
           }
         });
         
-        if (simpleResponse.ok) {
-          console.log('✅ API base responde - tentando verificar instância específica');
+        if (rootResponse.ok) {
+          console.log('✅ API base está ativa');
           
-          // Tentar verificar instância específica
-          const instanceResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
-            method: 'GET',
-            headers: {
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            }
-          });
-          
-          if (instanceResponse.ok) {
-            const instanceData = await instanceResponse.text();
-            console.log('🔍 Resposta da instância:', instanceData);
+          // Tentar verificar perfil da instância (endpoint oficial)
+          try {
+            const profileResponse = await fetch('https://api.aiensed.com/fetchProfile', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'd3050208ba862ee87302278ac4370cb9'
+              },
+              body: JSON.stringify({
+                instanceName: formData.instanceName
+              })
+            });
             
-            if (instanceData.toLowerCase().includes('ok') || instanceData.toLowerCase().includes('connected')) {
-              console.log('🎉 WhatsApp CONECTADO! (resposta direta da API)');
+            if (profileResponse.ok) {
+              console.log('🎉 WhatsApp CONECTADO! (perfil encontrado)');
               if (instanceStatus !== 'connected') {
                 setInstanceStatus('connected');
                 setIsQrExpired(false);
@@ -95,222 +88,72 @@ export default function WhatsAppConnect() {
                 });
               }
               return;
-            }
-          }
-        }
-      } catch (simpleError) {
-        console.log('❌ Verificação simples falhou:', simpleError);
-      }
-      
-      // Se a verificação simples falhou, tentar endpoints tradicionais
-      const endpoints = [
-        'https://api.aiensed.com/instance/connect',
-        'https://api.aiensed.com/instance/connect/',
-        'https://api.aiensed.com/instance/create'
-      ];
-      
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`🔍 Tentando endpoint: ${endpoint}`);
-          
-          // Tentar POST para verificar status
-          response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            },
-            body: JSON.stringify({
-              instanceName: formData.instanceName,
-              qrcode: false, // Não gerar QR, só verificar
-              integration: "WHATSAPP-BAILEYS"
-            })
-          });
-          
-          if (response.ok) {
-            workingEndpoint = endpoint;
-            console.log(`✅ Endpoint funcionando: ${endpoint}`);
-            break;
-          } else {
-            console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
-            
-            // Se for 403, pode ser que a instância já existe e está conectada
-            if (response.status === 403) {
-              try {
-                const errorData = await response.text();
-                console.log(`🚨 Detalhes do erro 403:`, errorData);
-                
-                // Se o erro for "already in use", pode significar que está conectada
-                if (errorData.toLowerCase().includes('already in use') || 
-                    errorData.toLowerCase().includes('already exists')) {
-                  console.log('🎉 Instância já existe - pode estar conectada!');
-                  
-                  // Verificar se realmente está conectada fazendo uma chamada adicional
-                  try {
-                    const statusResponse = await fetch(endpoint, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': 'd3050208ba862ee87302278ac4370cb9'
-                      },
-                      body: JSON.stringify({
-                        instanceName: formData.instanceName,
-                        qrcode: true, // Tentar gerar QR code
-                        integration: "WHATSAPP-BAILEYS"
-                      })
-                    });
-                    
-                    if (statusResponse.ok) {
-                      const statusData = await statusResponse.json();
-                      console.log('🔍 Dados da verificação de status:', statusData);
-                      
-                      if (statusData.qrcode) {
-                        console.log('📱 Instância existe mas NÃO está conectada (tem QR code)');
-                        // Manter status atual
-                      } else if (statusData.instance && !statusData.qrcode) {
-                        console.log('🎉 WhatsApp CONECTADO! (tem instance mas não tem QR code)');
-                        if (instanceStatus !== 'connected') {
-                          setInstanceStatus('connected');
-                          setIsQrExpired(false);
-                          toast({
-                            title: "WhatsApp Conectado!",
-                            description: "Sua instância está ativa e pronta para receber dados.",
-                          });
-                        }
-                      }
-                    }
-                  } catch (statusError) {
-                    console.log('❌ Erro ao verificar status detalhado:', statusError);
-                  }
-                  
-                  workingEndpoint = endpoint;
-                  response = { ok: true, status: 200 } as Response; // Simular sucesso
-                  break;
-                }
-              } catch (readError) {
-                console.log(`🚨 Não foi possível ler resposta de erro 403:`, readError);
-              }
-            }
-            
-            // Se for 404, a instância foi excluída
-            if (response.status === 404) {
-              console.log('🗑️ Instância não encontrada (404) - foi excluída da API');
+            } else if (profileResponse.status === 404) {
+              console.log('📱 Instância não encontrada (404) - foi excluída ou não conectada');
               if (instanceStatus === 'connected') {
-                console.log('🔄 Mudando status de connected para disconnected (instância excluída)');
                 setInstanceStatus('disconnected');
                 toast({
-                  title: "Instância Excluída",
-                  description: "A instância foi removida da API. Crie uma nova instância.",
+                  title: "WhatsApp Desconectado",
+                  description: "A instância foi removida ou não está conectada.",
                   variant: "destructive"
                 });
               }
-              return; // Parar verificação
+              return;
             }
+          } catch (profileError) {
+            console.log('❌ Erro ao verificar perfil:', profileError);
           }
-        } catch (endpointError) {
-          console.log(`❌ Erro no endpoint ${endpoint}:`, endpointError);
+          
+          // Se não conseguiu verificar perfil, tentar verificar se a instância responde
+          try {
+            const instanceResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
+              method: 'GET',
+              headers: {
+                'apikey': 'd3050208ba862ee87302278ac4370cb9'
+              }
+            });
+            
+            if (instanceResponse.ok) {
+              const instanceData = await instanceResponse.text();
+              console.log('🔍 Resposta da instância:', instanceData);
+              
+              if (instanceData.toLowerCase().includes('ok') || 
+                  instanceData.toLowerCase().includes('connected') ||
+                  instanceData.toLowerCase().includes('active')) {
+                console.log('🎉 WhatsApp CONECTADO! (resposta da instância)');
+                if (instanceStatus !== 'connected') {
+                  setInstanceStatus('connected');
+                  setIsQrExpired(false);
+                  toast({
+                    title: "WhatsApp Conectado!",
+                    description: "Sua instância está ativa e pronta para receber dados.",
+                  });
+                }
+                return;
+              }
+            }
+          } catch (instanceError) {
+            console.log('❌ Erro ao verificar instância:', instanceError);
+          }
+          
+        } else {
+          console.log(`❌ API base não responde: ${rootResponse.status}`);
         }
+      } catch (rootError) {
+        console.log('❌ Erro ao verificar API base:', rootError);
       }
       
-      if (!response || !response.ok) {
-        console.log(`❌ Nenhum endpoint funcionou para verificar status`);
-        return;
+      // Se chegou até aqui, a instância não está conectada
+      console.log('📱 Instância não está conectada');
+      if (instanceStatus === 'connected') {
+        setInstanceStatus('disconnected');
+        toast({
+          title: "WhatsApp Desconectado",
+          description: "A conexão foi perdida.",
+          variant: "destructive"
+        });
       }
-
-      console.log(`🔍 Resposta da API: ${response.status} ${response.statusText}`);
-
-      if (response.ok) {
-        let data;
-        try {
-          data = await response.json();
-        } catch (parseError) {
-          // Se não for JSON, tentar ler como texto
-          const textResponse = await response.text();
-          console.log('🔍 Resposta não-JSON:', textResponse);
-          
-          // Se a resposta for "ok" ou similar, considerar conectado
-          if (textResponse.toLowerCase().includes('ok') || textResponse.toLowerCase().includes('connected')) {
-            console.log('🎉 WhatsApp CONECTADO! (resposta de texto indica sucesso)');
-            if (instanceStatus !== 'connected') {
-              setInstanceStatus('connected');
-              setIsQrExpired(false);
-              toast({
-                title: "WhatsApp Conectado!",
-                description: "Sua instância está ativa e pronta para receber dados.",
-              });
-            }
-            return;
-          }
-          
-          // Se não conseguir interpretar, considerar desconectado
-          console.log('❓ Resposta de texto não interpretável');
-          return;
-        }
-        
-        console.log('🔍 Dados da resposta:', data);
-        console.log('🔍 Tem qrcode?', !!data.qrcode);
-        console.log('🔍 Tem instance?', !!data.instance);
-        
-        if (data.qrcode) {
-          console.log('📱 Instância existe mas NÃO está conectada (tem QR code)');
-          if (instanceStatus === 'connected') {
-            console.log('🔄 Mudando status de connected para disconnected');
-            setInstanceStatus('disconnected');
-            toast({
-              title: "WhatsApp Desconectado",
-              description: "A conexão foi perdida. Gere um novo QR Code para reconectar.",
-              variant: "destructive"
-            });
-          }
-        } else if (data.instance && !data.qrcode) {
-          console.log('🎉 WhatsApp CONECTADO! (tem instance mas não tem QR code)');
-          if (instanceStatus !== 'connected') {
-            console.log('🔄 Mudando status para connected');
-            setInstanceStatus('connected');
-            setIsQrExpired(false);
-            toast({
-              title: "WhatsApp Conectado!",
-              description: "Sua instância está ativa e pronta para receber dados.",
-            });
-          } else {
-            console.log('✅ Já está conectado, mantendo status');
-          }
-        } else if (data.status === 'connected' || data.connected === true) {
-          console.log('🎉 WhatsApp CONECTADO! (status explícito)');
-          if (instanceStatus !== 'connected') {
-            setInstanceStatus('connected');
-            setIsQrExpired(false);
-            toast({
-              title: "WhatsApp Conectado!",
-              description: "Sua instância está ativa e pronta para receber dados.",
-            });
-          }
-        } else if (data.message && data.message.includes('already in use')) {
-          // Se a API retornar "already in use", pode significar que está conectada
-          console.log('🎉 WhatsApp CONECTADO! (instância já em uso)');
-          if (instanceStatus !== 'connected') {
-            setInstanceStatus('connected');
-            setIsQrExpired(false);
-            toast({
-              title: "WhatsApp Conectado!",
-              description: "Sua instância está ativa e pronta para receber dados.",
-            });
-          }
-        } else {
-          console.log('❓ Resposta inesperada da API:', data);
-        }
-      } else {
-        console.log(`❌ API retornou erro: ${response.status}`);
-        if (instanceStatus === 'connected') {
-          console.log('🔄 Mudando status de connected para disconnected (erro da API)');
-          setInstanceStatus('disconnected');
-          toast({
-            title: "Instância Excluída",
-            description: "A instância foi removida da API. Crie uma nova instância.",
-            variant: "destructive"
-          });
-        }
-      }
+      
     } catch (error) {
       console.log(`❌ Erro na verificação:`, error);
     }
@@ -324,6 +167,7 @@ export default function WhatsAppConnect() {
     setInstanceStatus('creating');
 
     try {
+      // Usar o endpoint que sabemos que funciona para criar instância
       const response = await fetch('https://api.aiensed.com/instance/create', {
         method: 'POST',
         headers: {
@@ -410,138 +254,134 @@ export default function WhatsAppConnect() {
     setInstanceStatus('creating');
     
     try {
-      const endpoints = [
-        'https://api.aiensed.com/instance/connect/',
-        'https://api.aiensed.com/instance/create',
-        'https://api.aiensed.com/instance/connect'
-      ];
-      
-      let response;
-      let workingEndpoint = '';
-      
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`Testando endpoint: ${endpoint}`);
-          
-          response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            },
-            body: JSON.stringify({
-              instanceName: formData.instanceName,
-              qrcode: true,
-              integration: "WHATSAPP-BAILEYS"
-            })
-          });
-          
-          if (response.ok) {
-            workingEndpoint = endpoint;
-            console.log(`✅ Endpoint funcionando: ${endpoint}`);
-            break;
-          } else {
-            console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
-            
-            if (response.status === 403) {
-              try {
-                const errorData = await response.text();
-                
-                try {
-                  const errorJson = JSON.parse(errorData);
-                  
-                  if (errorJson.response?.message?.[0]?.includes('already in use')) {
-                    const uniqueName = generateUniqueName(formData.instanceName);
-                    console.log(`🔄 Tentando com nome único: ${uniqueName}`);
-                    
-                    const retryResponse = await fetch(endpoint, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': 'd3050208ba862ee87302278ac4370cb9'
-                      },
-                      body: JSON.stringify({
-                        instanceName: uniqueName,
-                        qrcode: true,
-                        integration: "WHATSAPP-BAILEYS"
-                      })
-                    });
-                    
-                    if (retryResponse.ok) {
-                      workingEndpoint = endpoint;
-                      response = retryResponse;
-                      setFormData(prev => ({ ...prev, instanceName: uniqueName }));
-                      break;
-                    }
-                  }
-                } catch (parseError) {
-                  console.log(`🚨 Erro 403 em texto:`, errorData);
-                }
-              } catch (readError) {
-                console.log(`🚨 Não foi possível ler resposta de erro 403:`, readError);
-              }
-            }
-          }
-        } catch (endpointError) {
-          console.log(`❌ Erro no endpoint ${endpoint}:`, endpointError);
-        }
-      }
-      
-      if (!response || !response.ok) {
-        throw new Error(`Nenhum endpoint funcionou. Último status: ${response?.status || 'Erro de rede'}`);
-      }
+      // Usar o endpoint que sabemos que funciona para criar instância
+      const response = await fetch('https://api.aiensed.com/instance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        },
+        body: JSON.stringify({
+          instanceName: formData.instanceName,
+          qrcode: true,
+          integration: "WHATSAPP-BAILEYS"
+        })
+      });
 
-      const data = await response.json();
-      console.log('🔍 Resposta completa da API:', data);
-      
-      let qrCode = null;
-      let instanceId = null;
-      let instanceName = null;
-      
-      if (data.qrcode) {
-        if (typeof data.qrcode === 'string') {
-          qrCode = data.qrcode;
-        } else if (data.qrcode.base64) {
-          qrCode = data.qrcode.base64;
-        } else if (data.qrcode.code) {
-          qrCode = data.qrcode.code;
-        }
-      }
-      
-      if (data.instance) {
-        if (typeof data.instance === 'string') {
-          instanceId = data.instance;
-        } else if (data.instance.instanceId) {
-          instanceId = data.instance.instanceId;
-        } else if (data.instance.id) {
-          instanceId = data.instance.id;
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 Resposta completa da API:', data);
+        
+        let qrCode = null;
+        let instanceId = null;
+        let instanceName = null;
+        
+        if (data.qrcode) {
+          if (typeof data.qrcode === 'string') {
+            qrCode = data.qrcode;
+          } else if (data.qrcode.base64) {
+            qrCode = data.qrcode.base64;
+          } else if (data.qrcode.code) {
+            qrCode = data.qrcode.code;
+          }
         }
         
-        if (data.instance.instanceName) {
-          instanceName = data.instance.instanceName;
+        if (data.instance) {
+          if (typeof data.instance === 'string') {
+            instanceId = data.instance;
+          } else if (data.instance.instanceId) {
+            instanceId = data.instance.instanceId;
+          } else if (data.instance.id) {
+            instanceId = data.instance.id;
+          }
+          
+          if (data.instance.instanceName) {
+            instanceName = data.instance.instanceName;
+          }
         }
-      }
-      
-      if (!instanceId && data.instanceId) instanceId = data.instanceId;
-      if (!instanceId && data.instance_id) instanceId = data.instance_id;
-      if (!instanceId && data.id) instanceId = data.id;
-      
-      if (!qrCode && data.qrCode) qrCode = data.qrCode;
-      if (!qrCode && data.qr) qrCode = data.qr;
-      if (!qrCode && data.qrcode_url) qrCode = data.qrcode_url;
-      
-      if (qrCode && instanceId) {
-        setQrCode(qrCode);
-        setInstanceId(instanceId);
-        setInstanceCreated(true);
-        setInstanceStatus('qr_ready');
         
-        toast({
-          title: "QR Code Gerado!",
-          description: `Instância "${instanceName || instanceId}" criada via ${workingEndpoint}. Agora escaneie o QR Code!`,
-        });
+        if (!instanceId && data.instanceId) instanceId = data.instanceId;
+        if (!instanceId && data.instance_id) instanceId = data.instance_id;
+        if (!instanceId && data.id) instanceId = data.id;
+        
+        if (!qrCode && data.qrCode) qrCode = data.qrCode;
+        if (!qrCode && data.qr) qrCode = data.qr;
+        if (!qrCode && data.qrcode_url) qrCode = data.qrcode_url;
+        
+        if (qrCode && instanceId) {
+          setQrCode(qrCode);
+          setInstanceId(instanceId);
+          setInstanceCreated(true);
+          setInstanceStatus('qr_ready');
+          
+          toast({
+            title: "QR Code Gerado!",
+            description: `Instância "${instanceName || instanceId}" criada com sucesso. Agora escaneie o QR Code!`,
+          });
+        } else {
+          throw new Error(`API não retornou dados esperados. Verifique o console para detalhes.`);
+        }
+        
+      } else if (response.status === 403) {
+        // Se for 403, tentar com nome único
+        try {
+          const errorData = await response.text();
+          console.log(`🚨 Erro 403:`, errorData);
+          
+          if (errorData.toLowerCase().includes('already in use')) {
+            const uniqueName = generateUniqueName(formData.instanceName);
+            console.log(`🔄 Tentando com nome único: ${uniqueName}`);
+            
+            const retryResponse = await fetch('https://api.aiensed.com/instance/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'd3050208ba862ee87302278ac4370cb9'
+              },
+              body: JSON.stringify({
+                instanceName: uniqueName,
+                qrcode: true,
+                integration: "WHATSAPP-BAILEYS"
+              })
+            });
+            
+            if (retryResponse.ok) {
+              const retryData = await retryResponse.json();
+              
+              let qrCode = null;
+              let instanceId = null;
+              
+              if (retryData.qrcode) {
+                qrCode = retryData.qrcode.base64 || retryData.qrcode;
+              }
+              
+              if (retryData.instance) {
+                instanceId = retryData.instance.instanceId || retryData.instance.id;
+              }
+              
+              if (qrCode && instanceId) {
+                setFormData(prev => ({ ...prev, instanceName: uniqueName }));
+                setQrCode(qrCode);
+                setInstanceId(instanceId);
+                setInstanceCreated(true);
+                setInstanceStatus('qr_ready');
+                
+                toast({
+                  title: "QR Code Gerado!",
+                  description: `Instância "${uniqueName}" criada com nome único. Agora escaneie o QR Code!`,
+                });
+              }
+            } else {
+              throw new Error(`Retry com nome único falhou: ${retryResponse.status}`);
+            }
+          } else {
+            throw new Error(`Erro 403: ${errorData}`);
+          }
+        } catch (parseError) {
+          throw new Error(`Erro ao processar resposta 403: ${parseError}`);
+        }
       } else {
-        throw new Error(`API não retornou dados esperados. Verifique o console para detalhes.`);
+        throw new Error(`API retornou erro: ${response.status}`);
       }
       
     } catch (error) {
