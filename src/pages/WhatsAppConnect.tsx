@@ -70,49 +70,59 @@ export default function WhatsAppConnect() {
     setIsQrExpired(false);
   };
 
-  // Função para verificar status da instância
+  // Função para verificar status da instância usando endpoints padrão da Evolution API
   const checkInstanceStatus = async () => {
     if (!instanceId) return;
 
     try {
       console.log(`🔍 Verificando status da instância: ${instanceId}`);
       
-      // Tentar recriar a instância para ver se já está conectada
-      const response = await fetch('https://api.aiensed.com/instance/create', {
-        method: 'POST',
+      // Tentar usar endpoint raiz para verificar status geral
+      const rootResponse = await fetch('https://api.aiensed.com/', {
         headers: {
-          'Content-Type': 'application/json',
           'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        },
-        body: JSON.stringify({
-          instanceName: formData.instanceName,
-          qrcode: false, // Não gerar QR se já conectado
-          integration: "WHATSAPP-BAILEYS"
-        })
+        }
       });
 
-      if (response.ok) {
-        const statusData = await response.json();
-        console.log('✅ Resposta da verificação:', statusData);
-
-        // Se não retornou QR code, provavelmente já está conectado
-        if (!statusData.qrcode && statusData.instance) {
-          console.log('🎉 Instância já conectada!');
-          setInstanceStatus('connected');
-          setIsQrExpired(false);
-          toast({
-            title: "WhatsApp Conectado!",
-            description: "Sua instância está ativa e pronta para receber dados.",
+      if (rootResponse.ok) {
+        const rootData = await rootResponse.json();
+        console.log('✅ Status da API:', rootData);
+        
+        // Se a API está ativa, tentar verificar perfil (indica conexão)
+        try {
+          const profileResponse = await fetch('https://api.aiensed.com/fetchProfile', {
+            method: 'POST',
+            headers: {
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            },
+            body: JSON.stringify({
+              instanceName: formData.instanceName
+            })
           });
-        } else if (statusData.qrcode) {
-          console.log('📱 QR Code ainda necessário');
-          // Atualizar QR code se necessário
-          if (statusData.qrcode.base64) {
-            setQrCode(statusData.qrcode.base64);
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            console.log('✅ Perfil recuperado:', profileData);
+            
+            // Se conseguiu recuperar perfil, está conectado
+            if (profileData.name || profileData.status) {
+              console.log('🎉 WhatsApp conectado! Perfil recuperado com sucesso.');
+              setInstanceStatus('connected');
+              setIsQrExpired(false);
+              toast({
+                title: "WhatsApp Conectado!",
+                description: "Sua instância está ativa e pronta para receber dados.",
+              });
+              return;
+            }
+          } else {
+            console.log(`📱 Perfil não disponível ainda: ${profileResponse.status}`);
           }
+        } catch (profileError) {
+          console.log('📱 Erro ao verificar perfil:', profileError);
         }
       } else {
-        console.log(`❌ Verificação retornou: ${response.status}`);
+        console.log(`❌ API não respondeu: ${rootResponse.status}`);
       }
     } catch (error) {
       console.log(`❌ Erro na verificação:`, error);
