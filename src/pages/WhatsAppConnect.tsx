@@ -443,6 +443,56 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
 
 
 
+  // Persistência de estado no localStorage
+  useEffect(() => {
+    // Carregar estado salvo ao montar o componente
+    const savedState = localStorage.getItem('whatsapp-connect-state');
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        console.log('🔄 Restaurando estado salvo:', parsedState);
+        
+        if (parsedState.instanceName && parsedState.instanceId) {
+          setFormData({ instanceName: parsedState.instanceName });
+          setInstanceId(parsedState.instanceId);
+          setInstanceCreated(true);
+          
+          // Se estava conectado, verificar se ainda está
+          if (parsedState.status === 'connected') {
+            setInstanceStatus('connected');
+            console.log('🔄 Restaurando status conectado...');
+            // Verificar status imediatamente
+            setTimeout(() => checkInstanceStatus(), 1000);
+          } else if (parsedState.status === 'qr_ready') {
+            setInstanceStatus('qr_ready');
+            if (parsedState.qrCode) {
+              setQrCode(parsedState.qrCode);
+              startQrTimer();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro ao restaurar estado:', error);
+        localStorage.removeItem('whatsapp-connect-state');
+      }
+    }
+  }, []);
+
+  // Salvar estado no localStorage quando mudar
+  useEffect(() => {
+    if (instanceId && formData.instanceName) {
+      const stateToSave = {
+        instanceName: formData.instanceName,
+        instanceId,
+        status: instanceStatus,
+        qrCode: qrCode,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('whatsapp-connect-state', JSON.stringify(stateToSave));
+      console.log('💾 Estado salvo:', stateToSave);
+    }
+  }, [instanceId, formData.instanceName, instanceStatus, qrCode]);
+
   // Timer de expiração do QR Code e verificação de status
   useEffect(() => {
     let statusInterval: number;
@@ -465,6 +515,11 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
           return prev - 1;
         });
       }, 1000);
+    }
+    
+    // Se está conectado, continuar verificando status
+    if (instanceStatus === 'connected' && instanceId) {
+      statusInterval = setInterval(checkInstanceStatus, 10000); // Verificar a cada 10 segundos
     }
     
     return () => {
@@ -788,19 +843,22 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                   {/* Botão para nova instância */}
                   {instanceStatus === 'connected' && (
                     <div className="mt-4 text-center">
-                      <Button
-                        onClick={() => {
-                          setInstanceStatus('idle');
-                          setInstanceCreated(false);
-                          setQrCode('');
-                          setInstanceId('');
-                          setFormData({ instanceName: '' });
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Criar Nova Instância
-                      </Button>
+                                              <Button
+                          onClick={() => {
+                            setInstanceStatus('idle');
+                            setInstanceCreated(false);
+                            setQrCode('');
+                            setInstanceId('');
+                            setFormData({ instanceName: '' });
+                            // Limpar estado salvo
+                            localStorage.removeItem('whatsapp-connect-state');
+                            console.log('🗑️ Estado limpo do localStorage');
+                          }}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Criar Nova Instância
+                        </Button>
                     </div>
                   )}
                 </div>
