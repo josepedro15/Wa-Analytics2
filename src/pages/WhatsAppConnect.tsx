@@ -91,71 +91,46 @@ export default function WhatsAppConnect() {
         })
       });
 
-      if (rootResponse.ok) {
-        const rootData = await rootResponse.json();
-        console.log('✅ Status da API:', rootData);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Resposta da verificação:', data);
         
-        // Se a API está ativa, tentar verificar se a instância está conectada
-        console.log('📱 Verificando se WhatsApp está conectado...');
-        
-        // Tentar verificar se conseguimos acessar informações da instância
-        try {
-          const instanceCheckResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
-            headers: {
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            }
-          });
-
-          if (instanceCheckResponse.ok) {
-            const instanceData = await instanceCheckResponse.json();
-            console.log('✅ Dados da instância:', instanceData);
-            
-            // Se conseguimos acessar dados da instância, provavelmente está conectada
-            if (instanceData.status === 200 && instanceData.message) {
-              if (instanceStatus !== 'connected') {
-                console.log('🎉 WhatsApp conectado! Instância respondendo com sucesso.');
-                setInstanceStatus('connected');
-                setIsQrExpired(false);
-                toast({
-                  title: "WhatsApp Conectado!",
-                  description: "Sua instância está ativa e pronta para receber dados.",
-                });
-              }
-              return;
-            }
-          } else {
-            console.log(`📱 Instância não respondeu: ${instanceCheckResponse.status}`);
-            // Se a instância não responde, pode ter sido desconectada
-            if (instanceStatus === 'connected') {
-              console.log('⚠️ WhatsApp desconectado!');
-              setInstanceStatus('disconnected');
-              toast({
-                title: "WhatsApp Desconectado",
-                description: "A conexão foi perdida. Gere um novo QR Code para reconectar.",
-                variant: "destructive"
-              });
-            }
-          }
-        } catch (instanceError) {
-          console.log('📱 Erro ao verificar instância:', instanceError);
-          // Se há erro, pode ter sido desconectada
+        // Se retornou QR code, a instância não está conectada
+        if (data.qrcode) {
+          console.log('📱 Instância existe mas não está conectada');
           if (instanceStatus === 'connected') {
-            console.log('⚠️ WhatsApp desconectado por erro!');
+            console.log('⚠️ WhatsApp desconectado!');
             setInstanceStatus('disconnected');
             toast({
               title: "WhatsApp Desconectado",
-              description: "Erro na conexão. Gere um novo QR Code para reconectar.",
+              description: "A conexão foi perdida. Gere um novo QR Code para reconectar.",
               variant: "destructive"
             });
           }
-        }
-        
-        // Se chegou até aqui, ainda não está conectado
-        if (instanceStatus !== 'connected' && instanceStatus !== 'disconnected') {
-          console.log('📱 WhatsApp ainda não conectado. Aguardando...');
+        } else if (data.instance && !data.qrcode) {
+          // Se não retornou QR code mas retornou instância, está conectada
+          console.log('🎉 WhatsApp conectado! Instância ativa.');
+          if (instanceStatus !== 'connected') {
+            setInstanceStatus('connected');
+            setIsQrExpired(false);
+            toast({
+              title: "WhatsApp Conectado!",
+              description: "Sua instância está ativa e pronta para receber dados.",
+            });
+          }
         }
       } else {
-        console.log(`❌ API não respondeu: ${rootResponse.status}`);
+        console.log(`❌ Instância não existe mais: ${response.status}`);
+        // Se a instância não existe mais, está desconectada
+        if (instanceStatus === 'connected') {
+          console.log('⚠️ Instância excluída! WhatsApp desconectado.');
+          setInstanceStatus('disconnected');
+          toast({
+            title: "Instância Excluída",
+            description: "A instância foi removida da API. Crie uma nova instância.",
+            variant: "destructive"
+          });
+        }
       }
     } catch (error) {
       console.log(`❌ Erro na verificação:`, error);
@@ -590,8 +565,8 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                            {/* Formulário com design moderno */}
-              <div className="space-y-6">
+                {/* Formulário com design moderno */}
+                <div className="space-y-6">
                 <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-2xl border border-emerald-100">
                   <div className="space-y-4">
                     <div>
@@ -879,22 +854,22 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                   {/* Botão para nova instância */}
                   {instanceStatus === 'connected' && (
                     <div className="mt-4 text-center">
-                                              <Button
-                          onClick={() => {
-                            setInstanceStatus('idle');
-                            setInstanceCreated(false);
-                            setQrCode('');
-                            setInstanceId('');
-                            setFormData({ instanceName: '' });
-                            // Limpar estado salvo
-                            localStorage.removeItem('whatsapp-connect-state');
-                            console.log('🗑️ Estado limpo do localStorage');
-                          }}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Criar Nova Instância
-                        </Button>
+                      <Button
+                        onClick={() => {
+                          setInstanceStatus('idle');
+                          setInstanceCreated(false);
+                          setQrCode('');
+                          setInstanceId('');
+                          setFormData({ instanceName: '' });
+                          // Limpar estado salvo
+                          localStorage.removeItem('whatsapp-connect-state');
+                          console.log('🗑️ Estado limpo do localStorage');
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Criar Nova Instância
+                      </Button>
                     </div>
                   )}
                 </div>
