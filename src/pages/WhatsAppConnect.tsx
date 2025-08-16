@@ -48,24 +48,65 @@ export default function WhatsAppConnect() {
     if (!instanceId || !formData.instanceName) return;
 
     try {
-      const response = await fetch('https://api.aiensed.com/instance/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        },
-        body: JSON.stringify({
-          instanceName: formData.instanceName,
-          qrcode: false,
-          integration: "WHATSAPP-BAILEYS"
-        })
-      });
+      console.log(`🔍 Verificando status da instância: ${formData.instanceName} (ID: ${instanceId})`);
+      console.log(`🔍 Status atual: ${instanceStatus}`);
+      
+      // Tentar múltiplos endpoints para verificar status
+      const endpoints = [
+        'https://api.aiensed.com/instance/create',
+        'https://api.aiensed.com/instance/connect',
+        'https://api.aiensed.com/instance/connect/'
+      ];
+      
+      let response;
+      let workingEndpoint = '';
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`🔍 Tentando endpoint: ${endpoint}`);
+          
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            },
+            body: JSON.stringify({
+              instanceName: formData.instanceName,
+              qrcode: false,
+              integration: "WHATSAPP-BAILEYS"
+            })
+          });
+          
+          if (response.ok) {
+            workingEndpoint = endpoint;
+            console.log(`✅ Endpoint funcionando: ${endpoint}`);
+            break;
+          } else {
+            console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
+          }
+        } catch (endpointError) {
+          console.log(`❌ Erro no endpoint ${endpoint}:`, endpointError);
+        }
+      }
+      
+      if (!response || !response.ok) {
+        console.log(`❌ Nenhum endpoint funcionou para verificar status`);
+        return;
+      }
+
+      console.log(`🔍 Resposta da API: ${response.status} ${response.statusText}`);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Dados da resposta:', data);
+        console.log('🔍 Tem qrcode?', !!data.qrcode);
+        console.log('🔍 Tem instance?', !!data.instance);
         
         if (data.qrcode) {
+          console.log('📱 Instância existe mas NÃO está conectada (tem QR code)');
           if (instanceStatus === 'connected') {
+            console.log('🔄 Mudando status de connected para disconnected');
             setInstanceStatus('disconnected');
             toast({
               title: "WhatsApp Desconectado",
@@ -74,17 +115,25 @@ export default function WhatsAppConnect() {
             });
           }
         } else if (data.instance && !data.qrcode) {
+          console.log('🎉 WhatsApp CONECTADO! (tem instance mas não tem QR code)');
           if (instanceStatus !== 'connected') {
+            console.log('🔄 Mudando status para connected');
             setInstanceStatus('connected');
             setIsQrExpired(false);
             toast({
               title: "WhatsApp Conectado!",
               description: "Sua instância está ativa e pronta para receber dados.",
             });
+          } else {
+            console.log('✅ Já está conectado, mantendo status');
           }
+        } else {
+          console.log('❓ Resposta inesperada da API:', data);
         }
       } else {
+        console.log(`❌ API retornou erro: ${response.status}`);
         if (instanceStatus === 'connected') {
+          console.log('🔄 Mudando status de connected para disconnected (erro da API)');
           setInstanceStatus('disconnected');
           toast({
             title: "Instância Excluída",
@@ -388,7 +437,8 @@ export default function WhatsAppConnect() {
     if (instanceStatus === 'qr_ready' && instanceId) {
       startQrTimer();
       
-      statusInterval = setInterval(checkInstanceStatus, 5000);
+      // Verificar status mais frequentemente quando aguardando conexão
+      statusInterval = setInterval(checkInstanceStatus, 3000); // A cada 3 segundos
       
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
@@ -402,6 +452,7 @@ export default function WhatsAppConnect() {
     }
     
     if (instanceStatus === 'connected' && instanceId) {
+      // Verificar status a cada 10 segundos quando conectado
       statusInterval = setInterval(checkInstanceStatus, 10000);
     }
     
@@ -621,6 +672,33 @@ export default function WhatsAppConnect() {
                             </Button>
                           </div>
                         )}
+                        
+                        {/* Botão para verificar status manualmente */}
+                        <div className="mt-3">
+                          <Button
+                            onClick={checkInstanceStatus}
+                            variant="outline"
+                            size="sm"
+                            className="mr-2"
+                          >
+                            🔍 Verificar Status
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              console.log('🔍 Status atual:', instanceStatus);
+                              console.log('🔍 Instance ID:', instanceId);
+                              console.log('🔍 Instance Name:', formData.instanceName);
+                              toast({
+                                title: "Debug Info",
+                                description: `Status: ${instanceStatus}, ID: ${instanceId}`,
+                              });
+                            }}
+                            variant="ghost"
+                            size="sm"
+                          >
+                            📊 Debug
+                          </Button>
+                        </div>
                       </div>
                     )}
 
