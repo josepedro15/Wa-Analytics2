@@ -51,6 +51,7 @@ export default function WhatsAppConnect() {
 
     try {
       console.log(`🔍 Verificando se instância existe: ${formData.instanceName}`);
+      console.log(`🔍 Estado atual: instanceCreated=${instanceCreated}, instanceStatus=${instanceStatus}`);
       
       // Primeiro verificar se existe no banco de dados
       const dbInstance = await checkInstanceInDatabase(formData.instanceName);
@@ -748,8 +749,8 @@ export default function WhatsAppConnect() {
               </CardContent>
             </Card>
 
-            {/* Status da Instância com design melhorado - só aparece quando instância existe */}
-            {instanceStatus !== 'idle' && instanceCreated && (
+            {/* Status da Instância com design melhorado - aparece quando há instância ou status ativo */}
+            {(instanceStatus !== 'idle' || instanceCreated) && (
               <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200 p-6">
                   <div className="flex items-center gap-3">
