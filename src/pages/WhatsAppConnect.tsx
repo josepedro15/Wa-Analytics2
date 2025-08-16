@@ -868,8 +868,8 @@ export default function WhatsAppConnect() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header com design moderno e elegante */}
       <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white shadow-2xl">
-        {/* Background pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
+        {/* Background pattern simples */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-30"></div>
         
         <div className="relative container mx-auto px-6 py-12">
           <div className="flex items-center justify-between">
