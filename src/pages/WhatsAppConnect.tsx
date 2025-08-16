@@ -79,17 +79,17 @@ export default function WhatsAppConnect() {
     setIsCreatingInstance(true);
     
     try {
-      // Chamada direta para a API Evolution
+      // Chamada direta para a API Evolution (usando configuração do N8N)
       const response = await fetch('https://api.aiensed.com/instance/connect/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer d3050208ba862ee87302278ac4370cb9'
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
         },
         body: JSON.stringify({
           instanceName: formData.instanceName,
-          userId: user.id,
-          email: user.email || ''
+          qrcode: true,
+          integration: "WHATSAPP-BAILEYS"
         })
       });
 
