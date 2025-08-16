@@ -764,20 +764,27 @@ export default function WhatsAppConnect() {
       loadExistingInstances();
     }
   }, [user?.id]);
-
-  // 🚫 REMOVIDO: TODOS os intervalos automáticos que causavam loop infinito
-  // 🚫 REMOVIDO: Verificações automáticas que travavam o sistema
-  // 🚫 REMOVIDO: Polling que impedia mudança de tela
-  // 🚫 REMOVIDO: existenceInterval, statusInterval, timerInterval automáticos
   
-  // ✅ APENAS timer manual para QR code (sem interferir no status)
+  // 🔍 Verificação inicial de status quando instância existe
+  useEffect(() => {
+    if (instanceCreated && formData.instanceName) {
+      console.log('🔍 Verificação inicial de status...');
+      // Aguardar um pouco antes de verificar
+      setTimeout(() => {
+        checkInstanceStatus();
+      }, 2000);
+    }
+  }, [instanceCreated, formData.instanceName]);
+
+  // ✅ Timer para QR code + verificação inteligente de status
   useEffect(() => {
     let timerInterval: number;
+    let statusInterval: number;
     
     if (instanceStatus === 'qr_ready' && instanceId) {
       startQrTimer();
       
-      // ⏰ APENAS timer de contagem regressiva (sem verificar status)
+      // ⏰ Timer de contagem regressiva
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
@@ -787,10 +794,25 @@ export default function WhatsAppConnect() {
           return prev - 1;
         });
       }, 1000);
+      
+      // 🔍 Verificar status a cada 10 segundos (não a cada 3!)
+      statusInterval = setInterval(() => {
+        console.log('🔍 Verificação inteligente de status (QR ready)...');
+        checkInstanceStatus();
+      }, 10000); // 10 segundos (muito mais lento)
+    }
+    
+    if (instanceStatus === 'connected' && instanceId) {
+      // 🔍 Verificar status a cada 15 segundos quando conectado
+      statusInterval = setInterval(() => {
+        console.log('🔍 Verificação inteligente de status (connected)...');
+        checkInstanceStatus();
+      }, 15000); // 15 segundos (muito mais lento)
     }
     
     return () => {
       if (timerInterval) clearInterval(timerInterval);
+      if (statusInterval) clearInterval(statusInterval);
     };
   }, [instanceStatus, instanceId]);
 
