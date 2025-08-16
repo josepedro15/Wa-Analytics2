@@ -1107,11 +1107,7 @@ export default function WhatsAppConnect() {
                           </ol>
                         </div>
                         
-                        <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
-                          <p className="text-xs text-gray-600">
-                            <strong>ID da Instância:</strong> {instanceId}
-                          </p>
-                        </div>
+                        {/* ID da instância removido da exibição */}
                       </div>
                       
                       {/* Botões de ação */}
@@ -1195,10 +1191,7 @@ export default function WhatsAppConnect() {
                       </div>
                       
                       <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 max-w-md mx-auto">
-                        <p className="text-sm text-gray-500 mb-2">ID da Instância:</p>
-                        <code className="text-sm bg-white px-3 py-2 rounded-xl border font-mono text-gray-700 break-all">
-                          {instanceId}
-                        </code>
+                        {/* ID da instância removido da exibição */}
                       </div>
                       
                       <div className="bg-green-50 border border-green-200 rounded-2xl p-6 max-w-lg mx-auto">
