@@ -212,12 +212,25 @@ export default function WhatsAppConnect() {
           }
           
         } else if (statusResponse.status === 404) {
-          console.log('📱 Instância não encontrada (404) - foi excluída');
-          if (instanceStatus === 'connected') {
-            setInstanceStatus('disconnected');
-            
-            // Instância não existe mais - manter no banco para histórico
-          }
+          // 🚨 Instância não encontrada na API (404) - REMOVER DO BANCO!
+          console.log('🚨 Instância não encontrada na API (404) - REMOVENDO DO BANCO!');
+          
+          // 🗑️ EXCLUIR instância órfã do banco de dados
+          await deleteInstanceFromDatabase(formData.instanceName);
+          
+          // 🔄 Resetar estado local
+          setInstanceStatus('idle');
+          setInstanceCreated(false);
+          setQrCode('');
+          setInstanceId('');
+          
+          // 📱 Notificar usuário
+          toast({
+            title: "Instância Removida",
+            description: "A instância foi removida da API e excluída do banco.",
+            variant: "destructive"
+          });
+          
           return;
         } else if (statusResponse.status === 403) {
           console.log('🚫 Acesso negado (403) - verificar permissões');
