@@ -161,6 +161,9 @@ export default function WhatsAppConnect() {
             if (instanceStatus !== 'disconnected') {
               setInstanceStatus('disconnected');
               
+              // 🔄 Sincronizar status no banco com API
+              updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
+              
               // 🔄 Gerar QR code para reconexão quando desconectado
               console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
               generateQrCodeForExistingInstance(formData.instanceName);
@@ -726,7 +729,7 @@ export default function WhatsAppConnect() {
       startQrTimer();
       
       // Verificar status em tempo real quando aguardando conexão
-      statusInterval = setInterval(checkInstanceStatus, 10000); // A cada 10 segundos (mais lento para evitar exclusão prematura)
+      statusInterval = setInterval(checkInstanceStatus, 30000); // A cada 30 segundos (mais lento para evitar sobrecarga)
       
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
@@ -741,7 +744,7 @@ export default function WhatsAppConnect() {
     
     if (instanceStatus === 'connected' && instanceId) {
       // Verificar status a cada 5 segundos quando conectado (mais responsivo)
-      statusInterval = setInterval(checkInstanceStatus, 15000); // A cada 15 segundos (mais lento para evitar exclusão prematura)
+      statusInterval = setInterval(checkInstanceStatus, 30000); // A cada 30 segundos (mais lento para evitar sobrecarga)
     }
     
     return () => {
