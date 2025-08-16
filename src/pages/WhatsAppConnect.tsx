@@ -574,21 +574,22 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* Card Principal com design moderno */}
-          <Card className="mb-8 shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-emerald-100">
-              <CardTitle className="flex items-center gap-3 text-2xl text-emerald-800">
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <Smartphone className="h-6 w-6 text-emerald-600" />
-                </div>
-                Configuração da Instância
-              </CardTitle>
-              <CardDescription className="text-emerald-700 text-lg">
-                Crie uma nova instância do WhatsApp para análise de dados
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Coluna Principal - Formulário */}
+          <div className="lg:col-span-2">
+            <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-emerald-100">
+                <CardTitle className="flex items-center gap-3 text-2xl text-emerald-800">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Smartphone className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  Configuração da Instância
+                </CardTitle>
+                <CardDescription className="text-emerald-700 text-lg">
+                  Crie uma nova instância do WhatsApp para análise de dados
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
                             {/* Formulário com design moderno */}
               <div className="space-y-6">
                 <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-2xl border border-emerald-100">
