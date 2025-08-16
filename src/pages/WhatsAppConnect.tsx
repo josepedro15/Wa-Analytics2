@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Smartphone, Zap, CheckCircle, AlertCircle, Clock, QrCode, Wifi, WifiOff } from 'lucide-react';
 import { z } from 'zod';
 
@@ -51,72 +52,71 @@ export default function WhatsAppConnect() {
     try {
       console.log(`🔍 Verificando se instância existe: ${formData.instanceName}`);
       
-      const response = await fetch('https://api.aiensed.com/instance/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        },
-        body: JSON.stringify({
-          instanceName: formData.instanceName,
-          qrcode: false,
-          integration: "WHATSAPP-BAILEYS"
-        })
-      });
+      // Primeiro verificar se existe no banco de dados
+      const dbInstance = await checkInstanceInDatabase(formData.instanceName);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 Resposta da verificação:', data);
+      if (dbInstance) {
+        console.log('💾 Instância encontrada no banco:', dbInstance);
+        setInstanceId(dbInstance.instance_id);
+        setInstanceCreated(true);
         
-        // Se retornou instância, ela existe
-        if (data.instance) {
-          // Se não tem instanceId salvo, salvar agora
-          if (!instanceId && data.instance.instanceId) {
-            setInstanceId(data.instance.instanceId);
-            setInstanceCreated(true);
-          }
+        // Verificar status na API
+        const response = await fetch('https://api.aiensed.com/instance/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'd3050208ba862ee87302278ac4370cb9'
+          },
+          body: JSON.stringify({
+            instanceName: formData.instanceName,
+            qrcode: false,
+            integration: "WHATSAPP-BAILEYS"
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('🔍 Resposta da API:', data);
           
-          // Se retornou QR code, está aguardando conexão
-          if (data.qrcode) {
-            console.log('📱 Instância existe, aguardando conexão WhatsApp');
-            if (instanceStatus !== 'qr_ready') {
+          // Se retornou instância, ela existe na API
+          if (data.instance) {
+            // Se retornou QR code, está aguardando conexão
+            if (data.qrcode) {
+              console.log('📱 Instância existe, aguardando conexão WhatsApp');
               setInstanceStatus('qr_ready');
-              // Se não tem QR code salvo, salvar agora
-              if (!qrCode && data.qrcode.base64) {
-                setQrCode(data.qrcode.base64);
-                startQrTimer();
-              }
-            }
-          } else {
-            // Se não tem QR code, está conectada
-            console.log('🎉 WhatsApp CONECTADO! (instância ativa)');
-            if (instanceStatus !== 'connected') {
+              setQrCode(data.qrcode.base64 || data.qrcode);
+              startQrTimer();
+              updateInstanceStatusInDatabase(formData.instanceName, 'connecting');
+            } else {
+              // Se não tem QR code, está conectada
+              console.log('🎉 WhatsApp CONECTADO! (instância ativa)');
               setInstanceStatus('connected');
               setIsQrExpired(false);
+              updateInstanceStatusInDatabase(formData.instanceName, 'connected');
               toast({
                 title: "WhatsApp Conectado!",
                 description: "Sua instância está ativa e pronta para receber dados.",
               });
             }
+          } else {
+            // Instância não existe na API (foi excluída)
+            console.log('❌ Instância não existe na API (foi excluída)');
+            setInstanceStatus('disconnected');
+            updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
           }
-        } else {
-          // Instância não existe
-          console.log('❌ Instância não existe');
-          setInstanceStatus('idle');
-          setInstanceCreated(false);
-          setQrCode('');
-          setInstanceId('');
+        } else if (response.status === 404) {
+          // Instância não encontrada na API
+          console.log('📱 Instância não encontrada na API (404)');
+          setInstanceStatus('disconnected');
+          updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
         }
-        
-      } else if (response.status === 404) {
-        // Instância não encontrada
-        console.log('📱 Instância não encontrada (404)');
+      } else {
+        // Instância não existe no banco
+        console.log('❌ Instância não existe no banco');
         setInstanceStatus('idle');
         setInstanceCreated(false);
         setQrCode('');
         setInstanceId('');
-      } else if (response.status === 403) {
-        console.log('🚫 Acesso negado (403)');
       }
       
     } catch (error) {
@@ -366,6 +366,9 @@ export default function WhatsAppConnect() {
           setInstanceCreated(true);
           setInstanceStatus('qr_ready');
           
+          // Salvar instância no banco de dados
+          await saveInstanceToDatabase(formData.instanceName, instanceId, qrCode);
+          
           toast({
             title: "QR Code Gerado!",
             description: `Instância "${instanceName || instanceId}" criada com sucesso. Agora escaneie o QR Code!`,
@@ -449,8 +452,95 @@ export default function WhatsAppConnect() {
     }
   };
 
-  // REMOVIDO: localStorage e persistência de estado
-  // Agora só verifica via API em tempo real
+  // Função para salvar instância no banco Supabase
+  const saveInstanceToDatabase = async (instanceName: string, instanceId: string, qrCode: string) => {
+    if (!user?.id) {
+      console.error('❌ Usuário não autenticado');
+      return;
+    }
+
+    try {
+      console.log('💾 Salvando instância no banco:', { instanceName, instanceId });
+      
+      const { data, error } = await supabase
+        .from('whatsapp_instances')
+        .insert({
+          user_id: user.id,
+          instance_name: instanceName,
+          instance_id: instanceId,
+          status: 'connecting',
+          qr_code: qrCode,
+          is_active: true
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erro ao salvar no banco:', error);
+        throw error;
+      }
+
+      console.log('✅ Instância salva no banco:', data);
+      return data;
+      
+    } catch (error) {
+      console.error('❌ Erro ao salvar instância:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar a instância no banco de dados.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Função para verificar se instância existe no banco
+  const checkInstanceInDatabase = async (instanceName: string) => {
+    if (!user?.id) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('whatsapp_instances')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('instance_name', instanceName)
+        .eq('is_active', true)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('❌ Erro ao buscar no banco:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ Erro ao verificar banco:', error);
+      return null;
+    }
+  };
+
+  // Função para atualizar status da instância no banco
+  const updateInstanceStatusInDatabase = async (instanceName: string, status: string) => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('whatsapp_instances')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .eq('instance_name', instanceName);
+
+      if (error) {
+        console.error('❌ Erro ao atualizar status:', error);
+      } else {
+        console.log('✅ Status atualizado no banco:', status);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao atualizar status:', error);
+    }
+  };
 
   useEffect(() => {
     let statusInterval: number;
