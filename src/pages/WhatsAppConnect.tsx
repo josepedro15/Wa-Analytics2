@@ -159,11 +159,17 @@ export default function WhatsAppConnect() {
           // Se a instância existe mas não está conectada (state: "closed" ou outro)
           if (statusData.instance && statusData.instance.state !== 'open') {
             console.log(`📱 WhatsApp DESCONECTADO! (state: ${statusData.instance.state})`);
+            
+            // ⚠️ NÃO DELETAR IMEDIATAMENTE - Aguardar confirmação
+            // A instância pode estar em processo de conexão
             if (instanceStatus !== 'disconnected') {
               setInstanceStatus('disconnected');
               
-              // Deletar instância desconectada do banco
-              deleteInstanceFromDatabase(formData.instanceName);
+              // ⏰ AGUARDAR 30 SEGUNDOS antes de deletar (evitar exclusão prematura)
+              setTimeout(() => {
+                console.log('⏰ Aguardando 30s para confirmar desconexão antes de deletar...');
+                checkInstanceStatus(); // Verificar novamente
+              }, 30000);
             }
             return;
           }
@@ -367,6 +373,13 @@ export default function WhatsAppConnect() {
           if (savedInstance) {
             console.log('✅ Instância salva com sucesso no banco:', savedInstance);
           }
+          
+          // ⏰ AGUARDAR 10 SEGUNDOS antes de verificar status
+          console.log('⏰ Aguardando 10 segundos para estabilizar instância...');
+          setTimeout(() => {
+            console.log('🔍 Iniciando verificação de status após estabilização...');
+            checkInstanceStatus();
+          }, 10000);
           
           toast({
             title: "QR Code Gerado!",
@@ -652,7 +665,7 @@ export default function WhatsAppConnect() {
       startQrTimer();
       
       // Verificar status em tempo real quando aguardando conexão
-      statusInterval = setInterval(checkInstanceStatus, 2000); // A cada 2 segundos
+      statusInterval = setInterval(checkInstanceStatus, 10000); // A cada 10 segundos (mais lento para evitar exclusão prematura)
       
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
@@ -667,7 +680,7 @@ export default function WhatsAppConnect() {
     
     if (instanceStatus === 'connected' && instanceId) {
       // Verificar status a cada 5 segundos quando conectado (mais responsivo)
-      statusInterval = setInterval(checkInstanceStatus, 5000);
+      statusInterval = setInterval(checkInstanceStatus, 15000); // A cada 15 segundos (mais lento para evitar exclusão prematura)
     }
     
     return () => {
