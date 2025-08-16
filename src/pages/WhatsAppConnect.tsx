@@ -105,13 +105,15 @@ export default function WhatsAppConnect() {
             
             // Se conseguimos acessar dados da instância, provavelmente está conectada
             if (instanceData.status === 200 && instanceData.message) {
-              console.log('🎉 WhatsApp conectado! Instância respondendo com sucesso.');
-              setInstanceStatus('connected');
-              setIsQrExpired(false);
-              toast({
-                title: "WhatsApp Conectado!",
-                description: "Sua instância está ativa e pronta para receber dados.",
-              });
+              if (instanceStatus !== 'connected') {
+                console.log('🎉 WhatsApp conectado! Instância respondendo com sucesso.');
+                setInstanceStatus('connected');
+                setIsQrExpired(false);
+                toast({
+                  title: "WhatsApp Conectado!",
+                  description: "Sua instância está ativa e pronta para receber dados.",
+                });
+              }
               return;
             }
           } else {
@@ -529,102 +531,128 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
   }, [instanceStatus, instanceId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao Dashboard
-          </Button>
-          
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Conectar WhatsApp
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Configure sua instância do WhatsApp para começar a coletar dados
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-blue-50 to-indigo-50">
+      {/* Header com gradiente */}
+      <div className="bg-gradient-to-r from-emerald-600 via-blue-600 to-indigo-600 text-white">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+              className="text-white hover:bg-white/20"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Voltar ao Dashboard
+            </Button>
+            
+            <div className="text-center">
+              <h1 className="text-4xl font-bold mb-2">
+                📱 Conectar WhatsApp
+              </h1>
+              <p className="text-emerald-100 text-lg">
+                Configure sua instância para análise de dados
+              </p>
+            </div>
+            
+            <div className="w-20"></div> {/* Espaçador para centralizar */}
           </div>
         </div>
-        
-        {/* Debug Info */}
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Debug:</strong> Página carregada. Usuário: {user?.email || 'Não autenticado'}
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Debug Info - mais discreto */}
+        <div className="mb-6 p-3 bg-blue-50/50 border border-blue-200/50 rounded-xl backdrop-blur-sm">
+          <p className="text-xs text-blue-700 text-center">
+            <strong>Debug:</strong> Usuário: {user?.email || 'Não autenticado'}
           </p>
         </div>
 
-        <div className="max-w-2xl mx-auto">
-          {/* Card Principal */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
+        <div className="max-w-4xl mx-auto">
+          {/* Card Principal com design moderno */}
+          <Card className="mb-8 shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-emerald-100">
+              <CardTitle className="flex items-center gap-3 text-2xl text-emerald-800">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <Smartphone className="h-6 w-6 text-emerald-600" />
+                </div>
                 Configuração da Instância
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-emerald-700 text-lg">
                 Crie uma nova instância do WhatsApp para análise de dados
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Formulário */}
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="instanceName" className="text-sm font-medium">
-                    Nome da Instância
-                  </Label>
-                  <div className="mt-1">
-                    <Input
-                      id="instanceName"
-                      type="text"
-                      placeholder="Ex: lojamoveis"
-                      value={formData.instanceName}
-                      onChange={(e) => handleInputChange('instanceName', e.target.value)}
-                      className={errors.instanceName ? "border-red-500 focus:border-red-500" : ""}
-                      disabled={isCreatingInstance}
-                    />
-                    {errors.instanceName && (
-                      <p className="mt-1 text-sm text-red-600">{errors.instanceName}</p>
-                    )}
+            <CardContent className="p-8 space-y-8">
+                            {/* Formulário com design moderno */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-6 rounded-2xl border border-emerald-100">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="instanceName" className="text-lg font-semibold text-emerald-800 mb-2 block">
+                        🏷️ Nome da Instância
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="instanceName"
+                          type="text"
+                          placeholder="Ex: lojamoveis"
+                          value={formData.instanceName}
+                          onChange={(e) => handleInputChange('instanceName', e.target.value)}
+                          className={`text-lg p-4 border-2 transition-all duration-300 ${
+                            errors.instanceName 
+                              ? "border-red-400 focus:border-red-500 focus:ring-red-200" 
+                              : "border-emerald-200 focus:border-emerald-500 focus:ring-emerald-200"
+                          } rounded-xl focus:ring-4`}
+                          disabled={isCreatingInstance}
+                        />
+                        {errors.instanceName && (
+                          <p className="mt-2 text-sm text-red-600 font-medium">{errors.instanceName}</p>
+                        )}
+                      </div>
+                      <p className="mt-3 text-sm text-emerald-700 bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                        💡 <strong>Dica:</strong> Use apenas letras minúsculas e números (sem hífens ou caracteres especiais). 
+                        Ex: lojamoveis, empresaabc, vendas2024
+                      </p>
+                    </div>
+
+                    {/* URL Preview com design moderno */}
+                    <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
+                      <p className="text-sm font-medium text-emerald-800 mb-2">
+                        🔗 URL da instância:
+                      </p>
+                      <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                        <code className="text-sm font-mono text-emerald-700 break-all">
+                          https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
+                        </code>
+                      </div>
+                    </div>
                   </div>
-                                             <p className="mt-2 text-xs text-gray-500">
-                             Use apenas letras minúsculas e números (sem hífens ou caracteres especiais). Ex: lojamoveis, empresaabc, vendas2024
-                           </p>
                 </div>
 
-                {/* URL Preview */}
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                    URL da instância:
-                  </p>
-                  <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1 rounded border">
-                    https://api.aiensed.com/instance/connect/{formData.instanceName || 'sua-instancia'}
-                  </code>
+                {/* Botão principal com design moderno */}
+                <div className="text-center">
+                  <Button
+                    onClick={handleConnect}
+                    disabled={isCreatingInstance || !formData.instanceName}
+                    className={`w-full max-w-md h-16 text-lg font-semibold rounded-2xl shadow-lg transition-all duration-300 ${
+                      isCreatingInstance || !formData.instanceName
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 hover:scale-105 hover:shadow-xl'
+                    }`}
+                    size="lg"
+                  >
+                    {isCreatingInstance ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                        Conectando WhatsApp...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-6 w-6 mr-3" />
+                        Conectar WhatsApp
+                      </>
+                    )}
+                  </Button>
                 </div>
-
-                                         <Button
-                           onClick={handleConnect}
-                           disabled={isCreatingInstance || !formData.instanceName}
-                           className="w-full"
-                           size="lg"
-                         >
-                           {isCreatingInstance ? (
-                             <>
-                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                               Conectando WhatsApp...
-                             </>
-                           ) : (
-                             <>
-                               <Zap className="h-4 w-4 mr-2" />
-                               Conectar WhatsApp
-                             </>
-                           )}
-                         </Button>
               </div>
 
               {/* Status da Instância */}
