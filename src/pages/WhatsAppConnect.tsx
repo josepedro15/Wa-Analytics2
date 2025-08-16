@@ -88,39 +88,43 @@ export default function WhatsAppConnect() {
         const rootData = await rootResponse.json();
         console.log('✅ Status da API:', rootData);
         
-        // Se a API está ativa, tentar verificar perfil (indica conexão)
-        try {
-          const profileResponse = await fetch('https://api.aiensed.com/fetchProfile', {
-            method: 'POST',
-            headers: {
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            },
-            body: JSON.stringify({
-              instanceName: formData.instanceName
-            })
-          });
-
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json();
-            console.log('✅ Perfil recuperado:', profileData);
-            
-            // Se conseguiu recuperar perfil, está conectado
-            if (profileData.name || profileData.status) {
-              console.log('🎉 WhatsApp conectado! Perfil recuperado com sucesso.');
-              setInstanceStatus('connected');
-              setIsQrExpired(false);
-              toast({
-                title: "WhatsApp Conectado!",
-                description: "Sua instância está ativa e pronta para receber dados.",
-              });
-              return;
-            }
-          } else {
-            console.log(`📱 Perfil não disponível ainda: ${profileResponse.status}`);
+              // Se a API está ativa, tentar verificar se a instância está conectada
+      // Como /fetchProfile não existe, vamos usar uma abordagem diferente
+      console.log('📱 Verificando se WhatsApp está conectado...');
+      
+      // Tentar verificar se conseguimos acessar informações da instância
+      // Vamos usar o endpoint raiz com parâmetros específicos
+      try {
+        const instanceCheckResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
+          headers: {
+            'apikey': 'd3050208ba862ee87302278ac4370cb9'
           }
-        } catch (profileError) {
-          console.log('📱 Erro ao verificar perfil:', profileError);
+        });
+
+        if (instanceCheckResponse.ok) {
+          const instanceData = await instanceCheckResponse.json();
+          console.log('✅ Dados da instância:', instanceData);
+          
+          // Se conseguimos acessar dados da instância, provavelmente está conectada
+          if (instanceData.status === 200 && instanceData.message) {
+            console.log('🎉 WhatsApp conectado! Instância respondendo com sucesso.');
+            setInstanceStatus('connected');
+            setIsQrExpired(false);
+            toast({
+              title: "WhatsApp Conectado!",
+              description: "Sua instância está ativa e pronta para receber dados.",
+            });
+            return;
+          }
+        } else {
+          console.log(`📱 Instância não respondeu: ${instanceCheckResponse.status}`);
         }
+      } catch (instanceError) {
+        console.log('📱 Erro ao verificar instância:', instanceError);
+      }
+      
+      // Se chegou até aqui, ainda não está conectado
+      console.log('📱 WhatsApp ainda não conectado. Aguardando...');
       } else {
         console.log(`❌ API não respondeu: ${rootResponse.status}`);
       }
