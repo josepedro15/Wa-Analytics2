@@ -196,23 +196,51 @@ export default function WhatsAppConnect() {
       console.log('🔍 Chaves disponíveis na resposta:', Object.keys(data));
       console.log('🔍 Tipo de dados:', typeof data);
       
-      // Passo 2: Extrair dados da resposta - tentar diferentes formatos
+      // Passo 2: Extrair dados da resposta - baseado na estrutura real da API
       let qrCode = null;
       let instanceId = null;
+      let instanceName = null;
       
-      // Tentar diferentes possibilidades de chaves
-      if (data.qrcode) qrCode = data.qrcode;
-      else if (data.qrCode) qrCode = data.qrCode;
-      else if (data.qr) qrCode = data.qr;
-      else if (data.qrcode_url) qrCode = data.qrcode_url;
+      console.log('🔍 Estrutura da resposta:', data);
       
-      if (data.instanceId) instanceId = data.instanceId;
-      else if (data.instance_id) instanceId = data.instance_id;
-      else if (data.id) instanceId = data.id;
-      else if (data.instance) instanceId = data.instance;
+      // Extrair QR Code - tentar diferentes possibilidades
+      if (data.qrcode) {
+        if (typeof data.qrcode === 'string') {
+          qrCode = data.qrcode;
+        } else if (data.qrcode.base64) {
+          qrCode = data.qrcode.base64;
+        } else if (data.qrcode.code) {
+          qrCode = data.qrcode.code;
+        }
+      }
+      
+      // Extrair Instance ID e Name
+      if (data.instance) {
+        if (typeof data.instance === 'string') {
+          instanceId = data.instance;
+        } else if (data.instance.instanceId) {
+          instanceId = data.instance.instanceId;
+        } else if (data.instance.id) {
+          instanceId = data.instance.id;
+        }
+        
+        if (data.instance.instanceName) {
+          instanceName = data.instance.instanceName;
+        }
+      }
+      
+      // Fallbacks para outras estruturas possíveis
+      if (!instanceId && data.instanceId) instanceId = data.instanceId;
+      if (!instanceId && data.instance_id) instanceId = data.instance_id;
+      if (!instanceId && data.id) instanceId = data.id;
+      
+      if (!qrCode && data.qrCode) qrCode = data.qrCode;
+      if (!qrCode && data.qr) qrCode = data.qr;
+      if (!qrCode && data.qrcode_url) qrCode = data.qrcode_url;
       
       console.log('🔍 QR Code encontrado:', qrCode);
       console.log('🔍 Instance ID encontrado:', instanceId);
+      console.log('🔍 Instance Name encontrado:', instanceName);
       
       if (qrCode && instanceId) {
         setQrCode(qrCode);
@@ -222,7 +250,7 @@ export default function WhatsAppConnect() {
         
         toast({
           title: "QR Code Gerado!",
-          description: `Instância criada via ${workingEndpoint}. Agora escaneie o QR Code!`,
+          description: `Instância "${instanceName || instanceId}" criada via ${workingEndpoint}. Agora escaneie o QR Code!`,
         });
       } else {
         // Mostrar erro mais detalhado
@@ -232,7 +260,7 @@ Resposta recebida: ${JSON.stringify(data, null, 2)}
 
 Chaves disponíveis: ${Object.keys(data).join(', ')}
 
-Esperado: qrcode (ou qrCode, qr, qrcode_url) e instanceId (ou instance_id, id, instance)`;
+Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou instance.id`;
         
         console.error('❌ Erro detalhado:', errorMsg);
         throw new Error(`API não retornou dados esperados. Verifique o console para detalhes.`);
