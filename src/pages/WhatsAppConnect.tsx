@@ -44,7 +44,7 @@ export default function WhatsAppConnect() {
     setIsQrExpired(false);
   };
 
-  // Função para verificar status da instância usando endpoints oficiais
+  // Função para verificar status da instância em tempo real via API
   const checkInstanceStatus = async () => {
     if (!instanceId || !formData.instanceName) return;
 
@@ -52,95 +52,66 @@ export default function WhatsAppConnect() {
       console.log(`🔍 Verificando status da instância: ${formData.instanceName} (ID: ${instanceId})`);
       console.log(`🔍 Status atual: ${instanceStatus}`);
       
-      // Primeiro, verificar se a API está ativa
+      // Verificar status da instância via POST /instance/create com qrcode: false
       try {
-        const rootResponse = await fetch('https://api.aiensed.com/', {
-          method: 'GET',
+        const statusResponse = await fetch('https://api.aiensed.com/instance/create', {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'apikey': 'd3050208ba862ee87302278ac4370cb9'
-          }
+          },
+          body: JSON.stringify({
+            instanceName: formData.instanceName,
+            qrcode: false,
+            integration: "WHATSAPP-BAILEYS"
+          })
         });
         
-        if (rootResponse.ok) {
-          console.log('✅ API base está ativa');
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          console.log('🔍 Resposta da verificação de status:', statusData);
           
-          // Tentar verificar perfil da instância (endpoint oficial)
-          try {
-            const profileResponse = await fetch('https://api.aiensed.com/fetchProfile', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': 'd3050208ba862ee87302278ac4370cb9'
-              },
-              body: JSON.stringify({
-                instanceName: formData.instanceName
-              })
-            });
-            
-            if (profileResponse.ok) {
-              console.log('🎉 WhatsApp CONECTADO! (perfil encontrado)');
-              if (instanceStatus !== 'connected') {
-                setInstanceStatus('connected');
-                setIsQrExpired(false);
-                toast({
-                  title: "WhatsApp Conectado!",
-                  description: "Sua instância está ativa e pronta para receber dados.",
-                });
-              }
-              return;
-            } else if (profileResponse.status === 404) {
-              console.log('📱 Instância não encontrada (404) - foi excluída ou não conectada');
-              if (instanceStatus === 'connected') {
-                setInstanceStatus('disconnected');
-                toast({
-                  title: "WhatsApp Desconectado",
-                  description: "A instância foi removida ou não está conectada.",
-                  variant: "destructive"
-                });
-              }
-              return;
+          // Se retornou instância mas sem QR code, está conectada
+          if (statusData.instance && !statusData.qrcode) {
+            console.log('🎉 WhatsApp CONECTADO! (instância ativa sem QR)');
+            if (instanceStatus !== 'connected') {
+              setInstanceStatus('connected');
+              setIsQrExpired(false);
+              toast({
+                title: "WhatsApp Conectado!",
+                description: "Sua instância está ativa e pronta para receber dados.",
+              });
             }
-          } catch (profileError) {
-            console.log('❌ Erro ao verificar perfil:', profileError);
+            return;
           }
           
-          // Se não conseguiu verificar perfil, tentar verificar se a instância responde
-          try {
-            const instanceResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
-              method: 'GET',
-              headers: {
-                'apikey': 'd3050208ba862ee87302278ac4370cb9'
-              }
-            });
-            
-            if (instanceResponse.ok) {
-              const instanceData = await instanceResponse.text();
-              console.log('🔍 Resposta da instância:', instanceData);
-              
-              if (instanceData.toLowerCase().includes('ok') || 
-                  instanceData.toLowerCase().includes('connected') ||
-                  instanceData.toLowerCase().includes('active')) {
-                console.log('🎉 WhatsApp CONECTADO! (resposta da instância)');
-                if (instanceStatus !== 'connected') {
-                  setInstanceStatus('connected');
-                  setIsQrExpired(false);
-                  toast({
-                    title: "WhatsApp Conectado!",
-                    description: "Sua instância está ativa e pronta para receber dados.",
-                  });
-                }
-                return;
-              }
+          // Se retornou QR code, ainda não está conectada
+          if (statusData.qrcode) {
+            console.log('📱 WhatsApp ainda não conectado (QR code presente)');
+            if (instanceStatus !== 'qr_ready') {
+              setInstanceStatus('qr_ready');
             }
-          } catch (instanceError) {
-            console.log('❌ Erro ao verificar instância:', instanceError);
+            return;
           }
           
-        } else {
-          console.log(`❌ API base não responde: ${rootResponse.status}`);
+        } else if (statusResponse.status === 404) {
+          console.log('📱 Instância não encontrada (404) - foi excluída');
+          if (instanceStatus === 'connected') {
+            setInstanceStatus('disconnected');
+            toast({
+              title: "WhatsApp Desconectado",
+              description: "A instância foi removida da API.",
+              variant: "destructive"
+            });
+          }
+          return;
+        } else if (statusResponse.status === 403) {
+          console.log('🚫 Acesso negado (403) - verificar permissões');
+          return;
         }
-      } catch (rootError) {
-        console.log('❌ Erro ao verificar API base:', rootError);
+        
+      } catch (statusError) {
+        console.log('❌ Erro ao verificar status:', statusError);
       }
       
       // Se chegou até aqui, a instância não está conectada
@@ -446,8 +417,8 @@ export default function WhatsAppConnect() {
     if (instanceStatus === 'qr_ready' && instanceId) {
       startQrTimer();
       
-      // Verificar status mais frequentemente quando aguardando conexão
-      statusInterval = setInterval(checkInstanceStatus, 3000); // A cada 3 segundos
+      // Verificar status em tempo real quando aguardando conexão
+      statusInterval = setInterval(checkInstanceStatus, 2000); // A cada 2 segundos
       
       timerInterval = setInterval(() => {
         setTimeRemaining(prev => {
@@ -461,8 +432,8 @@ export default function WhatsAppConnect() {
     }
     
     if (instanceStatus === 'connected' && instanceId) {
-      // Verificar status a cada 10 segundos quando conectado
-      statusInterval = setInterval(checkInstanceStatus, 10000);
+      // Verificar status a cada 5 segundos quando conectado (mais responsivo)
+      statusInterval = setInterval(checkInstanceStatus, 5000);
     }
     
     return () => {
