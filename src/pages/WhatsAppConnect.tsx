@@ -19,10 +19,7 @@ const connectSchema = z.object({
   instanceName: z.string()
     .min(3, 'Nome da instância deve ter pelo menos 3 caracteres')
     .max(50, 'Nome da instância deve ter no máximo 50 caracteres')
-    .regex(/^[a-z0-9-]+$/, 'Use apenas letras minúsculas, números e hífens')
-    .refine(name => !name.startsWith('-') && !name.endsWith('-'), {
-      message: 'Nome não pode começar ou terminar com hífen'
-    })
+    .regex(/^[a-z0-9]+$/, 'Use apenas letras minúsculas e números (sem hífens ou caracteres especiais)')
 });
 
 type ConnectFormData = z.infer<typeof connectSchema>;
@@ -44,18 +41,20 @@ export default function WhatsAppConnect() {
   const [instanceId, setInstanceId] = useState<string>('');
   const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'error'>('idle');
   
-  // Função para gerar nome único
+  // Função para gerar nome único (apenas letras e números)
   const generateUniqueName = (baseName: string): string => {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 6);
-    return `${baseName}-${timestamp}-${randomSuffix}`;
+    // Remover hífens e usar apenas letras e números
+    return `${baseName}${timestamp}${randomSuffix}`;
   };
   
-  // Função para sugerir nomes alternativos
+  // Função para sugerir nomes alternativos (apenas letras e números)
   const suggestAlternativeNames = (baseName: string): string => {
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 6);
-    return `${baseName}-${timestamp}-${randomSuffix}`;
+    // Remover hífens e usar apenas letras e números
+    return `${baseName}${timestamp}${randomSuffix}`;
   };
 
   const validateForm = (): boolean => {
@@ -383,9 +382,9 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                       <p className="mt-1 text-sm text-red-600">{errors.instanceName}</p>
                     )}
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
-                    Use apenas letras minúsculas, números e hífens. Ex: lojamoveis, empresa-abc, vendas2024
-                  </p>
+                                             <p className="mt-2 text-xs text-gray-500">
+                             Use apenas letras minúsculas e números (sem hífens ou caracteres especiais). Ex: lojamoveis, empresaabc, vendas2024
+                           </p>
                 </div>
 
                 {/* URL Preview */}
