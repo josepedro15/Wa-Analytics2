@@ -173,14 +173,19 @@ export default function WhatsAppConnect() {
               updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
               
               // 🔄 Gerar QR code para reconexão quando desconectado
-              console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
-              console.log('🔄 Chamando generateQrCodeForExistingInstance...');
-              
-              // ⏰ Aguardar um pouco antes de gerar novo QR
-              setTimeout(() => {
-                console.log('🔄 Executando geração de QR code após delay...');
-                generateQrCodeForExistingInstance(formData.instanceName);
-              }, 1000);
+              // ⚠️ NÃO gerar se já existe QR válido na tela
+              if (instanceStatus !== 'qr_ready' || !qrCode) {
+                console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
+                console.log('🔄 Chamando generateQrCodeForExistingInstance...');
+                
+                // ⏰ Aguardar um pouco antes de gerar novo QR
+                setTimeout(() => {
+                  console.log('🔄 Executando geração de QR code após delay...');
+                  generateQrCodeForExistingInstance(formData.instanceName);
+                }, 1000);
+              } else {
+                console.log('🔄 QR code já existe na tela - não sobrescrevendo automaticamente');
+              }
             }
             return;
           }
