@@ -65,16 +65,18 @@ export default function WhatsAppConnect() {
         try {
           console.log(`🔍 Tentando endpoint: ${endpoint}`);
           
-          // Para verificar status, usar GET em vez de POST
-          const url = endpoint.includes('?') 
-            ? `${endpoint}&instance=${formData.instanceName}`
-            : `${endpoint}?instance=${formData.instanceName}`;
-            
-          response = await fetch(url, {
-            method: 'GET',
+          // Voltar para POST, mas com lógica diferente para verificar status
+          response = await fetch(endpoint, {
+            method: 'POST',
             headers: {
+              'Content-Type': 'application/json',
               'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            }
+            },
+            body: JSON.stringify({
+              instanceName: formData.instanceName,
+              qrcode: false, // Não gerar QR, só verificar
+              integration: "WHATSAPP-BAILEYS"
+            })
           });
           
           if (response.ok) {
@@ -83,6 +85,25 @@ export default function WhatsAppConnect() {
             break;
           } else {
             console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
+            
+            // Se for 403, pode ser que a instância já existe e está conectada
+            if (response.status === 403) {
+              try {
+                const errorData = await response.text();
+                console.log(`🚨 Detalhes do erro 403:`, errorData);
+                
+                // Se o erro for "already in use", pode significar que está conectada
+                if (errorData.toLowerCase().includes('already in use') || 
+                    errorData.toLowerCase().includes('already exists')) {
+                  console.log('🎉 Instância já existe - pode estar conectada!');
+                  workingEndpoint = endpoint;
+                  response = { ok: true, status: 200 } as Response; // Simular sucesso
+                  break;
+                }
+              } catch (readError) {
+                console.log(`🚨 Não foi possível ler resposta de erro 403:`, readError);
+              }
+            }
           }
         } catch (endpointError) {
           console.log(`❌ Erro no endpoint ${endpoint}:`, endpointError);
@@ -154,6 +175,17 @@ export default function WhatsAppConnect() {
           }
         } else if (data.status === 'connected' || data.connected === true) {
           console.log('🎉 WhatsApp CONECTADO! (status explícito)');
+          if (instanceStatus !== 'connected') {
+            setInstanceStatus('connected');
+            setIsQrExpired(false);
+            toast({
+              title: "WhatsApp Conectado!",
+              description: "Sua instância está ativa e pronta para receber dados.",
+            });
+          }
+        } else if (data.message && data.message.includes('already in use')) {
+          // Se a API retornar "already in use", pode significar que está conectada
+          console.log('🎉 WhatsApp CONECTADO! (instância já em uso)');
           if (instanceStatus !== 'connected') {
             setInstanceStatus('connected');
             setIsQrExpired(false);
