@@ -51,24 +51,69 @@ export default function WhatsAppConnect() {
       console.log(`🔍 Verificando status da instância: ${formData.instanceName} (ID: ${instanceId})`);
       console.log(`🔍 Status atual: ${instanceStatus}`);
       
-      // Tentar múltiplos endpoints para verificar status
-      const endpoints = [
-        'https://api.aiensed.com/instance/create',
-        'https://api.aiensed.com/instance/connect',
-        'https://api.aiensed.com/instance/connect/'
-      ];
-      
-      // Primeiro, tentar verificar se a instância ainda existe
-      console.log('🔍 Verificando se a instância ainda existe na API...');
+      // Tentar diferentes abordagens para verificar status
+      console.log('🔍 Verificando status da instância...');
       
       let response;
       let workingEndpoint = '';
+      
+      // Primeiro, tentar verificar se a instância está conectada
+      try {
+        console.log('🔍 Tentando verificar status via GET simples...');
+        
+        // Tentar GET simples para ver se a instância responde
+        const simpleResponse = await fetch(`https://api.aiensed.com/`, {
+          method: 'GET',
+          headers: {
+            'apikey': 'd3050208ba862ee87302278ac4370cb9'
+          }
+        });
+        
+        if (simpleResponse.ok) {
+          console.log('✅ API base responde - tentando verificar instância específica');
+          
+          // Tentar verificar instância específica
+          const instanceResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
+            method: 'GET',
+            headers: {
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            }
+          });
+          
+          if (instanceResponse.ok) {
+            const instanceData = await instanceResponse.text();
+            console.log('🔍 Resposta da instância:', instanceData);
+            
+            if (instanceData.toLowerCase().includes('ok') || instanceData.toLowerCase().includes('connected')) {
+              console.log('🎉 WhatsApp CONECTADO! (resposta direta da API)');
+              if (instanceStatus !== 'connected') {
+                setInstanceStatus('connected');
+                setIsQrExpired(false);
+                toast({
+                  title: "WhatsApp Conectado!",
+                  description: "Sua instância está ativa e pronta para receber dados.",
+                });
+              }
+              return;
+            }
+          }
+        }
+      } catch (simpleError) {
+        console.log('❌ Verificação simples falhou:', simpleError);
+      }
+      
+      // Se a verificação simples falhou, tentar endpoints tradicionais
+      const endpoints = [
+        'https://api.aiensed.com/instance/connect',
+        'https://api.aiensed.com/instance/connect/',
+        'https://api.aiensed.com/instance/create'
+      ];
       
       for (const endpoint of endpoints) {
         try {
           console.log(`🔍 Tentando endpoint: ${endpoint}`);
           
-          // Voltar para POST, mas com lógica diferente para verificar status
+          // Tentar POST para verificar status
           response = await fetch(endpoint, {
             method: 'POST',
             headers: {
