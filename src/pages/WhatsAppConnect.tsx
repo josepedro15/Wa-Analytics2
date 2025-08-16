@@ -1124,39 +1124,7 @@ export default function WhatsAppConnect() {
                           </Button>
                         )}
                         
-                        <Button
-                          onClick={checkInstanceStatus}
-                          variant="outline"
-                          size="lg"
-                          className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 rounded-2xl px-8"
-                        >
-                          <CheckCircle className="h-5 w-5 mr-2" />
-                          Verificar Status
-                        </Button>
-                        
-                        <Button
-                          onClick={() => {
-                            console.log('🔍 Status atual:', instanceStatus);
-                            console.log('🔍 Instance ID:', instanceId);
-                            console.log('🔍 Instance Name:', formData.instanceName);
-                            
-                            // 🔄 Testar geração manual de QR code se desconectado
-                            if (instanceStatus === 'disconnected' && formData.instanceName) {
-                              console.log('🔄 Testando geração manual de QR code...');
-                              generateQrCodeForExistingInstance(formData.instanceName);
-                            }
-                            
-                            toast({
-                              title: "Debug Info",
-                              description: `Status: ${instanceStatus}, ID: ${instanceId}`,
-                            });
-                          }}
-                          variant="ghost"
-                          size="lg"
-                          className="text-gray-600 hover:text-gray-800 rounded-2xl px-6"
-                        >
-                          📊 Debug + QR
-                        </Button>
+                        {/* Botões Verificar Status e Debug + QR removidos da interface */}
                       </div>
                     </div>
                   )}
