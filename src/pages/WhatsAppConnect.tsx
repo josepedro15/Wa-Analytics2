@@ -95,12 +95,9 @@ export default function WhatsAppConnect() {
               // Se não tem QR code, está desconectada
               console.log('📱 WhatsApp DESCONECTADO! (instância inativa sem QR)');
               setInstanceStatus('disconnected');
-              updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
-              toast({
-                title: "WhatsApp Desconectado",
-                description: "A instância foi desconectada ou não está ativa.",
-                variant: "destructive"
-              });
+              
+              // Deletar instância desconectada do banco
+              deleteInstanceFromDatabase(formData.instanceName);
             }
           } else {
             // Instância não existe na API (foi excluída)
@@ -180,14 +177,8 @@ export default function WhatsAppConnect() {
             if (instanceStatus !== 'disconnected') {
               setInstanceStatus('disconnected');
               
-              // Atualizar status no banco de dados
-              updateInstanceStatusInDatabase(formData.instanceName, 'disconnected');
-              
-              toast({
-                title: "WhatsApp Desconectado",
-                description: "A instância foi desconectada ou não está ativa.",
-                variant: "destructive"
-              });
+              // Deletar instância desconectada do banco
+              deleteInstanceFromDatabase(formData.instanceName);
             }
             return;
           }
@@ -616,6 +607,42 @@ export default function WhatsAppConnect() {
       }
     } catch (error) {
       console.error('❌ Erro ao atualizar status:', error);
+    }
+  };
+
+  // Função para deletar instância do banco quando desconecta
+  const deleteInstanceFromDatabase = async (instanceName: string) => {
+    if (!user?.id) return;
+
+    try {
+      console.log(`🗑️ Deletando instância desconectada do banco: ${instanceName}`);
+      
+      const { error } = await supabase
+        .from('whatsapp_instances')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('instance_name', instanceName);
+
+      if (error) {
+        console.error('❌ Erro ao deletar instância:', error);
+      } else {
+        console.log(`✅ Instância deletada do banco: ${instanceName}`);
+        
+        // Limpar estado local
+        setInstanceStatus('idle');
+        setInstanceCreated(false);
+        setQrCode('');
+        setInstanceId('');
+        setFormData({ instanceName: '' });
+        
+        toast({
+          title: "Instância Removida",
+          description: "A instância desconectada foi removida do banco de dados.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao deletar instância:', error);
     }
   };
 
