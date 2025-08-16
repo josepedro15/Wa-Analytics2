@@ -86,20 +86,19 @@ export default function WhatsAppConnect() {
               console.log(`📱 WhatsApp DESCONECTADO! (state: ${data.instance.state})`);
               setInstanceStatus('disconnected');
               
-              // Deletar instância desconectada do banco
-              deleteInstanceFromDatabase(formData.instanceName);
+                          // Instância desconectada - manter no banco para histórico
             }
           } else {
             // Instância não existe na API (foi excluída)
             console.log('❌ Instância não existe na API (foi excluída)');
             setInstanceStatus('disconnected');
-            deleteInstanceFromDatabase(formData.instanceName);
+            // Instância não existe mais - manter no banco para histórico
           }
         } else if (response.status === 404) {
           // Instância não encontrada na API
           console.log('📱 Instância não encontrada na API (404)');
           setInstanceStatus('disconnected');
-          deleteInstanceFromDatabase(formData.instanceName);
+          // Instância não encontrada - manter no banco para histórico
         }
       } else {
         // Instância não existe no banco
@@ -162,8 +161,7 @@ export default function WhatsAppConnect() {
             if (instanceStatus !== 'disconnected') {
               setInstanceStatus('disconnected');
               
-              // Deletar instância desconectada do banco imediatamente
-              deleteInstanceFromDatabase(formData.instanceName);
+              // Instância desconectada - manter no banco para histórico
             }
             return;
           }
@@ -173,8 +171,7 @@ export default function WhatsAppConnect() {
           if (instanceStatus === 'connected') {
             setInstanceStatus('disconnected');
             
-            // Deletar instância do banco pois não existe mais
-            deleteInstanceFromDatabase(formData.instanceName);
+            // Instância não existe mais - manter no banco para histórico
           }
           return;
         } else if (statusResponse.status === 403) {
@@ -600,41 +597,7 @@ export default function WhatsAppConnect() {
     }
   };
 
-  // Função para deletar instância do banco quando desconecta
-  const deleteInstanceFromDatabase = async (instanceName: string) => {
-    if (!user?.id) return;
 
-    try {
-      console.log(`🗑️ Deletando instância desconectada do banco: ${instanceName}`);
-      
-      const { error } = await supabase
-        .from('whatsapp_instances')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('instance_name', instanceName);
-
-      if (error) {
-        console.error('❌ Erro ao deletar instância:', error);
-      } else {
-        console.log(`✅ Instância deletada do banco: ${instanceName}`);
-        
-        // Limpar estado local
-        setInstanceStatus('idle');
-        setInstanceCreated(false);
-        setQrCode('');
-        setInstanceId('');
-        setFormData({ instanceName: '' });
-        
-        toast({
-          title: "Instância Removida",
-          description: "A instância desconectada foi removida do banco de dados.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('❌ Erro ao deletar instância:', error);
-    }
-  };
 
   // Carregar instâncias existentes ao montar o componente
   useEffect(() => {
