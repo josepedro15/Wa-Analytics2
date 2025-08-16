@@ -39,7 +39,7 @@ export default function WhatsAppConnect() {
   const [instanceCreated, setInstanceCreated] = useState(false);
   const [qrCode, setQrCode] = useState<string>('');
   const [instanceId, setInstanceId] = useState<string>('');
-  const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'error'>('idle');
+  const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'disconnected' | 'error'>('idle');
   
   // Timer para expiração do QR Code
   const [qrExpirationTime, setQrExpirationTime] = useState<number>(0);
@@ -70,7 +70,7 @@ export default function WhatsAppConnect() {
     setIsQrExpired(false);
   };
 
-  // Função para verificar status da instância usando endpoints padrão da Evolution API
+    // Função para verificar status da instância usando endpoints padrão da Evolution API
   const checkInstanceStatus = async () => {
     if (!instanceId) return;
 
@@ -88,48 +88,126 @@ export default function WhatsAppConnect() {
         const rootData = await rootResponse.json();
         console.log('✅ Status da API:', rootData);
         
-              // Se a API está ativa, tentar verificar se a instância está conectada
-      // Como /fetchProfile não existe, vamos usar uma abordagem diferente
-      console.log('📱 Verificando se WhatsApp está conectado...');
-      
-      // Tentar verificar se conseguimos acessar informações da instância
-      // Vamos usar o endpoint raiz com parâmetros específicos
-      try {
-        const instanceCheckResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
-          headers: {
-            'apikey': 'd3050208ba862ee87302278ac4370cb9'
-          }
-        });
+        // Se a API está ativa, tentar verificar se a instância está conectada
+        console.log('📱 Verificando se WhatsApp está conectado...');
+        
+        // Tentar verificar se conseguimos acessar informações da instância
+        try {
+          const instanceCheckResponse = await fetch(`https://api.aiensed.com/?instance=${formData.instanceName}`, {
+            headers: {
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            }
+          });
 
-        if (instanceCheckResponse.ok) {
-          const instanceData = await instanceCheckResponse.json();
-          console.log('✅ Dados da instância:', instanceData);
-          
-          // Se conseguimos acessar dados da instância, provavelmente está conectada
-          if (instanceData.status === 200 && instanceData.message) {
-            console.log('🎉 WhatsApp conectado! Instância respondendo com sucesso.');
-            setInstanceStatus('connected');
-            setIsQrExpired(false);
-            toast({
-              title: "WhatsApp Conectado!",
-              description: "Sua instância está ativa e pronta para receber dados.",
-            });
-            return;
+          if (instanceCheckResponse.ok) {
+            const instanceData = await instanceCheckResponse.json();
+            console.log('✅ Dados da instância:', instanceData);
+            
+            // Se conseguimos acessar dados da instância, provavelmente está conectada
+            if (instanceData.status === 200 && instanceData.message) {
+              console.log('🎉 WhatsApp conectado! Instância respondendo com sucesso.');
+              setInstanceStatus('connected');
+              setIsQrExpired(false);
+              toast({
+                title: "WhatsApp Conectado!",
+                description: "Sua instância está ativa e pronta para receber dados.",
+              });
+              return;
+            }
+          } else {
+            console.log(`📱 Instância não respondeu: ${instanceCheckResponse.status}`);
+            // Se a instância não responde, pode ter sido desconectada
+            if (instanceStatus === 'connected') {
+              console.log('⚠️ WhatsApp desconectado!');
+              setInstanceStatus('disconnected');
+              toast({
+                title: "WhatsApp Desconectado",
+                description: "A conexão foi perdida. Gere um novo QR Code para reconectar.",
+                variant: "destructive"
+              });
+            }
           }
-        } else {
-          console.log(`📱 Instância não respondeu: ${instanceCheckResponse.status}`);
+        } catch (instanceError) {
+          console.log('📱 Erro ao verificar instância:', instanceError);
+          // Se há erro, pode ter sido desconectada
+          if (instanceStatus === 'connected') {
+            console.log('⚠️ WhatsApp desconectado por erro!');
+            setInstanceStatus('disconnected');
+            toast({
+              title: "WhatsApp Desconectado",
+              description: "Erro na conexão. Gere um novo QR Code para reconectar.",
+              variant: "destructive"
+            });
+          }
         }
-      } catch (instanceError) {
-        console.log('📱 Erro ao verificar instância:', instanceError);
-      }
-      
-      // Se chegou até aqui, ainda não está conectado
-      console.log('📱 WhatsApp ainda não conectado. Aguardando...');
+        
+        // Se chegou até aqui, ainda não está conectado
+        if (instanceStatus !== 'connected' && instanceStatus !== 'disconnected') {
+          console.log('📱 WhatsApp ainda não conectado. Aguardando...');
+        }
       } else {
         console.log(`❌ API não respondeu: ${rootResponse.status}`);
       }
     } catch (error) {
       console.log(`❌ Erro na verificação:`, error);
+    }
+  };
+
+  // Função para regenerar QR Code
+  const regenerateQrCode = async () => {
+    if (!formData.instanceName) return;
+
+    console.log('🔄 Regenerando QR Code...');
+    setIsQrExpired(false);
+    setTimeRemaining(60);
+    setInstanceStatus('creating');
+
+    try {
+      const response = await fetch('https://api.aiensed.com/instance/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        },
+        body: JSON.stringify({
+          instanceName: formData.instanceName,
+          qrcode: true,
+          integration: "WHATSAPP-BAILEYS"
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ QR Code regenerado:', data);
+
+        if (data.qrcode && data.instance) {
+          setQrCode(data.qrcode.base64 || data.qrcode);
+          setInstanceId(data.instance.instanceId || data.instance.id);
+          setInstanceStatus('qr_ready');
+          startQrTimer();
+          
+          toast({
+            title: "QR Code Regenerado!",
+            description: "Escaneie o novo QR Code com seu WhatsApp.",
+          });
+        }
+      } else {
+        console.log(`❌ Erro ao regenerar QR Code: ${response.status}`);
+        setInstanceStatus('error');
+        toast({
+          title: "Erro ao Regenerar",
+          description: "Não foi possível gerar um novo QR Code.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.log('❌ Erro ao regenerar QR Code:', error);
+      setInstanceStatus('error');
+      toast({
+        title: "Erro ao Regenerar",
+        description: "Erro de conexão ao gerar novo QR Code.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -522,10 +600,16 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                         <span className="text-red-600 font-medium">Erro na Conexão</span>
                       </>
                     )}
+                    {instanceStatus === 'disconnected' && (
+                      <>
+                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                        <span className="text-orange-600 font-medium">WhatsApp Desconectado</span>
+                      </>
+                    )}
                   </div>
 
-                  {/* QR Code */}
-                  {(instanceStatus === 'qr_ready' || instanceCreated) && qrCode && (
+                  {/* QR Code - só mostra quando não está conectado */}
+                  {(instanceStatus === 'qr_ready' || (instanceCreated && instanceStatus !== 'connected')) && qrCode && (
                     <div className="text-center">
                       <h3 className="font-medium text-gray-800 mb-3">
                         Escaneie o QR Code com seu WhatsApp
@@ -575,11 +659,7 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                       {isQrExpired && (
                         <div className="mt-3">
                           <Button
-                            onClick={() => {
-                              setIsQrExpired(false);
-                              setTimeRemaining(60);
-                              startQrTimer();
-                            }}
+                            onClick={regenerateQrCode}
                             variant="outline"
                             size="sm"
                           >
@@ -655,6 +735,53 @@ Estrutura esperada: qrcode.base64 ou qrcode.code, e instance.instanceId ou insta
                           Você pode fechar esta página. A instância continuará funcionando.
                         </p>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Status Desconectado */}
+                  {instanceStatus === 'disconnected' && (
+                    <div className="text-center">
+                      <div className="mb-4">
+                        {/* Ícone de desconexão */}
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-3">
+                          <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                            <svg 
+                              className="w-5 h-5 text-white" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={3} 
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-2xl font-bold text-orange-600 mb-2">
+                          ⚠️ WhatsApp Desconectado
+                        </h3>
+                        <p className="text-lg text-orange-700 font-medium">
+                          A conexão foi perdida
+                        </p>
+                      </div>
+                      
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-orange-600">
+                          Sua instância foi desconectada. Gere um novo QR Code para reconectar.
+                        </p>
+                      </div>
+                      
+                      <Button
+                        onClick={regenerateQrCode}
+                        className="bg-orange-600 hover:bg-orange-700"
+                        size="lg"
+                      >
+                        Reconectar WhatsApp
+                      </Button>
                     </div>
                   )}
 
