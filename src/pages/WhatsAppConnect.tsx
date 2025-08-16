@@ -159,17 +159,11 @@ export default function WhatsAppConnect() {
           // Se a instância existe mas não está conectada (state: "closed" ou outro)
           if (statusData.instance && statusData.instance.state !== 'open') {
             console.log(`📱 WhatsApp DESCONECTADO! (state: ${statusData.instance.state})`);
-            
-            // ⚠️ NÃO DELETAR IMEDIATAMENTE - Aguardar confirmação
-            // A instância pode estar em processo de conexão
             if (instanceStatus !== 'disconnected') {
               setInstanceStatus('disconnected');
               
-              // ⏰ AGUARDAR 30 SEGUNDOS antes de deletar (evitar exclusão prematura)
-              setTimeout(() => {
-                console.log('⏰ Aguardando 30s para confirmar desconexão antes de deletar...');
-                checkInstanceStatus(); // Verificar novamente
-              }, 30000);
+              // Deletar instância desconectada do banco imediatamente
+              deleteInstanceFromDatabase(formData.instanceName);
             }
             return;
           }
