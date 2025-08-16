@@ -86,25 +86,52 @@ export default function WhatsAppConnect() {
     setInstanceStatus('creating');
     
     try {
-      // Passo 1: Criar instância na API Evolution
-      const response = await fetch('https://api.aiensed.com/instance/connect/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'd3050208ba862ee87302278ac4370cb9'
-        },
-        body: JSON.stringify({
-          instanceName: formData.instanceName,
-          qrcode: true,
-          integration: "WHATSAPP-BAILEYS"
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
+      // Testar diferentes endpoints para encontrar o correto
+      const endpoints = [
+        'https://api.aiensed.com/instance/connect/',
+        'https://api.aiensed.com/instance/create',
+        'https://api.aiensed.com/instance/connect'
+      ];
+      
+      let response;
+      let workingEndpoint = '';
+      
+      // Tentar cada endpoint até encontrar um que funcione
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Testando endpoint: ${endpoint}`);
+          
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'd3050208ba862ee87302278ac4370cb9'
+            },
+            body: JSON.stringify({
+              instanceName: formData.instanceName,
+              qrcode: true,
+              integration: "WHATSAPP-BAILEYS"
+            })
+          });
+          
+          if (response.ok) {
+            workingEndpoint = endpoint;
+            console.log(`✅ Endpoint funcionando: ${endpoint}`);
+            break;
+          } else {
+            console.log(`❌ Endpoint ${endpoint} retornou: ${response.status}`);
+          }
+        } catch (endpointError) {
+          console.log(`❌ Erro no endpoint ${endpoint}:`, endpointError);
+        }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error(`Nenhum endpoint funcionou. Último status: ${response?.status || 'Erro de rede'}`);
       }
 
       const data = await response.json();
+      console.log('Resposta da API:', data);
       
       // Passo 2: Extrair dados da resposta
       if (data.qrcode && data.instanceId) {
@@ -115,7 +142,7 @@ export default function WhatsAppConnect() {
         
         toast({
           title: "QR Code Gerado!",
-          description: "Agora escaneie o QR Code com seu WhatsApp para conectar a instância.",
+          description: `Instância criada via ${workingEndpoint}. Agora escaneie o QR Code!`,
         });
       } else {
         throw new Error('QR Code ou ID da instância não recebidos da API');
@@ -126,7 +153,7 @@ export default function WhatsAppConnect() {
       setInstanceStatus('error');
       toast({
         title: "Erro na conexão",
-        description: "Não foi possível conectar à API. Tente novamente.",
+        description: `Erro: ${error instanceof Error ? error.message : 'Desconhecido'}`,
         variant: "destructive"
       });
     } finally {
