@@ -33,6 +33,9 @@ export default function WhatsAppConnect() {
   const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'disconnected' | 'error'>('idle');
   const [timeRemaining, setTimeRemaining] = useState<number>(60);
   const [isQrExpired, setIsQrExpired] = useState(false);
+  
+  // 🛡️ Variável de controle para proteger QR code manual
+  const [qrManuallyGenerated, setQrManuallyGenerated] = useState(false);
 
   const generateUniqueName = (baseName: string): string => {
     const timestamp = Date.now();
@@ -174,7 +177,15 @@ export default function WhatsAppConnect() {
               
               // 🔄 Gerar QR code para reconexão quando desconectado
               // ⚠️ NÃO gerar se já existe QR válido na tela
-              if (instanceStatus !== 'qr_ready' || !qrCode) {
+              console.log('🔍 Verificando se deve gerar QR automático:');
+              console.log('🔍 instanceStatus atual:', instanceStatus);
+              console.log('🔍 qrCode existe:', !!qrCode);
+              console.log('🔍 qrManuallyGenerated:', qrManuallyGenerated);
+              console.log('🔍 instanceStatus !== qr_ready:', instanceStatus !== 'qr_ready');
+              console.log('🔍 !qrCode:', !qrCode);
+              
+              // 🛡️ PROTEÇÃO ROBUSTA: Não gerar se QR já foi gerado
+              if ((instanceStatus !== 'qr_ready' || !qrCode) && !qrManuallyGenerated) {
                 console.log('🔄 Instância desconectada - gerando QR code para reconexão...');
                 console.log('🔄 Chamando generateQrCodeForExistingInstance...');
                 
@@ -184,7 +195,8 @@ export default function WhatsAppConnect() {
                   generateQrCodeForExistingInstance(formData.instanceName);
                 }, 1000);
               } else {
-                console.log('🔄 QR code já existe na tela - não sobrescrevendo automaticamente');
+                console.log('🛡️ PROTEÇÃO ATIVA: QR code já existe na tela - NÃO sobrescrevendo automaticamente');
+                console.log('🛡️ Estado atual:', { instanceStatus, qrCodeExists: !!qrCode, qrManuallyGenerated });
               }
             }
             return;
@@ -319,6 +331,10 @@ export default function WhatsAppConnect() {
             setQrCode(qrCode);
             setInstanceStatus('qr_ready');
             startQrTimer();
+            
+            // 🛡️ Marcar que QR foi gerado (manual ou automático)
+            setQrManuallyGenerated(true);
+            console.log('🛡️ QR code marcado como protegido contra sobrescrita');
             
             toast({
               title: "QR Code Gerado!",
