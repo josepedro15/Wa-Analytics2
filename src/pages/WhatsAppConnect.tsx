@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,12 @@ export default function WhatsAppConnect() {
   });
   const [errors, setErrors] = useState<Partial<ConnectFormData>>({});
   const [isCreatingInstance, setIsCreatingInstance] = useState(false);
+  
+  // Estado para controlar o fluxo
+  const [instanceCreated, setInstanceCreated] = useState(false);
+  const [qrCode, setQrCode] = useState<string>('');
+  const [instanceId, setInstanceId] = useState<string>('');
+  const [instanceStatus, setInstanceStatus] = useState<'idle' | 'creating' | 'qr_ready' | 'connected' | 'error'>('idle');
 
   const validateForm = (): boolean => {
     try {
@@ -77,9 +83,10 @@ export default function WhatsAppConnect() {
     }
 
     setIsCreatingInstance(true);
+    setInstanceStatus('creating');
     
     try {
-      // Chamada direta para a API Evolution (usando configuração do N8N)
+      // Passo 1: Criar instância na API Evolution
       const response = await fetch('https://api.aiensed.com/instance/connect/', {
         method: 'POST',
         headers: {
@@ -99,18 +106,24 @@ export default function WhatsAppConnect() {
 
       const data = await response.json();
       
-      toast({
-        title: "Sucesso!",
-        description: "Instância criada. Verifique a resposta da API no console.",
-      });
-
-      console.log('Resposta da API:', data);
-
-      // Limpar formulário após envio
-      setFormData({ instanceName: '' });
+      // Passo 2: Extrair dados da resposta
+      if (data.qrcode && data.instanceId) {
+        setQrCode(data.qrcode);
+        setInstanceId(data.instanceId);
+        setInstanceCreated(true);
+        setInstanceStatus('qr_ready');
+        
+        toast({
+          title: "QR Code Gerado!",
+          description: "Agora escaneie o QR Code com seu WhatsApp para conectar a instância.",
+        });
+      } else {
+        throw new Error('QR Code ou ID da instância não recebidos da API');
+      }
       
     } catch (error) {
       console.error('Erro ao conectar:', error);
+      setInstanceStatus('error');
       toast({
         title: "Erro na conexão",
         description: "Não foi possível conectar à API. Tente novamente.",
@@ -120,6 +133,46 @@ export default function WhatsAppConnect() {
       setIsCreatingInstance(false);
     }
   };
+
+  // Função para verificar status da instância
+  const checkInstanceStatus = async () => {
+    if (!instanceId) return;
+    
+    try {
+      const response = await fetch(`https://api.aiensed.com/instance/status/${instanceId}`, {
+        headers: {
+          'apikey': 'd3050208ba862ee87302278ac4370cb9'
+        }
+      });
+
+      if (response.ok) {
+        const statusData = await response.json();
+        
+        if (statusData.status === 'connected') {
+          setInstanceStatus('connected');
+          toast({
+            title: "Conectado!",
+            description: "WhatsApp conectado com sucesso! A instância está ativa.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+    }
+  };
+
+  // Verificar status periodicamente quando QR estiver pronto
+  useEffect(() => {
+    let interval: number;
+    
+    if (instanceStatus === 'qr_ready' && instanceId) {
+      interval = setInterval(checkInstanceStatus, 5000); // Verificar a cada 5 segundos
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [instanceStatus, instanceId]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -219,6 +272,94 @@ export default function WhatsAppConnect() {
                   )}
                 </Button>
               </div>
+
+              {/* Status da Instância */}
+              {instanceStatus !== 'idle' && (
+                <div className="mt-6 p-4 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    {instanceStatus === 'creating' && (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                        <span className="text-blue-600 font-medium">Criando instância...</span>
+                      </>
+                    )}
+                    {instanceStatus === 'qr_ready' && (
+                      <>
+                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                        <span className="text-green-600 font-medium">QR Code Gerado!</span>
+                      </>
+                    )}
+                    {instanceStatus === 'connected' && (
+                      <>
+                        <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                        <span className="text-green-600 font-medium">WhatsApp Conectado!</span>
+                      </>
+                    )}
+                    {instanceStatus === 'error' && (
+                      <>
+                        <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                        <span className="text-red-600 font-medium">Erro na Conexão</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* QR Code */}
+                  {instanceStatus === 'qr_ready' && qrCode && (
+                    <div className="text-center">
+                      <h3 className="font-medium text-gray-800 mb-3">
+                        Escaneie o QR Code com seu WhatsApp
+                      </h3>
+                      <div className="bg-white p-4 rounded-lg inline-block border">
+                        <img 
+                          src={qrCode} 
+                          alt="QR Code WhatsApp" 
+                          className="w-48 h-48"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Abra o WhatsApp Business → Configurações → Dispositivos Vinculados
+                      </p>
+                      <div className="mt-3 text-xs text-gray-500">
+                        ID da Instância: {instanceId}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status Conectado */}
+                  {instanceStatus === 'connected' && (
+                    <div className="text-center">
+                      <div className="text-green-600 text-lg font-medium mb-2">
+                        ✅ Instância Conectada com Sucesso!
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Sua instância está ativa e pronta para receber dados do WhatsApp.
+                      </p>
+                      <div className="mt-3 text-xs text-gray-500">
+                        ID da Instância: {instanceId}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão para nova instância */}
+                  {instanceStatus === 'connected' && (
+                    <div className="mt-4 text-center">
+                      <Button
+                        onClick={() => {
+                          setInstanceStatus('idle');
+                          setInstanceCreated(false);
+                          setQrCode('');
+                          setInstanceId('');
+                          setFormData({ instanceName: '' });
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Criar Nova Instância
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
