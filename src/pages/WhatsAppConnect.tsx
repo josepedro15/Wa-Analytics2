@@ -229,44 +229,55 @@ export default function WhatsAppConnect() {
 
     // 🔍 TESTAR MÚLTIPLOS ENDPOINTS PARA ENCONTRAR O CORRETO
     // 🎯 URL BASE SEMPRE: api.aiensed.com
+    // 📋 Endpoint oficial da documentação: GET /instance/connect/{instance}
     const endpoints = [
-      `https://api.aiensed.com/instance/connect/${instanceName}`,     // Endpoint oficial
+      `https://api.aiensed.com/instance/connect/${instanceName}`,     // ✅ Endpoint oficial da documentação
       `https://api.aiensed.com/instance/${instanceName}/connect`,     // Alternativo 1
       `https://api.aiensed.com/instance/connect?instance=${instanceName}`, // Alternativo 2
-      `https://api.aiensed.com/instance/create`                      // Fallback POST
+      `https://api.aiensed.com/instance/create`                      // Fallback POST (não recomendado)
     ];
 
-    for (let i = 0; i < endpoints.length; i++) {
-      const endpoint = endpoints[i];
-      console.log(`🔍 Testando endpoint ${i + 1}/${endpoints.length}: ${endpoint}`);
-      
-      try {
-        let response;
+          for (let i = 0; i < endpoints.length; i++) {
+        const endpoint = endpoints[i];
+        const isOfficial = endpoint.includes('/instance/connect/') && !endpoint.includes('?');
         
-        if (endpoint.includes('/instance/create')) {
-          // Endpoint POST com body
-          response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            },
-            body: JSON.stringify({
-              instanceName: instanceName,
-              qrcode: true,
-              integration: "WHATSAPP-BAILEYS"
-            })
-          });
+        if (isOfficial) {
+          console.log(`🎯 TESTANDO ENDPOINT OFICIAL DA DOCUMENTAÇÃO: ${endpoint}`);
         } else {
-          // Endpoints GET
-          response = await fetch(endpoint, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'd3050208ba862ee87302278ac4370cb9'
-            }
-          });
+          console.log(`🔍 Testando endpoint ${i + 1}/${endpoints.length}: ${endpoint}`);
         }
+        
+        try {
+          let response;
+          
+          if (endpoint.includes('/instance/create')) {
+            // Endpoint POST com body (não recomendado para regenerar QR)
+            console.log('⚠️ Usando endpoint POST /instance/create (não recomendado para regenerar QR)');
+            response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'd3050208ba862ee87302278ac4370cb9'
+              },
+              body: JSON.stringify({
+                instanceName: instanceName,
+                qrcode: true,
+                integration: "WHATSAPP-BAILEYS"
+              })
+            });
+          } else {
+            // Endpoints GET (recomendados para regenerar QR)
+            if (isOfficial) {
+              console.log('✅ Usando endpoint oficial GET /instance/connect/{instance}');
+            }
+            response = await fetch(endpoint, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': 'd3050208ba862ee87302278ac4370cb9'
+              }
+            });
+          }
 
         console.log(`🔍 Endpoint ${endpoint}: Status ${response.status}`);
         
