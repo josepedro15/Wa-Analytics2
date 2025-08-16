@@ -289,15 +289,23 @@ export default function WhatsAppConnect() {
           let qrCode = null;
           let pairingCode = null;
           
-          if (data.code) {
+          // 🎯 Priorizar base64 (formato mais comum para QR)
+          if (data.base64) {
+            qrCode = data.base64;
+            pairingCode = data.pairingCode || 'N/A';
+            console.log('✅ QR code encontrado no campo base64');
+          } else if (data.code) {
             qrCode = data.code;
             pairingCode = data.pairingCode || 'N/A';
+            console.log('✅ QR code encontrado no campo code');
           } else if (data.qrcode) {
             qrCode = data.qrcode.base64 || data.qrcode;
             pairingCode = 'N/A';
+            console.log('✅ QR code encontrado no campo qrcode');
           } else if (data.qrCode) {
             qrCode = data.qrCode;
             pairingCode = 'N/A';
+            console.log('✅ QR code encontrado no campo qrCode');
           }
           
           if (qrCode) {
