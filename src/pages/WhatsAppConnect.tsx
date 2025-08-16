@@ -222,11 +222,12 @@ export default function WhatsAppConnect() {
     setInstanceStatus('creating');
 
     // 🔍 TESTAR MÚLTIPLOS ENDPOINTS PARA ENCONTRAR O CORRETO
+    // 🎯 URL BASE SEMPRE: api.aiensed.com
     const endpoints = [
-      `https://api.aiensed.com/instance/connect/${instanceName}`,
-      `https://api.aiensed.com/instance/${instanceName}/connect`,
-      `https://api.aiensed.com/instance/connect?instance=${instanceName}`,
-      `https://api.aiensed.com/instance/create`
+      `https://api.aiensed.com/instance/connect/${instanceName}`,     // Endpoint oficial
+      `https://api.aiensed.com/instance/${instanceName}/connect`,     // Alternativo 1
+      `https://api.aiensed.com/instance/connect?instance=${instanceName}`, // Alternativo 2
+      `https://api.aiensed.com/instance/create`                      // Fallback POST
     ];
 
     for (let i = 0; i < endpoints.length; i++) {
