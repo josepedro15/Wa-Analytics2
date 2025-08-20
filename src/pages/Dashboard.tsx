@@ -6,12 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useTheme } from '@/hooks/useTheme';
 import { ExportModal } from '@/components/ExportModal';
 import { FilterModal } from '@/components/FilterModal';
-import { WhatsAppStatus } from '@/components/WhatsAppStatus';
+import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
+
 import { 
   MessageSquare, 
   TrendingUp, 
@@ -37,7 +40,10 @@ import {
   Award,
   Activity,
   Eye,
-  RefreshCw
+  RefreshCw,
+  Crown,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 interface MetricCard {
@@ -54,8 +60,20 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  
+  // WhatsApp instances data
+  const { instances, isLoadingInstances } = useWhatsAppInstances();
+  
+  // IDs dos administradores autorizados
+  const adminUserIds = [
+    'f4c09bd2-db18-44f3-8eb9-66a50e883b67',
+    '09961117-d889-4ed7-bfcf-cac6b5e4e5a6'
+  ];
+  
+  const isAdmin = adminUserIds.includes(user?.id || '');
   
   // Buscar dados do dashboard
   const { 
@@ -163,11 +181,11 @@ export default function Dashboard() {
   ];
 
   const intentionsData = [
-    { name: "Compra", percentage: dashboardData?.intencao_compra || 0, color: "bg-emerald-500", icon: "🛒" },
-    { name: "Dúvida Geral", percentage: dashboardData?.intencao_duvida_geral || 0, color: "bg-blue-500", icon: "❓" },
-    { name: "Reclamação", percentage: dashboardData?.intencao_reclamacao || 0, color: "bg-red-500", icon: "⚠️" },
-    { name: "Suporte", percentage: dashboardData?.intencao_suporte || 0, color: "bg-orange-500", icon: "🛠️" },
-    { name: "Orçamento", percentage: dashboardData?.intencao_orcamento || 0, color: "bg-purple-500", icon: "💰" }
+    { name: "Compra", percentage: dashboardData?.intencao_compra || 0, color: "#10b981", icon: "🛒" },
+    { name: "Dúvida Geral", percentage: dashboardData?.intencao_duvida_geral || 0, color: "#3b82f6", icon: "❓" },
+    { name: "Reclamação", percentage: dashboardData?.intencao_reclamacao || 0, color: "#ef4444", icon: "⚠️" },
+    { name: "Suporte", percentage: dashboardData?.intencao_suporte || 0, color: "#f59e0b", icon: "🛠️" },
+    { name: "Orçamento", percentage: dashboardData?.intencao_orcamento || 0, color: "#8b5cf6", icon: "💰" }
   ];
 
   // Processar próximas ações do dashboard
@@ -311,12 +329,165 @@ export default function Dashboard() {
                 </div>
               </Button>
             </div>
-            <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-4">
+                {/* WhatsApp Status - Mobile Indicator */}
+                <div className="lg:hidden">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/whatsapp-connect')}
+                        className="relative"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        {instances && instances.length > 0 && instances.filter(i => i.status === 'connected').length === 0 && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                        )}
+                        {instances && instances.length > 0 && instances.filter(i => i.status === 'connected').length > 0 && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></div>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <div className="text-xs">
+                        {instances && instances.length > 0 ? (
+                          <div>
+                            <div className="font-medium mb-1">WhatsApp Status</div>
+                            <div>{instances.filter(i => i.status === 'connected').length} de {instances.length} conectadas</div>
+                          </div>
+                        ) : (
+                          <div>Conectar WhatsApp</div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                
+                                {/* WhatsApp Status - Compact */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="hidden lg:flex items-center gap-3 px-3 py-2 bg-muted/50 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">WhatsApp</span>
+                      </div>
+                      <Separator orientation="vertical" className="h-4" />
+                      {isLoadingInstances ? (
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                          <span className="text-xs text-muted-foreground">Carregando...</span>
+                        </div>
+                      ) : instances && instances.length > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            {instances.filter(i => i.status === 'connected').length > 0 ? (
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            ) : (
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            )}
+                            <span className="text-xs font-medium">
+                              {instances.filter(i => i.status === 'connected').length} de {instances.length} conectadas
+                            </span>
+                          </div>
+                          {instances.filter(i => i.status === 'connected').length === 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate('/whatsapp-connect')}
+                              className="h-6 px-2 text-xs hover:bg-primary/10"
+                            >
+                              Conectar
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="text-xs text-muted-foreground">Nenhuma instância</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate('/whatsapp-connect')}
+                            className="h-6 px-2 text-xs hover:bg-primary/10"
+                          >
+                            Conectar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    <div className="space-y-2">
+                      <div className="font-medium">Status do WhatsApp</div>
+                      {instances && instances.length > 0 ? (
+                        <div className="space-y-1">
+                          {instances.map((instance) => (
+                            <div key={instance.id} className="flex items-center justify-between text-xs">
+                              <span>{instance.instance_name}</span>
+                              <div className="flex items-center gap-1">
+                                {instance.status === 'connected' ? (
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                ) : instance.status === 'connecting' ? (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                ) : (
+                                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                )}
+                                <span className="text-muted-foreground">
+                                  {instance.status === 'connected' ? 'Conectado' : 
+                                   instance.status === 'connecting' ? 'Conectando' : 'Desconectado'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">
+                          Nenhuma instância configurada. Clique para conectar.
+                        </div>
+                      )}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              
+              <Separator orientation="vertical" className="h-6" />
+              
               <div className="hidden md:block text-right">
                 <div className="text-sm font-medium">{user.email}</div>
                 <div className="text-xs text-muted-foreground">Usuário ativo</div>
               </div>
               <Separator orientation="vertical" className="h-6" />
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/admin')}
+                  className="rounded-full"
+                >
+                  <Crown className="h-4 w-4" />
+                </Button>
+              )}
+              {/* Botão de alternância de tema */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleTheme}
+                    className="rounded-full hover:bg-accent"
+                  >
+                    {isDark ? (
+                      <Sun className="h-4 w-4 transition-all duration-200 hover:rotate-12" />
+                    ) : (
+                      <Moon className="h-4 w-4 transition-all duration-200 hover:rotate-12" />
+                    )}
+                    <span className="sr-only">Alternar tema</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isDark ? 'Alternar para tema claro' : 'Alternar para tema escuro'}</p>
+                </TooltipContent>
+              </Tooltip>
               <Button variant="ghost" size="sm" className="rounded-full">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -546,10 +717,7 @@ export default function Dashboard() {
         </div>
 
         {/* Seção de Destaques e Ações */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Status WhatsApp */}
-          <WhatsAppStatus />
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {/* Destaque do Período */}
           <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
@@ -558,50 +726,50 @@ export default function Dashboard() {
                 Destaque do Período
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {dashboardData?.melhor_atendimento_cliente && (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2">
-                      <Star className="h-4 w-4" />
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2 text-sm">
+                      <Star className="h-3 w-3" />
                       Melhor Atendimento
                     </span>
-                    <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">
+                    <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 text-xs">
                       {dashboardData.melhor_atendimento_nota?.toFixed(1) || '5.0'}★
                     </Badge>
                   </div>
-                  <div className="text-sm text-emerald-700 dark:text-emerald-300 mb-2 font-medium">
+                  <div className="text-xs text-emerald-700 dark:text-emerald-300 mb-1 font-medium">
                     {dashboardData.melhor_atendimento_cliente}
                   </div>
-                  <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 line-clamp-2">
                     {dashboardData.melhor_atendimento_observacao}
                   </div>
                 </div>
               )}
 
               {dashboardData?.atendimento_critico_cliente && (
-                <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-800/50">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-semibold text-red-800 dark:text-red-200 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4" />
+                <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-red-800 dark:text-red-200 flex items-center gap-2 text-sm">
+                      <AlertCircle className="h-3 w-3" />
                       Atendimento Crítico
                     </span>
-                    <Badge variant="destructive">
+                    <Badge variant="destructive" className="text-xs">
                       {dashboardData.atendimento_critico_nota?.toFixed(1) || '1.5'}★
                     </Badge>
                   </div>
-                  <div className="text-sm text-red-700 dark:text-red-300 mb-2 font-medium">
+                  <div className="text-xs text-red-700 dark:text-red-300 mb-1 font-medium">
                     {dashboardData.atendimento_critico_cliente}
                   </div>
-                  <div className="text-xs text-red-600 dark:text-red-400">
+                  <div className="text-xs text-red-600 dark:text-red-400 line-clamp-2">
                     {dashboardData.atendimento_critico_observacao}
                   </div>
                 </div>
               )}
 
               {!dashboardData?.melhor_atendimento_cliente && !dashboardData?.atendimento_critico_cliente && (
-                <div className="p-4 bg-muted/50 rounded-xl border border-border/50 text-center">
-                  <div className="text-sm text-muted-foreground">Nenhum destaque registrado ainda.</div>
+                <div className="p-3 bg-muted/50 rounded-lg border border-border/50 text-center">
+                  <div className="text-xs text-muted-foreground">Nenhum destaque registrado ainda.</div>
                 </div>
               )}
             </CardContent>
@@ -615,24 +783,24 @@ export default function Dashboard() {
                 Automação Sugerida
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {dashboardData?.automacao_sugerida?.map((automacao, index) => {
                 const [title, description] = automacao.split(': ');
                 return (
-                  <div key={index} className="p-3 border border-border/50 rounded-lg bg-muted/20">
+                  <div key={index} className="p-2 border border-border/50 rounded-lg bg-muted/20">
                     <div className="flex items-start gap-2">
-                      <Zap className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <Zap className="h-3 w-3 text-primary mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{title}</div>
-                        <div className="text-xs text-muted-foreground mt-1">{description}</div>
+                        <div className="font-medium text-xs">{title}</div>
+                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</div>
                       </div>
                     </div>
                   </div>
                 );
               }) || (
-                <div className="p-4 border border-border/50 rounded-lg bg-muted/20 text-center">
-                  <Bot className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <div className="font-medium text-sm">Nenhuma automação sugerida</div>
+                <div className="p-3 border border-border/50 rounded-lg bg-muted/20 text-center">
+                  <Bot className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+                  <div className="font-medium text-xs">Nenhuma automação sugerida</div>
                   <div className="text-xs text-muted-foreground mt-1">As sugestões aparecerão conforme os dados forem analisados</div>
                 </div>
               )}
@@ -647,11 +815,11 @@ export default function Dashboard() {
                 Próximas Ações
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {tasksData.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-muted/20">
+                <div key={task.id} className="flex items-center justify-between p-2 border border-border/50 rounded-lg bg-muted/20">
                   <div className="flex-1">
-                    <div className="font-medium text-sm">{task.title}</div>
+                    <div className="font-medium text-xs line-clamp-1">{task.title}</div>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge 
                         variant={
@@ -675,54 +843,7 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Metas e Progresso */}
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Metas e Progresso
-            </CardTitle>
-            <CardDescription>
-              Acompanhe o progresso das suas metas de performance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Taxa de Conversão</span>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {dashboardData?.taxa_conversao?.toFixed(1) || 0}% / 30%
-                  </span>
-                </div>
-                <Progress value={((dashboardData?.taxa_conversao || 0) / 30) * 100} className="h-3" />
-                <div className="text-xs text-muted-foreground">Meta: 30% até março</div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Tempo de Resposta</span>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {dashboardData?.tempo_medio_resposta 
-                      ? `${Math.floor(dashboardData.tempo_medio_resposta / 60)}m ${dashboardData.tempo_medio_resposta % 60}s`
-                      : '0s'} / 2m
-                  </span>
-                </div>
-                <Progress value={Math.max(0, 100 - ((dashboardData?.tempo_medio_resposta || 0) / 120) * 100)} className="h-3" />
-                <div className="text-xs text-muted-foreground">Meta: &lt; 2min até fevereiro</div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Nota de Qualidade</span>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {dashboardData?.nota_media_qualidade?.toFixed(1) || 0} / 4.5
-                  </span>
-                </div>
-                <Progress value={((dashboardData?.nota_media_qualidade || 0) / 4.5) * 100} className="h-3" />
-                <div className="text-xs text-muted-foreground">Meta: 4.5/5 até abril</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* Footer melhorado */}
         <div className="text-center py-8 border-t border-border/50">
