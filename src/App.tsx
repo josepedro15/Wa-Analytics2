@@ -12,6 +12,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const WhatsAppConnect = lazy(() => import("./pages/WhatsAppConnect"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -36,6 +37,7 @@ const App = () => {
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/whatsapp-connect" element={<WhatsAppConnect />} />
                     <Route path="/admin" element={<Admin />} />

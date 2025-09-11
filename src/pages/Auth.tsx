@@ -12,7 +12,7 @@ import { Eye, EyeOff, MessageSquare } from 'lucide-react';
 export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, resetPassword } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -24,6 +24,7 @@ export default function Auth() {
     fullName: '',
     companyName: ''
   });
+  const [resetForm, setResetForm] = useState({ email: '' });
 
   useEffect(() => {
     if (user) {
@@ -108,13 +109,45 @@ export default function Auth() {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await resetPassword(resetForm.email);
+      
+      if (error) {
+        toast({
+          title: "Erro ao enviar email",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email enviado com sucesso!",
+          description: "Verifique sua caixa de entrada e siga as instruções para redefinir sua senha."
+        });
+        setResetForm({ email: '' });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns instantes",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-gradient-elegant flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <MessageSquare className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-foreground">MetricaWhats</span>
+            <span className="text-2xl font-bold text-foreground">MetricsIA</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Acesse sua conta
@@ -133,9 +166,10 @@ export default function Auth() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">Entrar</TabsTrigger>
                 <TabsTrigger value="signup">Cadastrar</TabsTrigger>
+                <TabsTrigger value="reset">Redefinir</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -248,6 +282,25 @@ export default function Auth() {
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Cadastrando..." : "Criar Conta"}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="reset">
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={resetForm.email}
+                      onChange={(e) => setResetForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Enviando..." : "Enviar Link de Redefinição"}
                   </Button>
                 </form>
               </TabsContent>
