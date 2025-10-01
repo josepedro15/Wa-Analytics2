@@ -460,6 +460,24 @@ export type Database = {
           }
         ]
       }
+      html: {
+        Row: {
+          id: number
+          html: string
+          data: string
+        }
+        Insert: {
+          id?: number
+          html: string
+          data?: string
+        }
+        Update: {
+          id?: number
+          html?: string
+          data?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
