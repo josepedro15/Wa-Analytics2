@@ -200,25 +200,6 @@ export default function SaoMiguelDashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Aviso de Acesso Especial */}
-        <Card className="border-green-200 dark:border-green-800/50 bg-green-50 dark:bg-green-950/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                <Shield className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-green-800 dark:text-green-200">
-                  Acesso Especial Concedido
-                </h3>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Você tem acesso exclusivo aos relatórios das filiais São Miguel. 
-                  Selecione uma filial abaixo para visualizar os relatórios específicos.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Seletor de Filiais */}
         {!selectedBranch && (
