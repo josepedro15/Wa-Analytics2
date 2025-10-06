@@ -116,6 +116,8 @@ export function useBranchData(branchId: string, selectedDate?: Date) {
         throw new Error('Filial não encontrada');
       }
 
+      console.log('Buscando dados para filial:', branchOption.key);
+
       let query = supabase
         .from('html')
         .select('*')
@@ -138,7 +140,10 @@ export function useBranchData(branchId: string, selectedDate?: Date) {
 
       const { data, error } = await query.single();
 
+      console.log('Resultado da query:', { data, error });
+
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Erro na query:', error);
         throw error;
       }
 
@@ -147,5 +152,6 @@ export function useBranchData(branchId: string, selectedDate?: Date) {
     enabled: !!user && !!branchId,
     staleTime: 2 * 60 * 1000, // 2 minutos
     refetchOnWindowFocus: false,
+    retry: 1, // Tentar apenas 1 vez em caso de erro
   });
 }
