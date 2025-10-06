@@ -91,8 +91,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) {
       navigate('/auth');
+    } else if (isSaoMiguelUser) {
+      // Usuário São Miguel deve ir direto para o dashboard específico
+      navigate('/sao-miguel');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isSaoMiguelUser]);
 
   const handleSignOut = async () => {
     setLoading(true);

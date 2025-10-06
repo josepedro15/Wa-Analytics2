@@ -26,11 +26,21 @@ export default function Auth() {
   });
   const [resetForm, setResetForm] = useState({ email: '' });
 
+  // ID do usuário São Miguel específico
+  const saoMiguelUserId = '1c93324c-65d3-456e-992e-c84e1f7d6ab1';
+  const isSaoMiguelUser = user?.id === saoMiguelUserId;
+
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      if (isSaoMiguelUser) {
+        // Usuário São Miguel vai direto para o dashboard específico
+        navigate('/sao-miguel');
+      } else {
+        // Outros usuários vão para o dashboard principal
+        navigate('/dashboard');
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, isSaoMiguelUser]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CookieBanner } from "@/components/CookieBanner";
+import { SaoMiguelRedirect } from "@/components/SaoMiguelRedirect";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
@@ -37,19 +38,19 @@ const App = () => {
               <BrowserRouter>
                 <Suspense fallback={<LoadingSpinner size="lg" />}>
                   <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/whatsapp-connect" element={<WhatsAppConnect />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/admin/contact-messages" element={<ContactMessages />} />
+                    <Route path="/" element={<SaoMiguelRedirect><Index /></SaoMiguelRedirect>} />
+                    <Route path="/auth" element={<SaoMiguelRedirect><Auth /></SaoMiguelRedirect>} />
+                    <Route path="/reset-password" element={<SaoMiguelRedirect><ResetPassword /></SaoMiguelRedirect>} />
+                    <Route path="/dashboard" element={<SaoMiguelRedirect><Dashboard /></SaoMiguelRedirect>} />
+                    <Route path="/whatsapp-connect" element={<SaoMiguelRedirect><WhatsAppConnect /></SaoMiguelRedirect>} />
+                    <Route path="/admin" element={<SaoMiguelRedirect><Admin /></SaoMiguelRedirect>} />
+                    <Route path="/admin/contact-messages" element={<SaoMiguelRedirect><ContactMessages /></SaoMiguelRedirect>} />
                     <Route path="/sao-miguel" element={<SaoMiguelDashboard />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms-of-service" element={<TermsOfService />} />
-                    <Route path="/cookie-policy" element={<CookiePolicy />} />
-                    <Route path="/teste" element={<Teste />} />
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="/privacy-policy" element={<SaoMiguelRedirect><PrivacyPolicy /></SaoMiguelRedirect>} />
+                    <Route path="/terms-of-service" element={<SaoMiguelRedirect><TermsOfService /></SaoMiguelRedirect>} />
+                    <Route path="/cookie-policy" element={<SaoMiguelRedirect><CookiePolicy /></SaoMiguelRedirect>} />
+                    <Route path="/teste" element={<SaoMiguelRedirect><Teste /></SaoMiguelRedirect>} />
+                    <Route path="*" element={<SaoMiguelRedirect><NotFound /></SaoMiguelRedirect>} />
                   </Routes>
                 </Suspense>
                 <CookieBanner />
