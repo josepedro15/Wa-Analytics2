@@ -9,12 +9,13 @@ import {
   Building2, 
   RefreshCw, 
   Download,
-  ExternalLink,
   AlertCircle,
   CheckCircle,
   Clock
 } from 'lucide-react';
 import { useState } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ReportViewerProps {
   selectedBranch: string;
@@ -42,29 +43,63 @@ export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportVi
     });
   };
 
-  const downloadHTML = () => {
+  const downloadPDF = async () => {
     if (!reportData?.html) return;
     
-    const blob = new Blob([reportData.html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${branchInfo?.name || 'relatorio'}_${reportData.data.split('T')[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+    try {
+      // Criar um elemento temporário para renderizar o HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = reportData.html;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '-9999px';
+      tempDiv.style.width = '210mm'; // A4 width
+      tempDiv.style.backgroundColor = 'white';
+      tempDiv.style.padding = '20px';
+      document.body.appendChild(tempDiv);
 
-  const openInNewTab = () => {
-    if (!reportData?.html) return;
-    
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.document.write(reportData.html);
-      newWindow.document.close();
+      // Capturar o elemento como canvas
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Remover elemento temporário
+      document.body.removeChild(tempDiv);
+
+      // Criar PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Baixar PDF
+      const fileName = `${branchInfo?.name || 'relatorio'}_${reportData.data.split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      alert('Erro ao gerar PDF. Tente novamente.');
     }
   };
+
 
   if (isLoading) {
     return (
@@ -187,13 +222,9 @@ export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportVi
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-3">
-            <Button onClick={downloadHTML} className="flex items-center gap-2">
+            <Button onClick={downloadPDF} className="flex items-center gap-2">
               <Download className="h-4 w-4" />
-              Baixar HTML
-            </Button>
-            <Button variant="outline" onClick={openInNewTab} className="flex items-center gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Abrir em Nova Aba
+              Baixar PDF
             </Button>
             <Button variant="outline" onClick={() => refetch()} className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
