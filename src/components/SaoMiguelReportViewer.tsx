@@ -21,7 +21,7 @@ interface ReportViewerProps {
   selectedDate?: Date | null;
 }
 
-export function ReportViewer({ selectedBranch, selectedDate }: ReportViewerProps) {
+export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   const { 

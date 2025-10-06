@@ -57,7 +57,7 @@ const getBranchType = (branchId: string) => {
   return { type: 'Atendimento', color: 'bg-green-100 text-green-800' };
 };
 
-export function BranchSelector({ 
+export function SaoMiguelBranchSelector({ 
   selectedBranch, 
   onBranchSelect, 
   onDateSelect, 
