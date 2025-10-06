@@ -43,7 +43,8 @@ import {
   RefreshCw,
   Crown,
   Sun,
-  Moon
+  Moon,
+  Building2
 } from 'lucide-react';
 
 interface MetricCard {
@@ -73,7 +74,11 @@ export default function Dashboard() {
     '09961117-d889-4ed7-bfcf-cac6b5e4e5a6'
   ];
   
+  // ID do usuário autorizado para São Miguel
+  const saoMiguelUserId = '1c93324c-65d3-456e-992e-c84e1f7d6ab1';
+  
   const isAdmin = adminUserIds.includes(user?.id || '');
+  const isSaoMiguelUser = user?.id === saoMiguelUserId;
   
   // Buscar dados do dashboard
   const { 
@@ -526,6 +531,16 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex gap-3">
+              {isSaoMiguelUser && (
+                <Button 
+                  onClick={() => navigate('/sao-miguel')}
+                  size="lg" 
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Building2 className="h-4 w-4" />
+                  Dashboard São Miguel
+                </Button>
+              )}
               <Button 
                 onClick={() => navigate('/whatsapp-connect')}
                 size="lg" 
