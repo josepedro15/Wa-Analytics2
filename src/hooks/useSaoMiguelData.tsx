@@ -26,9 +26,9 @@ export const BRANCH_OPTIONS: BranchOption[] = [
   },
   {
     id: 'smv-atendimento',
-    name: 'SMVatendimwnto',
+    name: 'SMVatendimento',
     description: 'São Miguel Viamão atendimento',
-    key: 'SMVatendimwnto - São Miguel Viamão atendimento'
+    key: 'SMVatendimento - São Miguel Viamão atendimento'
   },
   {
     id: 'smpoa-atendimento',
