@@ -127,8 +127,12 @@ export default function SaoMiguelDashboard() {
                 className="p-0 h-auto hover:bg-transparent group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                    <Building2 className="h-5 w-5 text-white" />
+                  <div className="h-12 w-auto flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                    <img 
+                      src="/LOGO SÃO MIGUEL.svg" 
+                      alt="São Miguel Logo" 
+                      className="h-10 w-auto"
+                    />
                   </div>
                   <div>
                     <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary/60 transition-all duration-200">
