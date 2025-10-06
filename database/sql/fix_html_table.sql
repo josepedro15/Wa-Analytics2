@@ -1,9 +1,9 @@
--- Adicionar coluna atendente à tabela html
-ALTER TABLE public.html 
+-- Adicionar coluna atendente à tabela html_SãoMiguel
+ALTER TABLE public.html_SãoMiguel 
 ADD COLUMN IF NOT EXISTS atendente TEXT;
 
 -- Criar alguns dados de exemplo para teste
-INSERT INTO public.html (id, html, data, atendente) VALUES 
+INSERT INTO public.html_SãoMiguel (id, html, data, atendente) VALUES 
 (1, '<html><body><h1>Relatório SMVplanoSMVplanos</h1><p>Este é um relatório de exemplo para São Miguel Viamão planos.</p><p>Data: ' || NOW() || '</p></body></html>', NOW()::text, 'SMVplanoSMVplanos - São Miguel Viamão planos'),
 (2, '<html><body><h1>Relatório SMVatendimwnto</h1><p>Este é um relatório de exemplo para São Miguel Viamão atendimento.</p><p>Data: ' || NOW() || '</p></body></html>', NOW()::text, 'SMVatendimwnto - São Miguel Viamão atendimento'),
 (3, '<html><body><h1>Relatório SMPOAatendimento</h1><p>Este é um relatório de exemplo para São Miguel Porto Alegre atendimento.</p><p>Data: ' || NOW() || '</p></body></html>', NOW()::text, 'SMPOAatendimento - São Miguel Porto Alegre atendimento'),
@@ -12,4 +12,4 @@ INSERT INTO public.html (id, html, data, atendente) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Verificar se os dados foram inseridos
-SELECT id, atendente, data FROM public.html ORDER BY id;
+SELECT id, atendente, data FROM public.html_SãoMiguel ORDER BY id;

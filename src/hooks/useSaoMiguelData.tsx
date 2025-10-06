@@ -61,7 +61,7 @@ export function useSaoMiguelData(selectedBranch?: string, selectedDate?: Date) {
       }
 
       let query = supabase
-        .from('html')
+        .from('html_SãoMiguel')
         .select('*')
         .order('data', { ascending: false });
 
@@ -119,7 +119,7 @@ export function useBranchData(branchId: string, selectedDate?: Date) {
       console.log('Buscando dados para filial:', branchOption.key);
 
       let query = supabase
-        .from('html')
+        .from('html_SãoMiguel')
         .select('*')
         .eq('atendente', branchOption.key)
         .order('data', { ascending: false })
