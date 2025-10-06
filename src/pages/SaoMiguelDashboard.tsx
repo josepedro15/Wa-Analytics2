@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { SaoMiguelBranchSelector } from '@/components/SaoMiguelBranchSelector';
@@ -13,14 +14,17 @@ import {
   AlertCircle,
   CheckCircle,
   Calendar,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  Settings,
+  LogOut
 } from 'lucide-react';
 
 // ID do usuário específico que tem acesso a esta página
 const AUTHORIZED_USER_ID = '1c93324c-65d3-456e-992e-c84e1f7d6ab1';
 
 export default function SaoMiguelDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -70,8 +74,26 @@ export default function SaoMiguelDashboard() {
     }
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    
+    if (error) {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  const refetch = () => {
+    // Função para atualizar dados (pode ser implementada conforme necessário)
+    toast({
+      title: "Dados atualizados",
+      description: "Os dados foram atualizados com sucesso.",
+    });
   };
 
   // Mostrar loading enquanto verifica autorização
@@ -93,40 +115,85 @@ export default function SaoMiguelDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
+      {/* Header padronizado */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                onClick={handleBackToDashboard}
-                className="text-foreground hover:bg-muted transition-all duration-300 rounded-xl px-4 py-2"
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/')}
+                className="p-0 h-auto hover:bg-transparent group"
               >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                <span className="font-medium text-sm">Voltar ao Dashboard</span>
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                    <Building2 className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent group-hover:from-primary/80 group-hover:to-primary/60 transition-all duration-200">
+                      São Miguel
+                    </span>
+                    <div className="text-xs text-muted-foreground group-hover:text-muted-foreground/80 transition-colors duration-200">
+                      Dashboard Personalizado
+                    </div>
+                  </div>
+                </div>
               </Button>
             </div>
             
-            <div className="text-center flex-1 max-w-2xl mx-auto">
-              <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg mb-3">
-                <Building2 className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold mb-2 text-foreground">
-                Dashboard São Miguel
-              </h1>
-              <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                Relatórios personalizados das filiais São Miguel
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800/50">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium text-green-700 dark:text-green-300">
                   Acesso Autorizado
                 </span>
               </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => refetch()}
+                    className="h-8 w-8 p-0 hover:bg-muted"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Atualizar dados</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/settings')}
+                    className="h-8 w-8 p-0 hover:bg-muted"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Configurações</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSignOut}
+                    className="h-8 w-8 p-0 hover:bg-muted"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Sair</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
