@@ -22,7 +22,6 @@ interface ReportViewerProps {
 }
 
 export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportViewerProps) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const { 
     data: reportData, 
@@ -136,7 +135,7 @@ export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportVi
   }
 
   return (
-    <div className={`space-y-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-4' : ''}`}>
+    <div className="space-y-6">
       {/* Header do Relatório */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader>
@@ -160,13 +159,6 @@ export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportVi
                 <CheckCircle className="h-3 w-3 text-green-500" />
                 Disponível
               </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-              >
-                {isFullscreen ? 'Sair' : 'Tela Cheia'}
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -211,38 +203,14 @@ export function SaoMiguelReportViewer({ selectedBranch, selectedDate }: ReportVi
         </CardContent>
       </Card>
 
-      {/* Visualizador do Relatório */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Visualização do Relatório
-          </CardTitle>
-          <CardDescription>
-            Relatório HTML renderizado para {branchInfo?.description}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="border border-border rounded-lg overflow-hidden">
-            <div 
-              className={`bg-white ${isFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[600px]'} overflow-auto`}
-              dangerouslySetInnerHTML={{ __html: reportData.html }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Visualizador do Relatório - Página Completa */}
+      <div className="w-full">
+        <div 
+          className="w-full min-h-screen bg-white"
+          dangerouslySetInnerHTML={{ __html: reportData.html }}
+        />
+      </div>
 
-      {/* Footer */}
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardContent className="pt-6">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>
-              Relatório gerado automaticamente para {branchInfo?.description} • 
-              Última atualização: {formatDate(reportData.data)}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
