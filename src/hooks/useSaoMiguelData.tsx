@@ -20,33 +20,21 @@ export interface BranchOption {
 export const BRANCH_OPTIONS: BranchOption[] = [
   {
     id: 'smv-planos',
-    name: 'SMVplanoSMVplanos',
+    name: 'SMVplano',
     description: 'São Miguel Viamão planos',
-    key: 'SMVplanoSMVplanos - São Miguel Viamão planos'
-  },
-  {
-    id: 'smv-atendimento',
-    name: 'SMVatendimento',
-    description: 'São Miguel Viamão atendimento',
-    key: 'SMVatendimento - São Miguel Viamão atendimento'
-  },
-  {
-    id: 'smpoa-atendimento',
-    name: 'SMPOAatendimento',
-    description: 'São Miguel Porto Alegre atendimento',
-    key: 'SMPOAatendimento - São Miguel Porto Alegre atendimento'
+    key: 'SMVplano'
   },
   {
     id: 'rost-atendimento',
-    name: 'SMVplanoRSTatendimento',
+    name: 'RSTatendimento',
     description: 'Rost atendimento',
-    key: 'SMVplanoRSTatendimento - Rost atendimento'
+    key: 'RSTatendimento'
   },
   {
     id: 'rost-planos',
-    name: 'SMVplanoRSTPlanos',
+    name: 'RSTplanos',
     description: 'Rost planos',
-    key: 'SMVplanoRSTPlanos - Rost planos'
+    key: 'RSTplanos'
   }
 ];
 

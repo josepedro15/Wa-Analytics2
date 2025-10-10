@@ -1,16 +1,18 @@
--- Corrigir nomes dos atendentes na tabela html_SãoMiguel
--- Este SQL corrige o erro de digitação "SMVatendimwnto" para "SMVatendimento"
+-- Atualizar nomes dos atendentes na tabela html_SãoMiguel para os novos nomes simplificados
 
--- Atualizar o registro com erro de digitação
+-- Atualizar todos os registros para os novos nomes
 UPDATE public.html_SãoMiguel 
-SET atendente = 'SMVatendimento - São Miguel Viamão atendimento'
-WHERE atendente = 'SMVatendimwnto - São Miguel Viamão atendimento';
+SET atendente = 'SMVplano'
+WHERE atendente LIKE '%SMVplano%' OR atendente LIKE '%SMVplanos%';
 
--- Verificar se a correção foi aplicada
-SELECT id, atendente, data FROM public.html_SãoMiguel 
-WHERE atendente LIKE '%SMVatendimento%'
-ORDER BY id;
+UPDATE public.html_SãoMiguel 
+SET atendente = 'RSTatendimento'
+WHERE atendente LIKE '%RSTatendimento%' OR atendente LIKE '%Rost%atendimento%';
 
--- Verificar todos os registros para confirmar
+UPDATE public.html_SãoMiguel 
+SET atendente = 'RSTplanos'
+WHERE atendente LIKE '%RSTplanos%' OR atendente LIKE '%Rost%planos%';
+
+-- Verificar se as atualizações foram aplicadas
 SELECT id, atendente, data FROM public.html_SãoMiguel 
 ORDER BY id;
