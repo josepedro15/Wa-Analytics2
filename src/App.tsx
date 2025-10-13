@@ -23,6 +23,9 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
 const Teste = lazy(() => import("./pages/Teste"));
+const Palestra = lazy(() => import("./pages/Palestra"));
+const PalestraGatilhos = lazy(() => import("./pages/PalestraGatilhos"));
+const PalestraObrigado = lazy(() => import("./pages/PalestraObrigado"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -50,6 +53,9 @@ const App = () => {
                     <Route path="/terms-of-service" element={<SaoMiguelRedirect><TermsOfService /></SaoMiguelRedirect>} />
                     <Route path="/cookie-policy" element={<SaoMiguelRedirect><CookiePolicy /></SaoMiguelRedirect>} />
                     <Route path="/teste" element={<SaoMiguelRedirect><Teste /></SaoMiguelRedirect>} />
+                    <Route path="/palestra" element={<Palestra />} />
+                    <Route path="/palestra/gatilhos" element={<PalestraGatilhos />} />
+                    <Route path="/palestra/obrigado" element={<PalestraObrigado />} />
                     <Route path="*" element={<SaoMiguelRedirect><NotFound /></SaoMiguelRedirect>} />
                   </Routes>
                 </Suspense>
