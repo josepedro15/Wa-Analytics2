@@ -249,24 +249,6 @@ export default function PalestraGatilhos() {
               );
             })}
           </div>
-
-          {/* Informação adicional */}
-          <div className="text-center mt-12">
-            <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <Sparkles className="h-5 w-5 text-blue-600" />
-                  <p className="font-semibold text-blue-900 dark:text-blue-100">
-                    Garantia de Resposta Rápida
-                  </p>
-                </div>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Entraremos em contato em até 24 horas com as informações personalizadas 
-                  de acordo com sua escolha. Fique de olho no seu WhatsApp e email!
-                </p>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </div>
