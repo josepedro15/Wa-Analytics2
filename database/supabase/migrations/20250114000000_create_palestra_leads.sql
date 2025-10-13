@@ -35,10 +35,11 @@ CREATE TRIGGER palestra_leads_updated_at
 ALTER TABLE palestra_leads ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de acesso
--- Permitir INSERT público (para captura de leads)
+-- Permitir INSERT público (para captura de leads) - ANON + AUTHENTICATED
 CREATE POLICY "Permitir INSERT público"
   ON palestra_leads
   FOR INSERT
+  TO anon, authenticated
   WITH CHECK (true);
 
 -- Apenas usuários autenticados podem ver leads
@@ -47,11 +48,13 @@ CREATE POLICY "Usuários autenticados podem ver leads"
   FOR SELECT
   USING (auth.role() = 'authenticated');
 
--- Apenas usuários autenticados podem atualizar (simplificado)
-CREATE POLICY "Usuários autenticados podem atualizar"
+-- Permitir UPDATE público (para atualizar com gatilho escolhido)
+CREATE POLICY "Permitir UPDATE público"
   ON palestra_leads
   FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
 
 -- Comentários para documentação
 COMMENT ON TABLE palestra_leads IS 'Armazena leads capturados na landing page da palestra';
