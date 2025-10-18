@@ -38,7 +38,7 @@ const getBranchColor = (branchId: string) => {
     case 'smv-planos':
       return 'from-blue-500 to-blue-600';
     case 'smv-atendimento':
-      return 'from-green-500 to-green-600';
+      return 'from-emerald-500 to-emerald-600';
     case 'smpoa-atendimento':
       return 'from-purple-500 to-purple-600';
     case 'rost-atendimento':

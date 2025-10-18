@@ -25,6 +25,12 @@ export const BRANCH_OPTIONS: BranchOption[] = [
     key: 'SMVplano'
   },
   {
+    id: 'smv-atendimento',
+    name: 'SMVatendimento',
+    description: 'São Miguel Viamão atendimento',
+    key: 'SMVatendimento'
+  },
+  {
     id: 'rost-atendimento',
     name: 'RSTatendimento',
     description: 'Rost atendimento',
