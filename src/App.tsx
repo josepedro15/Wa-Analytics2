@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CookieBanner } from "@/components/CookieBanner";
 import { SaoMiguelRedirect } from "@/components/SaoMiguelRedirect";
+import { RolaMaisRedirect } from "@/components/RolaMaisRedirect";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
@@ -19,6 +20,7 @@ const WhatsAppConnect = lazy(() => import("./pages/WhatsAppConnect"));
 const Admin = lazy(() => import("./pages/Admin"));
 const ContactMessages = lazy(() => import("./pages/ContactMessages"));
 const SaoMiguelDashboard = lazy(() => import("./pages/SaoMiguelDashboard"));
+const RolaMaisDashboard = lazy(() => import("./pages/RolaMaisDashboard"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
@@ -41,22 +43,23 @@ const App = () => {
               <BrowserRouter>
                 <Suspense fallback={<LoadingSpinner size="lg" />}>
                   <Routes>
-                    <Route path="/" element={<SaoMiguelRedirect><Index /></SaoMiguelRedirect>} />
-                    <Route path="/auth" element={<SaoMiguelRedirect><Auth /></SaoMiguelRedirect>} />
-                    <Route path="/reset-password" element={<SaoMiguelRedirect><ResetPassword /></SaoMiguelRedirect>} />
-                    <Route path="/dashboard" element={<SaoMiguelRedirect><Dashboard /></SaoMiguelRedirect>} />
-                    <Route path="/whatsapp-connect" element={<SaoMiguelRedirect><WhatsAppConnect /></SaoMiguelRedirect>} />
-                    <Route path="/admin" element={<SaoMiguelRedirect><Admin /></SaoMiguelRedirect>} />
-                    <Route path="/admin/contact-messages" element={<SaoMiguelRedirect><ContactMessages /></SaoMiguelRedirect>} />
+                    <Route path="/" element={<SaoMiguelRedirect><RolaMaisRedirect><Index /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/auth" element={<SaoMiguelRedirect><RolaMaisRedirect><Auth /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/reset-password" element={<SaoMiguelRedirect><RolaMaisRedirect><ResetPassword /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/dashboard" element={<SaoMiguelRedirect><RolaMaisRedirect><Dashboard /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/whatsapp-connect" element={<SaoMiguelRedirect><RolaMaisRedirect><WhatsAppConnect /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/admin" element={<SaoMiguelRedirect><RolaMaisRedirect><Admin /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/admin/contact-messages" element={<SaoMiguelRedirect><RolaMaisRedirect><ContactMessages /></RolaMaisRedirect></SaoMiguelRedirect>} />
                     <Route path="/sao-miguel" element={<SaoMiguelDashboard />} />
-                    <Route path="/privacy-policy" element={<SaoMiguelRedirect><PrivacyPolicy /></SaoMiguelRedirect>} />
-                    <Route path="/terms-of-service" element={<SaoMiguelRedirect><TermsOfService /></SaoMiguelRedirect>} />
-                    <Route path="/cookie-policy" element={<SaoMiguelRedirect><CookiePolicy /></SaoMiguelRedirect>} />
-                    <Route path="/teste" element={<SaoMiguelRedirect><Teste /></SaoMiguelRedirect>} />
+                    <Route path="/rolamais" element={<RolaMaisDashboard />} />
+                    <Route path="/privacy-policy" element={<SaoMiguelRedirect><RolaMaisRedirect><PrivacyPolicy /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/terms-of-service" element={<SaoMiguelRedirect><RolaMaisRedirect><TermsOfService /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/cookie-policy" element={<SaoMiguelRedirect><RolaMaisRedirect><CookiePolicy /></RolaMaisRedirect></SaoMiguelRedirect>} />
+                    <Route path="/teste" element={<SaoMiguelRedirect><RolaMaisRedirect><Teste /></RolaMaisRedirect></SaoMiguelRedirect>} />
                     <Route path="/palestra" element={<Palestra />} />
                     <Route path="/palestra/gatilhos" element={<PalestraGatilhos />} />
                     <Route path="/palestra/obrigado" element={<PalestraObrigado />} />
-                    <Route path="*" element={<SaoMiguelRedirect><NotFound /></SaoMiguelRedirect>} />
+                    <Route path="*" element={<SaoMiguelRedirect><RolaMaisRedirect><NotFound /></RolaMaisRedirect></SaoMiguelRedirect>} />
                   </Routes>
                 </Suspense>
                 <CookieBanner />

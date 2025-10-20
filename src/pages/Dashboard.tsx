@@ -77,8 +77,12 @@ export default function Dashboard() {
   // ID do usuário autorizado para São Miguel
   const saoMiguelUserId = '1c93324c-65d3-456e-992e-c84e1f7d6ab1';
   
+  // ID do usuário autorizado para RolaMais
+  const rolaMaisUserId = 'bdc06188-645d-4a2d-91cc-a02e44dea18b';
+  
   const isAdmin = adminUserIds.includes(user?.id || '');
   const isSaoMiguelUser = user?.id === saoMiguelUserId;
+  const isRolaMaisUser = user?.id === rolaMaisUserId;
   
   // Buscar dados do dashboard
   const { 
@@ -542,6 +546,16 @@ export default function Dashboard() {
                 >
                   <Building2 className="h-4 w-4" />
                   Dashboard São Miguel
+                </Button>
+              )}
+              {isRolaMaisUser && (
+                <Button 
+                  onClick={() => navigate('/rolamais')}
+                  size="lg" 
+                  className="gap-2 bg-orange-600 hover:bg-orange-700"
+                >
+                  <Zap className="h-4 w-4" />
+                  Dashboard RolaMais
                 </Button>
               )}
               <Button 
