@@ -46,6 +46,7 @@ import {
   Moon,
   Building2
 } from 'lucide-react';
+import { BentoGrid, BentoGridItem } from '@/components/ui/bento-grid';
 
 interface MetricCard {
   title: string;
@@ -602,40 +603,50 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Métricas Principais - Cards melhorados */}
+        {/* Métricas Principais - Bento Grid Premium */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
             <Activity className="h-6 w-6 text-primary" />
             <h2 className="text-2xl font-semibold">Métricas Principais</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <BentoGrid className="md:auto-rows-[minmax(200px,auto)]">
             {metricsData.map((metric, index) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                    {metric.title}
-                  </CardTitle>
-                  <div className={`p-2 rounded-lg bg-gradient-to-r ${metric.color} text-white`}>
-                    {metric.icon}
+              <BentoGridItem
+                key={index}
+                title={metric.title}
+                description={
+                  <div className="space-y-2">
+                    <div className="text-xs text-neutral-600 dark:text-neutral-300">
+                      {metric.description}
+                    </div>
+                    <div className={`flex items-center gap-1 text-xs ${
+                      metric.trend === 'up' ? 'text-emerald-600 dark:text-emerald-400' : 
+                      metric.trend === 'down' ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
+                    }`}>
+                      {metric.trend === 'up' && <TrendingUp className="h-3 w-3" />}
+                      {metric.trend === 'down' && <TrendingDown className="h-3 w-3" />}
+                      <span className="font-medium">{metric.change}</span>
+                      <span className="text-muted-foreground">vs dia anterior</span>
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="text-3xl font-bold">{metric.value}</div>
-                  <div className="text-sm text-muted-foreground">{metric.description}</div>
-                  <div className={`text-xs flex items-center gap-1 ${
-                    metric.trend === 'up' ? 'text-emerald-600' : 
-                    metric.trend === 'down' ? 'text-red-600' : 'text-muted-foreground'
-                  }`}>
-                    {metric.trend === 'up' && <TrendingUp className="h-3 w-3" />}
-                    {metric.trend === 'down' && <TrendingDown className="h-3 w-3" />}
-                    <span className="font-medium">{metric.change}</span>
-                    <span className="text-muted-foreground">vs dia anterior</span>
+                }
+                header={
+                  <div className={`flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br ${metric.color} p-4 items-center justify-center`}>
+                    <div className="text-white/80">
+                      {metric.icon}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                }
+                icon={
+                  <div className="text-3xl font-bold text-neutral-600 dark:text-neutral-200 mb-2">
+                    {metric.value}
+                  </div>
+                }
+                className={index === 0 ? "md:col-span-2" : ""}
+              />
             ))}
-          </div>
+          </BentoGrid>
         </section>
 
         {/* Seção de Insights - Layout melhorado */}
