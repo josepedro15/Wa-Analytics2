@@ -349,7 +349,7 @@ export default function Dashboard() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate('/whatsapp-connect')}
+                        onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
                         className="relative"
                       >
                         <MessageSquare className="h-4 w-4" />
@@ -406,7 +406,7 @@ export default function Dashboard() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => navigate('/whatsapp-connect')}
+                              onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
                               className="h-6 px-2 text-xs hover:bg-primary/10"
                             >
                               Conectar
@@ -420,7 +420,7 @@ export default function Dashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate('/whatsapp-connect')}
+                            onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
                             className="h-6 px-2 text-xs hover:bg-primary/10"
                           >
                             Conectar
@@ -559,7 +559,7 @@ export default function Dashboard() {
                 </Button>
               )}
               <Button 
-                onClick={() => navigate('/whatsapp-connect')}
+                onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
                 size="lg" 
                 className="gap-2 bg-green-600 hover:bg-green-700"
               >

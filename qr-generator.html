@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetricsIA - Gerador de QR Code</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: hsl(0, 0%, 100%);
+            background-attachment: fixed;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: hsl(249, 8%, 19%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, hsla(141, 19%, 57%, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, hsla(141, 19%, 57%, 0.05) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        .card {
+            background: hsl(197, 1%, 98%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.3rem;
+            box-shadow: 
+                0px 1px 2px 0px rgba(0, 0, 0, 0.1),
+                0px 2px 4px -1px rgba(0, 0, 0, 0.1);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid hsl(232, 1%, 93%);
+            z-index: 1;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, hsl(141, 19%, 57%) 0%, hsl(141, 19%, 62%) 50%, hsl(141, 19%, 57%) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, hsla(141, 19%, 57%, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, hsl(141, 19%, 57%) 0%, hsl(141, 19%, 62%) 100%);
+            border-radius: calc(1.3rem - 4px);
+            margin-bottom: 16px;
+            box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+                box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            50% { 
+                transform: scale(1.05); 
+                box-shadow: 0px 8px 10px -1px rgba(0, 0, 0, 0.15);
+            }
+        }
+
+        .logo-container svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+        }
+
+        h1 {
+            color: hsl(249, 8%, 19%);
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: hsl(249, 8%, 19%);
+            font-size: 0.95rem;
+            margin-bottom: 0;
+            font-weight: 500;
+            opacity: 0.7;
+        }
+
+        .input-group { 
+            margin-bottom: 25px; 
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper::before {
+            content: '🏢';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 20px 16px 48px;
+            border: 1px solid hsl(232, 1%, 93%);
+            border-radius: calc(1.3rem - 4px);
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: hsl(229, 0%, 98%);
+            color: hsl(249, 8%, 19%);
+            font-family: inherit;
+            box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        input:focus {
+            border-color: hsl(141, 19%, 57%);
+            outline: none;
+            background-color: hsl(0, 0%, 100%);
+            box-shadow: 
+                0 0 0 4px hsla(141, 19%, 57%, 0.1),
+                0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        input::placeholder {
+            color: hsl(249, 8%, 19%);
+            opacity: 0.5;
+        }
+
+        input.invalid {
+            border-color: hsl(26, 24%, 62%);
+            background-color: hsl(0, 100%, 97%);
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: hsl(249, 8%, 19%);
+            opacity: 0.6;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .input-error {
+            font-size: 12px;
+            color: hsl(26, 24%, 62%);
+            margin-top: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .input-error.show { 
+            display: block; 
+        }
+
+        button {
+            width: 100%;
+            padding: 16px 24px;
+            background: hsl(141, 19%, 57%);
+            color: hsl(0, 0%, 100%);
+            border: none;
+            border-radius: calc(1.3rem - 4px);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            background: hsl(141, 19%, 52%);
+            box-shadow: 
+                0px 2px 4px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 
+                0px 1px 2px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        button:disabled {
+            background: hsl(286, 1%, 92%);
+            color: hsl(249, 8%, 19%);
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #qrCode {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 32px;
+            opacity: 0;
+            transform: scale(0.9) translateY(10px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #qrCode.show { 
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        #qrCode img {
+            border-radius: calc(1.3rem - 4px);
+            box-shadow: 
+                0px 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 4px solid hsl(251, 2%, 94%);
+            background: white;
+            padding: 8px;
+            animation: qrAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes qrAppear {
+            0% {
+                transform: scale(0.8) rotate(-5deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.05) rotate(2deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .qr-label {
+            margin-top: 16px;
+            padding: 8px 16px;
+            background: hsl(251, 2%, 94%);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            color: hsl(141, 19%, 57%);
+            font-weight: 500;
+            animation: fadeIn 0.6s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert {
+            padding: 14px 18px;
+            border-radius: calc(1.3rem - 4px);
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+            box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show { 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert.error {
+            background: hsl(0, 100%, 97%);
+            color: hsl(26, 24%, 62%);
+            border: 1px solid hsl(26, 24%, 70%);
+        }
+
+        .alert.error::before {
+            content: '⚠️';
+            font-size: 1.2rem;
+        }
+
+        .alert.success {
+            background: hsl(251, 2%, 94%);
+            color: hsl(141, 19%, 57%);
+            border: 1px solid hsl(141, 19%, 70%);
+        }
+
+        .alert.success::before {
+            content: '✅';
+            font-size: 1.2rem;
+        }
+
+        .processing-status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 16px;
+            background: hsl(251, 2%, 94%);
+            border-radius: calc(1.3rem - 4px);
+            color: hsl(141, 19%, 57%);
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            border: 1px solid hsl(141, 19%, 70%);
+            box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+            animation: pulseStatus 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseStatus {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .processing-status.show { 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: hsl(286, 1%, 92%);
+            border-radius: calc(1.3rem - 4px);
+            font-size: 11px;
+            font-family: 'Menlo', 'Courier New', monospace;
+            color: hsl(249, 8%, 19%);
+            opacity: 0.7;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid hsl(232, 1%, 93%);
+        }
+
+        .debug-info.show { 
+            display: block; 
+        }
+
+        .debug-toggle {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: hsl(286, 1%, 92%);
+            border: 1px solid hsl(232, 1%, 93%);
+            border-radius: calc(1.3rem - 4px);
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+            color: hsl(249, 8%, 19%);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .debug-toggle:hover {
+            background: hsl(286, 1%, 88%);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="logo-container">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1>MetricsIA</h1>
+            <p class="subtitle">Gerador de QR Code - uazapi GO V2</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="input-group">
+            <div class="input-wrapper">
+                <input type="text" id="companyName" placeholder="Nome da Empresa" autocomplete="off" maxlength="50">
+            </div>
+            <div class="input-hint">Apenas letras e números</div>
+            <div id="inputError" class="input-error">Use apenas letras e números</div>
+        </div>
+
+        <div id="processingStatus" class="processing-status">
+            <span class="loading-spinner"></span>
+            <span id="processingText">Processando...</span>
+        </div>
+
+        <button id="generateButton" onclick="generateQRCode()">Gerar QR Code</button>
+
+        <div id="qrCode"></div>
+
+        <button class="debug-toggle" onclick="toggleDebug()">Mostrar Debug</button>
+        <div id="debugInfo" class="debug-info"></div>
+    </div>
+
+    <script>
+        const generateButton = document.getElementById('generateButton');
+        const companyNameInput = document.getElementById('companyName');
+        const qrCodeDiv = document.getElementById('qrCode');
+        const alertDiv = document.getElementById('alert');
+        const processingStatus = document.getElementById('processingStatus');
+        const processingText = document.getElementById('processingText');
+        const debugInfo = document.getElementById('debugInfo');
+        const inputError = document.getElementById('inputError');
+
+        let debugLogs = [];
+        let instanceToken = null;
+
+        // DETECÇÃO DE URL
+        function getBaseURL() {
+            if (window.location.origin &&
+                window.location.origin !== 'null' &&
+                !window.location.origin.startsWith('file:')) {
+                return window.location.origin;
+            }
+            return 'https://n8n.aiensed.com';
+        }
+
+        const BASE_URL = getBaseURL();
+        addDebugLog(`🌐 Base URL: ${BASE_URL}`);
+
+        function isValidInput(text) {
+            return /^[a-zA-Z0-9]+$/.test(text);
+        }
+
+        function filterInput(text) {
+            return text.replace(/[^a-zA-Z0-9]/g, '');
+        }
+
+        function addDebugLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLogs.push(`${timestamp}: ${message}`);
+            console.log(message);
+            debugInfo.innerHTML = debugLogs.join('\n');
+            debugInfo.scrollTop = debugInfo.scrollHeight;
+        }
+
+        function toggleDebug() {
+            debugInfo.classList.toggle('show');
+        }
+
+        function showAlert(message, type = 'error') {
+            alertDiv.textContent = message;
+            alertDiv.className = `alert ${type} show`;
+            setTimeout(() => alertDiv.classList.remove('show'), 5000);
+        }
+
+        function showProcessingStatus(message) {
+            processingText.textContent = message;
+            processingStatus.classList.add('show');
+        }
+
+        function hideProcessingStatus() {
+            processingStatus.classList.remove('show');
+        }
+
+        // 🔄 NOVA FUNÇÃO: Tentar obter QR Code com retry
+        async function fetchQRCodeWithRetry(token, maxAttempts = 8, delayMs = 3000) {
+            const connectUrl = `${BASE_URL}/webhook/conectar-instancia-uazapi`;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    addDebugLog(`🔄 Tentativa ${attempt}/${maxAttempts} de obter QR Code...`);
+                    showProcessingStatus(`Aguardando QR Code (tentativa ${attempt}/${maxAttempts})...`);
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+                    const response = await fetch(connectUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token, phone: '' }),
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    addDebugLog(`📡 Status: ${response.status}`);
+
+                    if (!response.ok) {
+                        addDebugLog(`⚠️ Erro HTTP ${response.status}, tentando novamente...`);
+                        await new Promise(resolve => setTimeout(resolve, delayMs));
+                        continue;
+                    }
+
+                    const qrData = await response.text();
+                    addDebugLog(`📥 Recebido: ${qrData.length} chars`);
+
+                    // Validar se recebeu QR Code válido
+                    if (!qrData || qrData === 'null' || qrData.trim() === '' || qrData.length < 100) {
+                        addDebugLog(`⚠️ QR Code inválido (${qrData.length} chars), aguardando...`);
+
+                        if (attempt < maxAttempts) {
+                            await new Promise(resolve => setTimeout(resolve, delayMs));
+                            continue;
+                        } else {
+                            throw new Error('QR Code não foi gerado após múltiplas tentativas');
+                        }
+                    }
+
+                    // QR Code válido recebido!
+                    addDebugLog(`✅ QR Code válido recebido!`);
+                    return qrData;
+
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        addDebugLog(`⏱️ Timeout na tentativa ${attempt}`);
+                    } else {
+                        addDebugLog(`❌ Erro: ${error.message}`);
+                    }
+
+                    if (attempt < maxAttempts) {
+                        await new Promise(resolve => setTimeout(resolve, delayMs));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+
+            throw new Error('Falha em todas as tentativas de obter QR Code');
+        }
+
+        async function generateQRCode() {
+            const companyName = companyNameInput.value.trim();
+
+            if (!companyName || !isValidInput(companyName)) {
+                showAlert('Use apenas letras e números');
+                return;
+            }
+
+            generateButton.disabled = true;
+            generateButton.innerHTML = '<span class="loading-spinner"></span>Gerando...';
+            qrCodeDiv.classList.remove('show');
+            alertDiv.classList.remove('show');
+
+            try {
+                addDebugLog(`🚀 Iniciando: ${companyName}`);
+                showProcessingStatus('Criando instância...');
+
+                // ETAPA 1: Criar instância
+                const createUrl = `${BASE_URL}/webhook/criar-instancia-uazapi`;
+                const createResponse = await fetch(createUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ companyName }),
+                });
+
+                addDebugLog(`📡 Criar instância: ${createResponse.status}`);
+
+                if (!createResponse.ok) {
+                    const errorText = await createResponse.text();
+                    throw new Error(`Erro ao criar instância: ${errorText}`);
+                }
+
+                const createData = await createResponse.json();
+                instanceToken = createData.token;
+                addDebugLog(`✅ Token: ${instanceToken.substring(0, 20)}...`);
+
+                if (!instanceToken) {
+                    throw new Error('Token não retornado');
+                }
+
+                // ETAPA 2: Aguardar e obter QR Code com retry
+                addDebugLog(`⏳ Aguardando API gerar QR Code...`);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Delay inicial de 2s
+
+                const qrData = await fetchQRCodeWithRetry(instanceToken);
+
+                // ETAPA 3: Processar e exibir QR Code
+                showProcessingStatus('Processando QR Code...');
+
+                let cleanBase64 = qrData;
+                if (cleanBase64.includes('base64,')) {
+                    cleanBase64 = cleanBase64.split('base64,')[1];
+                }
+                cleanBase64 = cleanBase64.replace(/[\s\n\r\t]/g, '');
+
+                const qrCodeImage = document.createElement('img');
+                qrCodeImage.alt = 'QR Code';
+                qrCodeImage.style.width = '200px';
+                qrCodeImage.style.height = '200px';
+
+                qrCodeImage.onerror = () => {
+                    addDebugLog(`❌ Erro ao carregar imagem`);
+                    throw new Error('Erro ao carregar QR Code');
+                };
+
+                qrCodeImage.onload = () => {
+                    addDebugLog(`✅ QR CODE EXIBIDO!`);
+                    qrCodeDiv.classList.add('show');
+                    showAlert('QR Code gerado! Escaneie com WhatsApp', 'success');
+                    hideProcessingStatus();
+                    
+                    // Adicionar label abaixo do QR Code
+                    const label = document.createElement('div');
+                    label.className = 'qr-label';
+                    label.textContent = '📱 Escaneie com seu WhatsApp';
+                    qrCodeDiv.appendChild(label);
+                };
+
+                qrCodeImage.src = `data:image/png;base64,${cleanBase64}`;
+                qrCodeDiv.innerHTML = '';
+                qrCodeDiv.appendChild(qrCodeImage);
+
+            } catch (error) {
+                addDebugLog(`💥 ERRO: ${error.message}`);
+                console.error('Erro:', error);
+                showAlert(error.message);
+                hideProcessingStatus();
+            } finally {
+                generateButton.disabled = false;
+                generateButton.textContent = 'Gerar QR Code';
+            }
+        }
+
+        companyNameInput.addEventListener('input', function(e) {
+            e.target.value = filterInput(e.target.value);
+        });
+
+        companyNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !generateButton.disabled) {
+                generateQRCode();
+            }
+        });
+    </script>
+</body>
+</html>
+

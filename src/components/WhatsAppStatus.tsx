@@ -95,7 +95,7 @@ export function WhatsAppStatus() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/whatsapp-connect')}
+            onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -117,7 +117,7 @@ export function WhatsAppStatus() {
               Conecte seu WhatsApp para começar a coletar dados
             </p>
             <Button
-              onClick={() => navigate('/whatsapp-connect')}
+              onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
               className="gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -165,7 +165,7 @@ export function WhatsAppStatus() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/whatsapp-connect')}
+                  onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
                   className="text-xs"
                 >
                   Ver todas as {totalInstances} instâncias
