@@ -8,7 +8,10 @@ import { useThree, Canvas, extend } from "@react-three/fiber";
 
 import { OrbitControls } from "@react-three/drei";
 
-import countries from "@/data/globe.json";
+// Importar countries
+import countriesData from "@/data/globe.json";
+
+const countries = countriesData as { type: string; features: any[] };
 
 declare module "@react-three/fiber" {
   interface ThreeElements {
@@ -155,14 +158,23 @@ export function Globe({ globeConfig, data }: WorldProps) {
         ) === i,
     );
 
+    // Configurar polígonos apenas se houver dados
+    if (countries && countries.features && countries.features.length > 0) {
+      globeRef.current
+        .hexPolygonsData(countries.features)
+        .hexPolygonResolution(3)
+        .hexPolygonMargin(0.7)
+        .showAtmosphere(defaultProps.showAtmosphere)
+        .atmosphereColor(defaultProps.atmosphereColor)
+        .atmosphereAltitude(defaultProps.atmosphereAltitude)
+        .hexPolygonColor(() => defaultProps.polygonColor);
+    }
+    
+    // Sempre configurar atmosfera e globo base
     globeRef.current
-      .hexPolygonsData(countries.features)
-      .hexPolygonResolution(3)
-      .hexPolygonMargin(0.7)
       .showAtmosphere(defaultProps.showAtmosphere)
       .atmosphereColor(defaultProps.atmosphereColor)
-      .atmosphereAltitude(defaultProps.atmosphereAltitude)
-      .hexPolygonColor(() => defaultProps.polygonColor);
+      .atmosphereAltitude(defaultProps.atmosphereAltitude);
 
     globeRef.current
       .arcsData(data)
