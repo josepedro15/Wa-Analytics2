@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { ExportModal } from '@/components/ExportModal';
 import { FilterModal } from '@/components/FilterModal';
 import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
+import { OnboardingView } from '@/components/OnboardingView';
 
 import { 
   MessageSquare, 
@@ -83,6 +84,11 @@ export default function Dashboard() {
   const isAdmin = adminUserIds.includes(user?.id || '');
   const isSaoMiguelUser = user?.id === saoMiguelUserId;
   const isRolaMaisUser = user?.id === rolaMaisUserId;
+  
+  // Verificar se o usuário tem dashboard personalizado
+  // Se não for admin, São Miguel ou RolaMais, mostrar onboarding
+  const hasCustomDashboard = isAdmin || isSaoMiguelUser || isRolaMaisUser;
+  const whatsappConnected = instances && instances.length > 0 && instances.some(i => i.status === 'connected');
   
   // Buscar dados do dashboard
   const { 
@@ -518,91 +524,101 @@ export default function Dashboard() {
       </header>
 
       <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header da página */}
-        <section className="space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                  Dashboard Analítico
-                </h1>
-                {selectedDate && (
-                  <Badge variant="secondary" className="px-3 py-1 text-sm">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {selectedDate.toLocaleDateString('pt-BR')}
-                  </Badge>
-                )}
+        {/* Verificar se tem dashboard personalizado */}
+        {!hasCustomDashboard ? (
+          // Mostrar página de onboarding para novos clientes
+          <OnboardingView 
+            user={user!} 
+            whatsappConnected={whatsappConnected || false}
+          />
+        ) : (
+          // Mostrar dashboard tradicional para admins e clientes com dashboard personalizado
+          <>
+            {/* Header da página */}
+            <section className="space-y-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                      Dashboard Analítico
+                    </h1>
+                    {selectedDate && (
+                      <Badge variant="secondary" className="px-3 py-1 text-sm">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {selectedDate.toLocaleDateString('pt-BR')}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-lg text-muted-foreground max-w-2xl">
+                    Análise completa e insights detalhados dos seus atendimentos do WhatsApp
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  {isSaoMiguelUser && (
+                    <Button 
+                      onClick={() => navigate('/sao-miguel')}
+                      size="lg" 
+                      className="gap-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Building2 className="h-4 w-4" />
+                      Dashboard São Miguel
+                    </Button>
+                  )}
+                  {isRolaMaisUser && (
+                    <Button 
+                      onClick={() => navigate('/rolamais')}
+                      size="lg" 
+                      className="gap-2 bg-orange-600 hover:bg-orange-700"
+                    >
+                      <Zap className="h-4 w-4" />
+                      Dashboard RolaMais
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
+                    size="lg" 
+                    className="gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Conectar WhatsApp
+                  </Button>
+                  <FilterModal 
+                    onFilterChange={(date) => {
+                      setSelectedDate(date);
+                      if (date) {
+                        toast({
+                          title: "Data selecionada",
+                          description: `Exibindo relatório de ${date.toLocaleDateString('pt-BR')}`,
+                        });
+                      } else {
+                        toast({
+                          title: "Filtro removido",
+                          description: "Exibindo relatório mais recente",
+                        });
+                      }
+                    }}
+                    currentDate={selectedDate}
+                    trigger={
+                      <Button variant="outline" size="lg" className="gap-2">
+                        <Filter className="h-4 w-4" />
+                        {selectedDate ? 'Filtrado' : 'Filtrar'}
+                      </Button>
+                    }
+                  />
+                  <ExportModal 
+                    data={dashboardData} 
+                    trigger={
+                      <Button variant="outline" size="lg" className="gap-2">
+                        <Download className="h-4 w-4" />
+                        Exportar
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
-              <p className="text-lg text-muted-foreground max-w-2xl">
-                Análise completa e insights detalhados dos seus atendimentos do WhatsApp
-              </p>
-            </div>
-            <div className="flex gap-3">
-              {isSaoMiguelUser && (
-                <Button 
-                  onClick={() => navigate('/sao-miguel')}
-                  size="lg" 
-                  className="gap-2 bg-blue-600 hover:bg-blue-700"
-                >
-                  <Building2 className="h-4 w-4" />
-                  Dashboard São Miguel
-                </Button>
-              )}
-              {isRolaMaisUser && (
-                <Button 
-                  onClick={() => navigate('/rolamais')}
-                  size="lg" 
-                  className="gap-2 bg-orange-600 hover:bg-orange-700"
-                >
-                  <Zap className="h-4 w-4" />
-                  Dashboard RolaMais
-                </Button>
-              )}
-              <Button 
-                onClick={() => window.open('https://webhook.metricsia.com.br/webhook/conexaochip', '_blank')}
-                size="lg" 
-                className="gap-2 bg-green-600 hover:bg-green-700"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Conectar WhatsApp
-              </Button>
-              <FilterModal 
-                onFilterChange={(date) => {
-                  setSelectedDate(date);
-                  if (date) {
-                    toast({
-                      title: "Data selecionada",
-                      description: `Exibindo relatório de ${date.toLocaleDateString('pt-BR')}`,
-                    });
-                  } else {
-                    toast({
-                      title: "Filtro removido",
-                      description: "Exibindo relatório mais recente",
-                    });
-                  }
-                }}
-                currentDate={selectedDate}
-                trigger={
-                  <Button variant="outline" size="lg" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    {selectedDate ? 'Filtrado' : 'Filtrar'}
-                  </Button>
-                }
-              />
-              <ExportModal 
-                data={dashboardData} 
-                trigger={
-                  <Button variant="outline" size="lg" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Exportar
-                  </Button>
-                }
-              />
-            </div>
-          </div>
-        </section>
+            </section>
 
-        {/* Métricas Principais - Cards melhorados */}
+            {/* Métricas Principais - Cards melhorados */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
             <Activity className="h-6 w-6 text-primary" />
@@ -877,25 +893,27 @@ export default function Dashboard() {
 
 
 
-        {/* Footer melhorado */}
-        <div className="text-center py-8 border-t border-border/50">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              <span>Última análise: {dashboardData?.updated_at ? new Date(dashboardData.updated_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}</span>
+            {/* Footer melhorado */}
+            <div className="text-center py-8 border-t border-border/50">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  <span>Última análise: {dashboardData?.updated_at ? new Date(dashboardData.updated_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div className="hidden md:block">•</div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Período: {dashboardData?.periodo_inicio ? new Date(dashboardData.periodo_inicio).toLocaleDateString('pt-BR') : '-'} a {dashboardData?.periodo_fim ? new Date(dashboardData.periodo_fim).toLocaleDateString('pt-BR') : '-'}</span>
+                </div>
+                <div className="hidden md:block">•</div>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>MetricsIA Analytics Engine v1.0</span>
+                </div>
+              </div>
             </div>
-            <div className="hidden md:block">•</div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>Período: {dashboardData?.periodo_inicio ? new Date(dashboardData.periodo_inicio).toLocaleDateString('pt-BR') : '-'} a {dashboardData?.periodo_fim ? new Date(dashboardData.periodo_fim).toLocaleDateString('pt-BR') : '-'}</span>
-            </div>
-            <div className="hidden md:block">•</div>
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span>MetricsIA Analytics Engine v1.0</span>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

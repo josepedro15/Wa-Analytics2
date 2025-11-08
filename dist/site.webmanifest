@@ -1,0 +1,17 @@
+{
+  "name": "MetricsIA - Analytics para WhatsApp",
+"short_name": "MetricsIA",
+  "description": "Transforme seus atendimentos do WhatsApp em insights poderosos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#25D366",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
