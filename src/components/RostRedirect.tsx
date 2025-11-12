@@ -7,7 +7,7 @@ interface RostRedirectProps {
 }
 
 // ID do usuário Funerária Rost específico
-const ROST_USER_ID = '1594e0bd-8f8c-41de-9257-bda0280ea38e';
+const ROST_USER_ID = '3e4d220a-2129-4e09-a8ed-a5ced9d04d7e';
 
 export function RostRedirect({ children }: RostRedirectProps) {
   const { user } = useAuth();

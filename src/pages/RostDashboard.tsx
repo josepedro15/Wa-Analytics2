@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 // ID do usuário específico que tem acesso a esta página
-const AUTHORIZED_USER_ID = '1594e0bd-8f8c-41de-9257-bda0280ea38e';
+const AUTHORIZED_USER_ID = '3e4d220a-2129-4e09-a8ed-a5ced9d04d7e';
 
 export default function RostDashboard() {
   const { user, signOut } = useAuth();
