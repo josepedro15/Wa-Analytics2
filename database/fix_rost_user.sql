@@ -1,5 +1,5 @@
 -- Script para diagnosticar e corrigir problemas com o usuário Rost
--- User ID: dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f
+-- User ID: 1150cc05-a17b-4dd1-8b21-58ce3037ec5a
 
 -- 1. Verificar se o usuário existe
 DO $$
@@ -8,7 +8,7 @@ BEGIN
   
   IF EXISTS (
     SELECT 1 FROM auth.users 
-    WHERE id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f'
+    WHERE id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a'
   ) THEN
     RAISE NOTICE 'Usuário encontrado no auth.users';
   ELSE
@@ -21,25 +21,25 @@ SELECT
   'dashboard_data' as tabela,
   COUNT(*) as total_registros
 FROM public.dashboard_data 
-WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- 3. Verificar dados no profiles
 SELECT 
   'profiles' as tabela,
   COUNT(*) as total_registros
 FROM public.profiles 
-WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- 4. Verificar instâncias do WhatsApp
 SELECT 
   'whatsapp_instances' as tabela,
   COUNT(*) as total_registros
 FROM public.whatsapp_instances 
-WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- 5. Criar perfil se não existir
 INSERT INTO public.profiles (user_id, full_name, role)
-VALUES ('dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f', 'Rost', 'vendedor')
+VALUES ('1150cc05-a17b-4dd1-8b21-58ce3037ec5a', 'Rost', 'vendedor')
 ON CONFLICT (user_id) DO NOTHING;
 
 -- 6. Criar dados iniciais do dashboard se não existir
@@ -85,7 +85,7 @@ INSERT INTO public.dashboard_data (
   meta_nota_qualidade
 )
 SELECT
-  'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f',
+  '1150cc05-a17b-4dd1-8b21-58ce3037ec5a',
   CURRENT_DATE,
   CURRENT_DATE,
   
@@ -124,7 +124,7 @@ SELECT
   '0 / Meta 4,5 (até abril)'
 WHERE NOT EXISTS (
   SELECT 1 FROM public.dashboard_data 
-  WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f'
+  WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a'
 );
 
 -- 7. Verificar se as políticas RLS estão corretas
@@ -146,7 +146,7 @@ SELECT
   'Dados criados com sucesso!' as status,
   COUNT(*) as registros_dashboard
 FROM public.dashboard_data 
-WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- Mensagem final
 DO $$

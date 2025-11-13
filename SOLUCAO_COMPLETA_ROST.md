@@ -2,7 +2,7 @@
 
 ## 🔴 Problema
 
-O usuário `rost@metrics.com` (ID: `dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f`) estava recebendo **erro 500** ao tentar fazer login.
+O usuário `rost@metrics.com` (ID: `1150cc05-a17b-4dd1-8b21-58ce3037ec5a`) estava recebendo **erro 500** ao tentar fazer login.
 
 ## 🎯 Causas Identificadas
 
@@ -15,8 +15,8 @@ O usuário `rost@metrics.com` (ID: `dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f`) estav
 ### 1. Atualização do Código (✅ Já feito)
 
 Atualizados os arquivos:
-- `src/components/RostRedirect.tsx` - ID atualizado para `dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f`
-- `src/pages/RostDashboard.tsx` - ID atualizado para `dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f`
+- `src/components/RostRedirect.tsx` - ID atualizado para `1150cc05-a17b-4dd1-8b21-58ce3037ec5a`
+- `src/pages/RostDashboard.tsx` - ID atualizado para `1150cc05-a17b-4dd1-8b21-58ce3037ec5a`
 
 ### 2. Configuração do Banco de Dados
 
@@ -25,7 +25,7 @@ Execute o script SQL no **Supabase Dashboard → SQL Editor**:
 ```sql
 -- Criar perfil para o usuário Rost
 INSERT INTO public.profiles (user_id, full_name, role)
-VALUES ('dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f', 'Funerária Rost', 'vendedor')
+VALUES ('1150cc05-a17b-4dd1-8b21-58ce3037ec5a', 'Funerária Rost', 'vendedor')
 ON CONFLICT (user_id) 
 DO UPDATE SET 
   full_name = 'Funerária Rost',
@@ -98,7 +98,7 @@ ON CONFLICT DO NOTHING;
 
 ### Tabela: `profiles`
 ```sql
-user_id: dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f
+user_id: 1150cc05-a17b-4dd1-8b21-58ce3037ec5a
 full_name: Funerária Rost
 role: vendedor
 ```
@@ -120,13 +120,13 @@ Se ainda houver problemas, verifique:
 // Verificar usuário logado
 const { data: { user } } = await supabase.auth.getUser()
 console.log('User ID:', user?.id)
-console.log('Esperado:', 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f')
+console.log('Esperado:', '1150cc05-a17b-4dd1-8b21-58ce3037ec5a')
 ```
 
 ### 2. No Supabase SQL Editor:
 ```sql
 -- Verificar perfil
-SELECT * FROM profiles WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+SELECT * FROM profiles WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- Verificar dados HTML
 SELECT * FROM html_SãoMiguel_rost ORDER BY data DESC LIMIT 10;

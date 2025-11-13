@@ -2,7 +2,7 @@
 
 ## 🔴 Problema Identificado
 
-O usuário `rost@metrics.com` (ID: `dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f`) está recebendo erro **500 (Internal Server Error)** ao tentar fazer login.
+O usuário `rost@metrics.com` (ID: `1150cc05-a17b-4dd1-8b21-58ce3037ec5a`) está recebendo erro **500 (Internal Server Error)** ao tentar fazer login.
 
 ### Causa Raiz
 
@@ -38,7 +38,7 @@ O script irá:
 ```sql
 -- Criar perfil
 INSERT INTO public.profiles (user_id, full_name, role)
-VALUES ('dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f', 'Rost', 'vendedor')
+VALUES ('1150cc05-a17b-4dd1-8b21-58ce3037ec5a', 'Rost', 'vendedor')
 ON CONFLICT (user_id) DO NOTHING;
 
 -- Criar dados iniciais do dashboard
@@ -63,7 +63,7 @@ INSERT INTO public.dashboard_data (
   meta_tempo_resposta,
   meta_nota_qualidade
 ) VALUES (
-  'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f',
+  '1150cc05-a17b-4dd1-8b21-58ce3037ec5a',
   CURRENT_DATE,
   CURRENT_DATE,
   0, 0, 0, 0,
@@ -98,7 +98,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- Criar perfil
   INSERT INTO public.profiles (user_id, full_name, role)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', 'vendedor')
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuário'), 'vendedor')
   ON CONFLICT (user_id) DO NOTHING;
   
   -- Criar dashboard inicial

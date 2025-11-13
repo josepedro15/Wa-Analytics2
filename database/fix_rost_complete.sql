@@ -1,5 +1,5 @@
 -- Script completo para configurar o usuário Rost
--- User ID: dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f
+-- User ID: 1150cc05-a17b-4dd1-8b21-58ce3037ec5a
 
 -- 1. Verificar se o usuário existe
 SELECT 
@@ -8,11 +8,11 @@ SELECT
   email,
   created_at
 FROM auth.users 
-WHERE id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+WHERE id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- 2. Criar perfil se não existir
 INSERT INTO public.profiles (user_id, full_name, role)
-VALUES ('dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f', 'Funerária Rost', 'vendedor')
+VALUES ('1150cc05-a17b-4dd1-8b21-58ce3037ec5a', 'Funerária Rost', 'vendedor')
 ON CONFLICT (user_id) 
 DO UPDATE SET 
   full_name = 'Funerária Rost',
@@ -79,7 +79,7 @@ SELECT
   role,
   created_at
 FROM public.profiles
-WHERE user_id = 'dfaac2f3-4ae9-410c-a0bf-bd9ba5d7559f';
+WHERE user_id = '1150cc05-a17b-4dd1-8b21-58ce3037ec5a';
 
 -- Mensagem final
 DO $$
