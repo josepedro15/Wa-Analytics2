@@ -23,7 +23,7 @@ export const RJ_DIEHL_BRANCH_OPTIONS: RjDiehlBranchOption[] = [
         id: 'rj-diehl-main',
         name: 'RJ DIEHL',
         description: 'RJ DIEHL Principal',
-        key: 'RjDiehl'
+        key: 'Rj-Dieh'
     }
 ];
 
