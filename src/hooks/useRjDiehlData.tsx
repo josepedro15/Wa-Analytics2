@@ -38,7 +38,7 @@ export function useRjDiehlData(selectedBranch?: string, selectedDate?: Date) {
             }
 
             let query = supabase
-                .from('html_RJDiehl' as any)
+                .from('html_RjDiehl' as any)
                 .select('*')
                 .order('data', { ascending: false });
 
@@ -101,7 +101,7 @@ export function useRjDiehlBranchData(branchId: string, selectedDate?: Date) {
             console.log('Buscando dados para filial RJ DIEHL:', branchOption.key);
 
             let query = supabase
-                .from('html_RJDiehl' as any)
+                .from('html_RjDiehl' as any)
                 .select('*')
                 .eq('atendente', branchOption.key)
                 .order('data', { ascending: false })
