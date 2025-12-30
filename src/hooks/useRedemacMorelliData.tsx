@@ -19,12 +19,6 @@ export interface RedemacMorelliBranchOption {
 // Configuração das áreas da RedemacMorelli
 export const REDEMAC_MORELLI_BRANCH_OPTIONS: RedemacMorelliBranchOption[] = [
   {
-    id: 'redemac-vendas',
-    name: 'RMvendas',
-    description: 'RedemacMorelli - Vendas',
-    key: 'RMvendas'
-  },
-  {
     id: 'redemac-atendimento',
     name: 'RMatendimento',
     description: 'RedemacMorelli - Atendimento',

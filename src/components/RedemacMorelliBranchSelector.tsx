@@ -6,7 +6,6 @@ import {
     Building2,
     Calendar,
     Users,
-    TrendingUp,
     BarChart3,
     MapPin,
     Clock,
@@ -22,8 +21,6 @@ interface RedemacMorelliBranchSelectorProps {
 
 const getBranchIcon = (branchId: string) => {
     switch (branchId) {
-        case 'redemac-vendas':
-            return <TrendingUp className="h-5 w-5" />;
         case 'redemac-atendimento':
             return <Users className="h-5 w-5" />;
         default:
@@ -33,8 +30,6 @@ const getBranchIcon = (branchId: string) => {
 
 const getBranchColor = (branchId: string) => {
     switch (branchId) {
-        case 'redemac-vendas':
-            return 'from-red-600 to-orange-600';
         case 'redemac-atendimento':
             return 'from-orange-600 to-red-600';
         default:
@@ -42,10 +37,7 @@ const getBranchColor = (branchId: string) => {
     }
 };
 
-const getBranchType = (branchId: string) => {
-    if (branchId.includes('vendas')) {
-        return { type: 'Vendas', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' };
-    }
+const getBranchType = () => {
     return { type: 'Atendimento', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' };
 };
 
@@ -120,18 +112,18 @@ export function RedemacMorelliBranchSelector({
                 </CardContent>
             </Card>
 
-            {/* Grid de Áreas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Área de Atendimento */}
+            <div className="grid grid-cols-1 gap-6">
                 {REDEMAC_MORELLI_BRANCH_OPTIONS.map((branch) => {
                     const isSelected = selectedBranch === branch.id;
-                    const branchType = getBranchType(branch.id);
+                    const branchType = getBranchType();
 
                     return (
                         <Card
                             key={branch.id}
                             className={`cursor-pointer transition-all duration-300 hover:shadow-lg border-border/50 bg-card/50 backdrop-blur-sm ${isSelected
-                                    ? 'ring-2 ring-red-500 shadow-lg scale-105'
-                                    : 'hover:scale-102'
+                                ? 'ring-2 ring-red-500 shadow-lg scale-105'
+                                : 'hover:scale-102'
                                 }`}
                             onClick={() => onBranchSelect(branch.id)}
                         >
@@ -159,9 +151,7 @@ export function RedemacMorelliBranchSelector({
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                         <BarChart3 className="h-3 w-3" />
-                                        <span>
-                                            {branchType.type === 'Vendas' ? 'Relatório de Vendas' : 'Relatório de Atendimento'}
-                                        </span>
+                                        <span>Relatório de Atendimento</span>
                                     </div>
                                 </div>
 
