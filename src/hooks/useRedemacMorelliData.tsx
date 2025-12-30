@@ -20,9 +20,9 @@ export interface RedemacMorelliBranchOption {
 export const REDEMAC_MORELLI_BRANCH_OPTIONS: RedemacMorelliBranchOption[] = [
   {
     id: 'redemac-atendimento',
-    name: 'RMatendimento',
+    name: 'MORELLI',
     description: 'RedemacMorelli - Atendimento',
-    key: 'RMatendimento'
+    key: 'MORELLI'
   }
 ];
 
