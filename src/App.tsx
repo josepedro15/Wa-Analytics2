@@ -12,6 +12,7 @@ import { SaoMiguelRedirect } from "@/components/SaoMiguelRedirect";
 import { RolaMaisRedirect } from "@/components/RolaMaisRedirect";
 import { RostRedirect } from "@/components/RostRedirect";
 import { RjDiehlRedirect } from "@/components/RjDiehlRedirect";
+import { RedemacMorelliRedirect } from "@/components/RedemacMorelliRedirect";
 
 // Lazy load components
 const Index = lazy(() => import("./pages/Index"));
@@ -25,6 +26,7 @@ const SaoMiguelDashboard = lazy(() => import("./pages/SaoMiguelDashboard"));
 const RolaMaisDashboard = lazy(() => import("./pages/RolaMaisDashboard"));
 const RostDashboard = lazy(() => import("./pages/RostDashboard"));
 const RjDiehlDashboard = lazy(() => import("./pages/RjDiehlDashboard"));
+const RedemacMorelliDashboard = lazy(() => import("./pages/RedemacMorelliDashboard"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy = lazy(() => import("./pages/CookiePolicy"));
@@ -47,10 +49,10 @@ const App = () => {
             <BrowserRouter>
               <Suspense fallback={<LoadingSpinner size="lg" />}>
                 <Routes>
-                  <Route path="/" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><Index /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
-                  <Route path="/auth" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><Auth /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
-                  <Route path="/reset-password" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><ResetPassword /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
-                  <Route path="/dashboard" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><Dashboard /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
+                  <Route path="/" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><RedemacMorelliRedirect><Index /></RedemacMorelliRedirect></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
+                  <Route path="/auth" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><RedemacMorelliRedirect><Auth /></RedemacMorelliRedirect></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
+                  <Route path="/reset-password" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><RedemacMorelliRedirect><ResetPassword /></RedemacMorelliRedirect></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
+                  <Route path="/dashboard" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><RedemacMorelliRedirect><Dashboard /></RedemacMorelliRedirect></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
                   <Route path="/whatsapp-connect" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><WhatsAppConnect /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
                   <Route path="/admin" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><Admin /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
                   <Route path="/admin/contact-messages" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><ContactMessages /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
@@ -58,6 +60,7 @@ const App = () => {
                   <Route path="/rolamais" element={<RolaMaisDashboard />} />
                   <Route path="/rost" element={<RostDashboard />} />
                   <Route path="/rj-diehl" element={<RjDiehlDashboard />} />
+                  <Route path="/redemac-morelli" element={<RedemacMorelliDashboard />} />
                   <Route path="/privacy-policy" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><PrivacyPolicy /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
                   <Route path="/terms-of-service" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><TermsOfService /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
                   <Route path="/cookie-policy" element={<SaoMiguelRedirect><RolaMaisRedirect><RostRedirect><RjDiehlRedirect><CookiePolicy /></RjDiehlRedirect></RostRedirect></RolaMaisRedirect></SaoMiguelRedirect>} />
